@@ -54,7 +54,7 @@ export default function HomePage() {
                 </div>
               </div>
               <Image
-                src="httpshttps://placehold.co/600x400.png"
+                src="https://placehold.co/600x400.png"
                 alt="Hero Brain Activity"
                 data-ai-hint="brain activity abstract"
                 width={600}
