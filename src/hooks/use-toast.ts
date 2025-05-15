@@ -3,19 +3,19 @@
 // Inspired by react-hot-toast library
 import * as React from "react"
 
-import type {
-  ToastActionElement,
-  ToastProps,
-} from "@/components/ui/toast"
+import type { ToastProps as RadixToastProps } from "@radix-ui/react-toast"; // Corrected path if needed
+import type { ToastActionElement } from "@/components/ui/toast"; // Assuming this path is correct based on shadcn setup
 
-const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 1000000
+const TOAST_LIMIT = 3; // Allow a few toasts
+const TOAST_REMOVE_DELAY = 5000; // Auto-remove after 5 seconds
 
-type ToasterToast = ToastProps & {
+// Use RadixToastProps for the base, and add our specific fields
+type ToasterToast = RadixToastProps & {
   id: string
   title?: React.ReactNode
   description?: React.ReactNode
   action?: ToastActionElement
+  variant?: "default" | "destructive"; // Ensure variant is part of the type
 }
 
 const actionTypes = {
@@ -60,7 +60,7 @@ const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
 
 const addToRemoveQueue = (toastId: string) => {
   if (toastTimeouts.has(toastId)) {
-    return
+    clearTimeout(toastTimeouts.get(toastId)); // Clear existing timeout if any
   }
 
   const timeout = setTimeout(() => {
@@ -77,10 +77,16 @@ const addToRemoveQueue = (toastId: string) => {
 export const reducer = (state: State, action: Action): State => {
   switch (action.type) {
     case "ADD_TOAST":
+      // Add new toast to the beginning, and ensure limit is respected
+      const newToasts = [action.toast, ...state.toasts].slice(0, TOAST_LIMIT);
+      // For each new toast added, set up its removal timer
+      if (!toastTimeouts.has(action.toast.id)) { // Only if not already managed (e.g., via dismiss)
+        addToRemoveQueue(action.toast.id);
+      }
       return {
         ...state,
-        toasts: [action.toast, ...state.toasts].slice(0, TOAST_LIMIT),
-      }
+        toasts: newToasts,
+      };
 
     case "UPDATE_TOAST":
       return {
@@ -93,14 +99,16 @@ export const reducer = (state: State, action: Action): State => {
     case "DISMISS_TOAST": {
       const { toastId } = action
 
-      // ! Side effects ! - This could be extracted into a dismissToast() action,
-      // but I'll keep it here for simplicity
       if (toastId) {
-        addToRemoveQueue(toastId)
+        // If a specific toast is dismissed, clear its auto-remove timeout and start a new one for quicker removal
+        if (toastTimeouts.has(toastId)) clearTimeout(toastTimeouts.get(toastId));
+        addToRemoveQueue(toastId); // This will set a new timeout for removal
       } else {
+        // Dismiss all: clear all timeouts and set new ones
         state.toasts.forEach((toast) => {
-          addToRemoveQueue(toast.id)
-        })
+          if (toastTimeouts.has(toast.id)) clearTimeout(toastTimeouts.get(toast.id));
+          addToRemoveQueue(toast.id);
+        });
       }
 
       return {
@@ -109,7 +117,7 @@ export const reducer = (state: State, action: Action): State => {
           t.id === toastId || toastId === undefined
             ? {
                 ...t,
-                open: false,
+                open: false, // Mark as not open, UI will animate out
               }
             : t
         ),
@@ -140,15 +148,21 @@ function dispatch(action: Action) {
   })
 }
 
-type Toast = Omit<ToasterToast, "id">
+// This is the exposed Toast function type
+type ToastFunction = (props: Omit<ToasterToast, "id" | "open" | "onOpenChange">) => {
+  id: string;
+  dismiss: () => void;
+  update: (props: Partial<ToasterToast>) => void;
+};
 
-function toast({ ...props }: Toast) {
+
+const toast: ToastFunction = ({ ...props }) => {
   const id = genId()
 
-  const update = (props: ToasterToast) =>
+  const update = (updateProps: Partial<ToasterToast>) =>
     dispatch({
       type: "UPDATE_TOAST",
-      toast: { ...props, id },
+      toast: { ...updateProps, id },
     })
   const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id })
 
@@ -159,7 +173,10 @@ function toast({ ...props }: Toast) {
       id,
       open: true,
       onOpenChange: (open) => {
-        if (!open) dismiss()
+        if (!open) {
+          // When Radix signals close (e.g. animation ends or swipe), we ensure it's dismissed
+          dismiss();
+        }
       },
     },
   })
