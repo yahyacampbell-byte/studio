@@ -79,7 +79,6 @@ export default function HomePage() {
                   </Button>
                 </div>
               </div>
-              {/* Image removed from here */}
             </div>
           </div>
         </section>
@@ -105,7 +104,6 @@ export default function HomePage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                   {/* Image removed from here */}
                 </CardContent>
               </Card>
               <Card className="hover:shadow-lg transition-shadow">
@@ -117,7 +115,6 @@ export default function HomePage() {
                   </CardDescription>
                 </CardHeader>
                  <CardContent>
-                   {/* Image removed from here */}
                 </CardContent>
               </Card>
               <Card className="hover:shadow-lg transition-shadow">
@@ -129,7 +126,6 @@ export default function HomePage() {
                   </CardDescription>
                 </CardHeader>
                  <CardContent>
-                   {/* Image removed from here */}
                 </CardContent>
               </Card>
             </div>
@@ -140,12 +136,12 @@ export default function HomePage() {
       <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
         <p className="text-xs text-muted-foreground">&copy; {new Date().getFullYear()} {APP_NAME}. All rights reserved.</p>
         <nav className="sm:ml-auto flex gap-4 sm:gap-6">
-          {/* <Link href="#" className="text-xs hover:underline underline-offset-4 text-muted-foreground" prefetch={false}>
-            Terms of Service
+          <Link href="https://www.xillo.io/privacy-policy/" className="text-xs hover:underline underline-offset-4 text-muted-foreground" prefetch={false} target="_blank" rel="noopener noreferrer">
+            Privacy Policy
           </Link>
-          <Link href="#" className="text-xs hover:underline underline-offset-4 text-muted-foreground" prefetch={false}>
-            Privacy
-          </Link> */}
+          <Link href="https://www.xillo.io/tdi-terms-conditions/" className="text-xs hover:underline underline-offset-4 text-muted-foreground" prefetch={false} target="_blank" rel="noopener noreferrer">
+            Terms & Conditions
+          </Link>
         </nav>
       </footer>
     </div>
