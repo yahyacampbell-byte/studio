@@ -17,7 +17,7 @@ import { COGNITIVE_GAMES, PROFILING_GAMES_COUNT } from '@/lib/constants';
 
 export default function InsightsPage() {
   const { isAuthenticated, isLoadingAuth } = useRequireAuth();
-  const { activities, aiResults, setAIResults, isLoadingAI, setIsLoadingAI, clearActivities } = useActivity();
+  const { activities, aiResults, setAIResults, isLoadingAI, setIsLoadingAI } = useActivity();
   const { toast } = useToast();
 
   const profilingGameIds = useMemo(() => COGNITIVE_GAMES.slice(0, PROFILING_GAMES_COUNT).map(g => g.id), []);
@@ -124,7 +124,7 @@ export default function InsightsPage() {
     const remainingGames = PROFILING_GAMES_COUNT - new Set(activities.filter(act => profilingGameIds.includes(act.gameId)).map(act => act.gameId)).size;
     analysisCardDescription = `You have ${activities.length} game activities logged. Please complete all ${PROFILING_GAMES_COUNT} Profiling Analysis Games to enable analysis. You have ${remainingGames} more profiling game(s) to play.`;
   } else {
-    analysisCardDescription = `You have ${activities.length} game activities logged, including all profiling games. Click below to process them and reveal your cognitive strengths and insights.`;
+    analysisCardDescription = `You have ${activities.length} game activities logged, including all profiling games. Click below to process them and reveal your cognitive strengths and insights. This analysis will use all your recorded gameplay.`;
   }
 
 
@@ -167,11 +167,6 @@ export default function InsightsPage() {
               <Button asChild size="lg" className="w-full sm:w-auto">
                 <Link href="/games">Play Games to Get Started</Link>
               </Button>
-            )}
-             {activities.length > 0 && (
-                <Button onClick={clearActivities} variant="outline" disabled={isLoadingAI} className="w-full sm:w-auto sm:ml-4">
-                    Clear All Activity Data
-                </Button>
             )}
           </CardContent>
         </Card>

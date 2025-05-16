@@ -9,7 +9,7 @@ import { v4 as uuidv4 } from 'uuid';
 interface ActivityContextType {
   activities: GameActivity[];
   addActivity: (activityData: { gameId: GameId; gameTitle: string; score: number; activityDuration: number }) => void;
-  clearActivities: () => void;
+  // clearActivities: () => void; // Removed
   aiResults: AIAnalysisResults | null;
   setAIResults: (results: AIAnalysisResults | null) => void;
   isLoadingAI: boolean;
@@ -73,12 +73,13 @@ export const ActivityProvider = ({ children }: { children: ReactNode }) => {
     });
   }, [updateLocalStorageActivities]);
 
-  const clearActivities = useCallback(() => {
-    setActivities([]);
-    updateLocalStorageActivities([]);
-    setAIResultsState(null); 
-    updateLocalStorageAIResults(null);
-  }, [updateLocalStorageActivities, updateLocalStorageAIResults]);
+  // Removed clearActivities function
+  // const clearActivities = useCallback(() => {
+  //   setActivities([]);
+  //   updateLocalStorageActivities([]);
+  //   setAIResultsState(null); 
+  //   updateLocalStorageAIResults(null);
+  // }, [updateLocalStorageActivities, updateLocalStorageAIResults]);
 
   const setAIResults = useCallback((results: AIAnalysisResults | null) => {
     setAIResultsState(results);
@@ -87,7 +88,7 @@ export const ActivityProvider = ({ children }: { children: ReactNode }) => {
 
 
   return (
-    <ActivityContext.Provider value={{ activities, addActivity, clearActivities, aiResults, setAIResults, isLoadingAI, setIsLoadingAI }}>
+    <ActivityContext.Provider value={{ activities, addActivity, aiResults, setAIResults, isLoadingAI, setIsLoadingAI }}>
       {children}
     </ActivityContext.Provider>
   );
