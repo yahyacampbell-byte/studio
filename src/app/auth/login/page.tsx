@@ -2,10 +2,10 @@
 "use client";
 
 import React, { useEffect } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth, User } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Brain, LogIn } from 'lucide-react';
+import { LogIn } from 'lucide-react'; // Removed Brain
 import { APP_NAME } from '@/lib/constants';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -13,7 +13,7 @@ import Image from 'next/image';
 import { Separator } from '@/components/ui/separator';
 
 export default function LoginPage() {
-  const { login, isAuthenticated, isLoadingAuth } = useAuth();
+  const { login, isAuthenticated, isLoadingAuth, user } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -23,18 +23,30 @@ export default function LoginPage() {
   }, [isAuthenticated, isLoadingAuth, router]);
 
   const handleDemoLogin = () => {
-    login({ 
+    const demoUser: User = { 
       id: 'demo-user-123', 
       email: 'demo@example.com',
-      cognifitUserToken: 'DEMO_COGNIFIT_USER_TOKEN' 
-    });
+      firstName: 'Demo',
+      lastName: 'User',
+      birthDate: '1990-01-01', // Mock birth date
+      sex: '1', // Mock sex (Male)
+      cognifitUserToken: null, // Set to null to test on-demand CogniFit registration
+    };
+    login(demoUser);
     router.push('/dashboard');
   };
   
   if (isLoadingAuth || (!isLoadingAuth && isAuthenticated)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10">
-        <Brain className="h-12 w-12 animate-pulse text-primary" />
+         <Image 
+            src="https://www.xillo.io/wp-content/uploads/2023/07/Xillo.svg" 
+            alt={`${APP_NAME} Logo`}
+            data-ai-hint="logo"
+            width={48} 
+            height={48}
+            className="h-12 w-12 animate-pulse text-primary"
+        />
         <p className="ml-4 text-lg text-muted-foreground">Loading...</p>
       </div>
     );
@@ -48,9 +60,9 @@ export default function LoginPage() {
             src="https://www.xillo.io/wp-content/uploads/2023/07/Xillo.svg" 
             alt={`${APP_NAME} Logo`}
             data-ai-hint="logo"
-            width={133} // Approx 4.16 aspect ratio for 32px height
+            width={133} 
             height={32}
-            className="h-8" // Adjust height as needed
+            className="h-8" 
         />
         <span className="ml-3 text-3xl font-semibold sr-only">{APP_NAME}</span>
       </Link>

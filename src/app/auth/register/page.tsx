@@ -17,11 +17,11 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { DatePicker } from '@/components/ui/date-picker';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth, User } from '@/context/AuthContext';
 import { APP_NAME } from '@/lib/constants';
-import { registerCognifitUser } from '@/services/cognifitService';
+// Removed: import { registerCognifitUser } from '@/services/cognifitService';
 import { useToast } from '@/hooks/use-toast';
-import { Brain, Loader2, UserPlus, User, Mail, Lock, CalendarDays, UsersRound } from 'lucide-react';
+import { Loader2, UserPlus, User as UserIcon, Mail, Lock, UsersRound } from 'lucide-react'; // Renamed User to UserIcon
 
 const registrationFormSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -45,8 +45,8 @@ export default function RegisterPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const currentYear = new Date().getFullYear();
-  const fromYear = currentYear - 100; // Allow selection up to 100 years ago
-  const toYear = currentYear - 5; // Minimum age of 5, for example
+  const fromYear = currentYear - 100; 
+  const toYear = currentYear - 5; 
 
   const form = useForm<RegistrationFormValues>({
     resolver: zodResolver(registrationFormSchema),
@@ -71,29 +71,25 @@ export default function RegisterPage() {
     try {
       const appUserId = uuidv4();
       
-      const cognifitUserToken = await registerCognifitUser({
-        appUserId,
+      // CogniFit registration is deferred. Login to app with cognifitUserToken: null
+      const appUser: User = {
+        id: appUserId,
+        email: data.email,
         firstName: data.firstName,
         lastName: data.lastName,
         birthDate: format(data.birthDate, "yyyy-MM-dd"),
-        sex: data.sex === '1' ? 1 : 2,
-        locale: 'en', // Defaulting to English locale
-      });
+        sex: data.sex as '1' | '2',
+        cognifitUserToken: null, // No CogniFit token at app registration
+      };
+      
+      login(appUser);
 
-      if (cognifitUserToken) {
-        login({
-          id: appUserId,
-          email: data.email,
-          cognifitUserToken,
-        });
-        toast({
-          title: "Registration Successful!",
-          description: `Welcome to ${APP_NAME}! You are now logged in.`,
-        });
-        router.push('/dashboard');
-      } else {
-        throw new Error("Failed to obtain CogniFit user token.");
-      }
+      toast({
+        title: "Registration Successful!",
+        description: `Welcome to ${APP_NAME}! You are now logged in.`,
+      });
+      router.push('/dashboard');
+
     } catch (error) {
       console.error("Registration error:", error);
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred.";
@@ -116,7 +112,7 @@ export default function RegisterPage() {
             data-ai-hint="logo"
             width={48} 
             height={48}
-            className="h-12 w-12 animate-pulse text-primary" // Replaced Brain Icon with Image
+            className="h-12 w-12 animate-pulse text-primary"
         />
         <p className="ml-4 text-lg text-muted-foreground">Loading...</p>
       </div>
@@ -153,7 +149,7 @@ export default function RegisterPage() {
                       <FormLabel>First Name</FormLabel>
                       <FormControl>
                         <div className="relative">
-                          <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                           <Input placeholder="John" {...field} className="pl-10" />
                         </div>
                       </FormControl>
@@ -169,7 +165,7 @@ export default function RegisterPage() {
                       <FormLabel>Last Name</FormLabel>
                        <FormControl>
                         <div className="relative">
-                           <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                           <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                            <Input placeholder="Doe" {...field} className="pl-10" />
                         </div>
                       </FormControl>

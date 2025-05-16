@@ -5,10 +5,13 @@ import React, { createContext, useContext, useState, useEffect, ReactNode, useCa
 import { useRouter } from 'next/navigation';
 import { LOCAL_STORAGE_AUTH_KEY } from '@/lib/constants';
 
-
-interface User {
+export interface User {
   id: string;
-  email?: string; // Optional for demo
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  birthDate?: string; // Stored as YYYY-MM-DD
+  sex?: '1' | '2';
   cognifitUserToken: string | null;
 }
 
@@ -16,8 +19,9 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoadingAuth: boolean;
-  login: (userData: Pick<User, 'id' | 'cognifitUserToken'> & { email?: string }) => void;
+  login: (userData: User) => void;
   logout: () => void;
+  updateCognifitUserToken: (token: string) => void;
   cognifitUserToken: string | null; // Convenience accessor
 }
 
@@ -58,24 +62,30 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
-  const login = useCallback((userData: Pick<User, 'id' | 'cognifitUserToken'> & { email?: string }) => {
-    const newUser: User = {
-        id: userData.id,
-        email: userData.email,
-        cognifitUserToken: userData.cognifitUserToken,
-    };
-    const newAuthState: AuthState = { user: newUser, isAuthenticated: true };
+  const login = useCallback((userData: User) => {
+    const newAuthState: AuthState = { user: userData, isAuthenticated: true };
     setAuthState(newAuthState);
     updateLocalStorageAuth(newAuthState);
-    // router.push('/dashboard'); // Redirect after login
   }, [updateLocalStorageAuth]);
 
   const logout = useCallback(() => {
     const newAuthState: AuthState = { user: null, isAuthenticated: false };
     setAuthState(newAuthState);
     updateLocalStorageAuth(newAuthState);
-    router.push('/auth/login'); // Redirect to login after logout
+    router.push('/auth/login'); 
   }, [updateLocalStorageAuth, router]);
+
+  const updateCognifitUserToken = useCallback((token: string) => {
+    setAuthState(prevAuthState => {
+      if (prevAuthState.user) {
+        const updatedUser = { ...prevAuthState.user, cognifitUserToken: token };
+        const newAuthState = { ...prevAuthState, user: updatedUser };
+        updateLocalStorageAuth(newAuthState);
+        return newAuthState;
+      }
+      return prevAuthState;
+    });
+  }, [updateLocalStorageAuth]);
 
   return (
     <AuthContext.Provider value={{ 
@@ -84,6 +94,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         isLoadingAuth, 
         login, 
         logout,
+        updateCognifitUserToken,
         cognifitUserToken: authState.user?.cognifitUserToken || null
     }}>
       {children}
