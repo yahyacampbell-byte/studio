@@ -62,6 +62,8 @@ const personalizedInsightsPrompt = ai.definePrompt({
   Then, provide recommendations on how the user can improve their skills in specific areas.
   The insights and recommendations should be clear, concise, and actionable.
   Focus on the patterns emerging from the summarized data.
+  
+  IMPORTANT: When mentioning specific games in your insights or recommendations, please use their full titles as provided in the summary (e.g., 'Math Madness', 'Jigsaw 9'). Do NOT use API keys or abbreviations.
   `,
 });
 
@@ -99,3 +101,4 @@ const generatePersonalizedInsightsFlow = ai.defineFlow(
     return output!;
   }
 );
+
