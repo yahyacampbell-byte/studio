@@ -2,7 +2,7 @@
 "use client";
 
 import type { AIAnalysisResults } from '@/lib/types';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 interface ProgressTrendChartProps {
@@ -17,9 +17,9 @@ export function ProgressTrendChart({ aiAnalysisHistory }: ProgressTrendChartProp
           <CardTitle>Cognitive Score Trend</CardTitle>
           <CardDescription>Your overall cognitive score trend will appear here.</CardDescription>
         </CardHeader>
-        <CardContent className="h-[300px] flex items-center justify-center">
-          <p className="text-muted-foreground">
-            {(!aiAnalysisHistory || aiAnalysisHistory.length === 0) 
+        <CardContent className="h-[200px] flex flex-col items-center justify-center"> {/* Reduced height */}
+          <p className="text-muted-foreground text-center">
+            {(!aiAnalysisHistory || aiAnalysisHistory.length === 0)
               ? "No analysis data available yet. Analyze your activity on the Insights page."
               : "At least two analyses are needed to show a trend. Keep playing and analyzing!"}
           </p>
@@ -34,59 +34,72 @@ export function ProgressTrendChart({ aiAnalysisHistory }: ProgressTrendChartProp
       : 0;
     return {
       date: new Date(analysis.lastAnalyzed).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
-      averageScore: parseFloat(averageScore.toFixed(1)), // Keep one decimal place
+      averageScore: parseFloat(averageScore.toFixed(1)),
     };
   });
+
+  const latestScoreData = chartData[chartData.length - 1];
 
   return (
     <Card className="shadow-lg">
       <CardHeader>
         <CardTitle>Overall Cognitive Score Trend</CardTitle>
         <CardDescription>
-          Track the average of your intelligence scores over time. Scores are from 0 to 100.
+          Average of your intelligence scores over time (0-100).
+          {latestScoreData && (
+            <span className="block text-sm font-semibold text-primary mt-1">
+              Latest Average Score: {latestScoreData.averageScore}
+            </span>
+          )}
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={300}>
+      <CardContent className="pt-2"> {/* Reduced top padding */}
+        <ResponsiveContainer width="100%" height={150}> {/* Reduced height */}
           <LineChart
             data={chartData}
             margin={{
               top: 5,
-              right: 20, // Adjusted for better label visibility
-              left: 0,  // Adjusted
+              right: 10, 
+              left: -25, // Adjust to pull Y-axis labels (if any) closer or if axis is hidden
               bottom: 5,
             }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis 
-                dataKey="date" 
-                tick={{ fontSize: 12, fill: 'hsl(var(--foreground))' }} 
-                angle={-35} // Angle labels for better fit if many data points
-                textAnchor="end"
-                height={50} // Increase height for angled labels
-                interval="preserveStartEnd" // Show first and last, and some in between
+            {/* XAxis: Minimalist, only shows dates, no line/ticks */}
+            <XAxis
+                dataKey="date"
+                tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                tickLine={false}
+                axisLine={false}
+                interval="preserveStartEnd"
+                dy={5} // Pushes tick labels slightly down
             />
-            <YAxis 
-                domain={[0, 100]} 
-                tick={{ fontSize: 12, fill: 'hsl(var(--foreground))' }} 
+            {/* YAxis: Hidden for sparkline effect, but domain is set for scale */}
+            <YAxis
+                domain={[0, 100]}
+                tick={false}
+                axisLine={false}
+                tickLine={false}
+                width={0} // Effectively hide it
             />
             <Tooltip
-              contentStyle={{ 
-                backgroundColor: 'hsl(var(--popover))', 
+              contentStyle={{
+                backgroundColor: 'hsl(var(--popover))',
                 borderColor: 'hsl(var(--border))',
                 borderRadius: 'var(--radius)',
-                color: 'hsl(var(--popover-foreground))'
+                color: 'hsl(var(--popover-foreground))',
+                fontSize: '12px',
+                padding: '8px 12px'
               }}
               cursor={{ stroke: 'hsl(var(--accent))', strokeOpacity: 0.5, strokeWidth: 1 }}
             />
-            <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '20px' }} />
-            <Line 
-                type="monotone" 
-                dataKey="averageScore" 
-                stroke="hsl(var(--primary))" 
-                strokeWidth={2} 
-                activeDot={{ r: 6 }} 
-                name="Average Score"
+            <Line
+                type="monotone"
+                dataKey="averageScore"
+                stroke="hsl(var(--primary))"
+                strokeWidth={2}
+                dot={{ r: 3, fill: 'hsl(var(--primary))', strokeWidth: 1, stroke: 'hsl(var(--background))' }}
+                activeDot={{ r: 5, strokeWidth: 2, fill: 'hsl(var(--primary))', stroke: 'hsl(var(--background))' }}
+                name="Avg. Score"
             />
           </LineChart>
         </ResponsiveContainer>
