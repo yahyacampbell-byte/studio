@@ -24,40 +24,59 @@ interface DatePickerProps {
   showMonthDropdown?: boolean;
 }
 
-export function DatePicker({ value, onChange, disabled, fromYear, toYear, captionLayout = "buttons", showMonthDropdown = true }: DatePickerProps) {
-  const currentYear = new Date().getFullYear();
+export function DatePicker({ 
+  value, 
+  onChange, 
+  disabled, 
+  fromYear, 
+  toYear, 
+  captionLayout = "buttons", 
+  showMonthDropdown = true 
+}: DatePickerProps) {
+  
+  // Initialize displayedMonth ensuring it's the first of the month
+  const [displayedMonth, setDisplayedMonth] = React.useState(() => {
+    if (value) {
+      return new Date(value.getFullYear(), value.getMonth(), 1);
+    }
+    // Default to January of the `toYear` or current year if `toYear` is not provided
+    return new Date(toYear || new Date().getFullYear(), 0, 1); 
+  });
 
-  // State for the displayed month, controlled by DatePicker
-  const [displayedMonth, setDisplayedMonth] = React.useState(
-    value || new Date(toYear || currentYear, 0, 1) // Default to first day of the month of `toYear` or current year
-  );
-
-  // Effect to update displayedMonth if the selected value (prop `value`) changes externally
+  // Effect to sync displayedMonth if the EXTERNAL `value` prop changes
   React.useEffect(() => {
     if (value) {
-      // Check if the new value's month is different from the current displayedMonth
-      // This check helps prevent unnecessary updates if the month is already correct
-      if (value.getFullYear() !== displayedMonth.getFullYear() || value.getMonth() !== displayedMonth.getMonth()) {
-        setDisplayedMonth(new Date(value.getFullYear(), value.getMonth(), 1));
+      const newMonthBasedOnValue = new Date(value.getFullYear(), value.getMonth(), 1);
+      if (newMonthBasedOnValue.getTime() !== displayedMonth.getTime()) {
+        setDisplayedMonth(newMonthBasedOnValue);
       }
     } else {
-      // If value is cleared, reset displayedMonth to a default
-      // (e.g., first month of `toYear` or current year)
-      // Check if displayedMonth is already the default to prevent loop if toYear/currentYear changes unnecessarily
-      const defaultResetDate = new Date(toYear || currentYear, 0, 1);
-      if (displayedMonth.getFullYear() !== defaultResetDate.getFullYear() || displayedMonth.getMonth() !== defaultResetDate.getMonth()) {
-        setDisplayedMonth(defaultResetDate);
-      }
+      // If value is cleared (becomes undefined), reset displayedMonth to a sensible default.
+      // This ensures the calendar doesn't get stuck on a month if the date is cleared externally.
+      const defaultResetDate = new Date(toYear || new Date().getFullYear(), 0, 1);
+       if (displayedMonth.getTime() !== defaultResetDate.getTime()) {
+         setDisplayedMonth(defaultResetDate);
+       }
     }
-  }, [value, toYear, currentYear]); // Removed displayedMonth from dependencies
-  
-  const handleDateSelect = (selectedDate?: Date) => {
-    onChange(selectedDate); // Propagate to form hook
-    // When a date is selected, DayPicker itself usually navigates its view.
-    // If `month` prop is controlled, we might need to update `displayedMonth` here too
-    // to ensure the calendar view snaps to the selected date's month.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value, toYear]); // displayedMonth is intentionally omitted to prevent loops with internal navigation
+
+  const handleMonthNavigation = (newlyNavigatedMonth: Date) => {
+    // This function is called by DayPicker's onMonthChange (triggered by arrows or our custom dropdown)
+    const firstOfNavigatedMonth = new Date(newlyNavigatedMonth.getFullYear(), newlyNavigatedMonth.getMonth(), 1);
+    if (displayedMonth.getTime() !== firstOfNavigatedMonth.getTime()) {
+      setDisplayedMonth(firstOfNavigatedMonth);
+    }
+  };
+
+  const handleDateSelection = (selectedDate?: Date) => {
+    onChange(selectedDate); // Call the prop from react-hook-form (or parent component)
     if (selectedDate) {
-        setDisplayedMonth(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1));
+      // When a date is selected, update displayedMonth to the month of the selected date
+      const monthOfSelectedDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
+      if (displayedMonth.getTime() !== monthOfSelectedDate.getTime()) {
+        setDisplayedMonth(monthOfSelectedDate);
+      }
     }
   };
 
@@ -79,17 +98,15 @@ export function DatePicker({ value, onChange, disabled, fromYear, toYear, captio
         <Calendar
           mode="single"
           selected={value}
-          onSelect={handleDateSelect}
+          onSelect={handleDateSelection}
           disabled={disabled}
           captionLayout={captionLayout}
           fromYear={fromYear}
           toYear={toYear}
           showMonthDropdown={showMonthDropdown}
           
-          // Controlled month view
           month={displayedMonth}
-          onMonthChange={setDisplayedMonth}
-          // initialFocus is ignored by react-day-picker when `month` is controlled.
+          onMonthChange={handleMonthNavigation}
         />
       </PopoverContent>
     </Popover>

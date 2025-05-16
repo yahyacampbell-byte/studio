@@ -12,16 +12,17 @@ import { buttonVariants } from "@/components/ui/button"
 
 export interface CustomCalendarProps extends Omit<React.ComponentProps<typeof DayPicker>, 'month' | 'onMonthChange'> {
   showMonthDropdown?: boolean;
-  month?: Date; // Make month prop explicit for controlled component
-  onMonthChange?: (date: Date) => void; // Make onMonthChange prop explicit
+  month?: Date; 
+  onMonthChange?: (date: Date) => void; 
 }
 
 
-const InternalDropdownOverride: React.FC<DayPickerDropdownProps & { showMonthDropdown?: boolean }> = ({ name, showMonthDropdown, children, ...props }) => {
-  if (name === 'months' && showMonthDropdown === false) {
-    return null; 
-  }
-
+const InternalDropdownOverride: React.FC<DayPickerDropdownProps & { 
+  showMonthDropdown?: boolean;
+  topLevelOnMonthChange?: (date: Date) => void;
+  currentDisplayMonth?: Date;
+}> = ({ name, showMonthDropdown, children, topLevelOnMonthChange, currentDisplayMonth, ...props }) => {
+  
   const selectClassName = cn(
     "rdp-dropdown", 
     "mx-1",
@@ -37,15 +38,61 @@ const InternalDropdownOverride: React.FC<DayPickerDropdownProps & { showMonthDro
     name === 'months' ? "rdp-dropdown_month" : "rdp-dropdown_year"
   );
 
+  if (name === 'months') {
+    if (showMonthDropdown === false) {
+      return null; 
+    }
+    return (
+      <select
+        name={name}
+        aria-label={props['aria-label']}
+        className={selectClassName}
+        value={props.value}
+        onChange={(e) => {
+          const newMonth = Number(e.target.value);
+          props.onChange?.(newMonth); // Call react-day-picker's internal handler
+          if (topLevelOnMonthChange && currentDisplayMonth) {
+            const currentYear = currentDisplayMonth.getFullYear();
+            topLevelOnMonthChange(new Date(currentYear, newMonth, 1));
+          }
+        }}
+        disabled={props.disabled}
+      >
+        {children}
+      </select>
+    );
+  }
+
+  if (name === 'years') {
+     return (
+      <select
+        name={name}
+        aria-label={props['aria-label']}
+        className={selectClassName}
+        value={props.value}
+        onChange={(e) => {
+          const newYear = Number(e.target.value);
+          props.onChange?.(newYear); // Call react-day-picker's internal handler
+          if (topLevelOnMonthChange && currentDisplayMonth) {
+            const currentMonth = currentDisplayMonth.getMonth();
+            topLevelOnMonthChange(new Date(newYear, currentMonth, 1));
+          }
+        }}
+        disabled={props.disabled}
+      >
+        {children}
+      </select>
+    );
+  }
+
+  // Fallback for other dropdown types if any, or if logic is bypassed
   return (
-    <select
+     <select
       name={name}
       aria-label={props['aria-label']}
       className={selectClassName}
       value={props.value}
-      onChange={(e) => {
-        props.onChange?.(Number(e.target.value)) 
-      }}
+      onChange={(e) => props.onChange?.(Number(e.target.value))}
       disabled={props.disabled}
     >
       {children}
@@ -59,8 +106,8 @@ function Calendar({
   classNames,
   showOutsideDays = true,
   showMonthDropdown = true, 
-  month: controlledMonth, // Use the controlled month prop
-  onMonthChange: controlledOnMonthChange, // Use the controlled onMonthChange prop
+  month: controlledMonth, 
+  onMonthChange: controlledOnMonthChange, 
   ...props
 }: CustomCalendarProps) { 
 
@@ -72,12 +119,15 @@ function Calendar({
 
   if ((props.captionLayout === 'dropdown' || props.captionLayout === 'dropdown-buttons')) {
     componentsConfig.Dropdown = (dropdownProps: DayPickerDropdownProps) => (
-      <InternalDropdownOverride {...dropdownProps} showMonthDropdown={showMonthDropdown} />
+      <InternalDropdownOverride 
+        {...dropdownProps} 
+        showMonthDropdown={showMonthDropdown}
+        topLevelOnMonthChange={controlledOnMonthChange}
+        currentDisplayMonth={controlledMonth} 
+      />
     );
   }
   
-  // If month is controlled, defaultMonth and initialFocus are ignored by DayPicker.
-  // If not controlled, DayPicker manages its own state.
   const dayPickerProps = {
     ...props,
     month: controlledMonth,
@@ -125,11 +175,10 @@ function Calendar({
         ...classNames,
       }}
       components={componentsConfig}
-      {...dayPickerProps} // Spread all props, including controlled month/onMonthChange
+      {...dayPickerProps} 
     />
   )
 }
 Calendar.displayName = "Calendar"
 
 export { Calendar }
-
