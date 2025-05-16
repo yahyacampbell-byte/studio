@@ -65,27 +65,43 @@ export async function registerCognifitUser(
       body: JSON.stringify(requestBody),
     });
 
-    const data: CognifitUserRegistrationResponse = await response.json();
+    const responseText = await response.text(); // Get response as text first
 
     if (!response.ok) {
-      console.error("CogniFit API Error Response:", data);
-      throw new Error(
-        `CogniFit API error: ${data.errorMessage || data.error || response.statusText}`
-      );
+      console.error(`CogniFit API Error: ${response.status} ${response.statusText}. Response body: ${responseText}`);
+      // Try to parse as JSON to extract a structured error message if available
+      try {
+        const errorData: CognifitUserRegistrationResponse = JSON.parse(responseText);
+        throw new Error(
+          `CogniFit API error (${response.status}): ${errorData.errorMessage || errorData.error || responseText}`
+        );
+      } catch (parseError) {
+        // If parsing fails, use the raw text
+        throw new Error(
+          `CogniFit API error (${response.status}): ${responseText || response.statusText}`
+        );
+      }
     }
+
+    // If response.ok, try to parse the text as JSON for the expected success response
+    const data: CognifitUserRegistrationResponse = JSON.parse(responseText);
 
     if (data.user_token) {
       console.log(`Successfully registered user ${internalUserEmail} with CogniFit. User token obtained.`);
       return data.user_token;
     } else {
-      console.error("CogniFit API did not return a user_token:", data);
+      console.error("CogniFit API did not return a user_token in a successful response:", data);
       throw new Error(
-        `CogniFit registration failed: ${data.errorMessage || data.error || "No user_token received."}`
+        `CogniFit registration successful but no user_token received: ${data.errorMessage || data.error || "Unknown issue."}`
       );
     }
   } catch (error) {
     console.error("Error during CogniFit user registration:", error);
     if (error instanceof Error) {
+        // Avoid re-wrapping if it's already one of our specific errors
+        if (error.message.startsWith("CogniFit API error") || error.message.startsWith("CogniFit registration successful but no user_token received")) {
+            throw error;
+        }
         throw new Error(`Failed to register user with CogniFit: ${error.message}`);
     }
     throw new Error("An unknown error occurred during CogniFit user registration.");
@@ -101,46 +117,41 @@ export async function registerCognifitUser(
 export async function getCognifitSDKVersion(): Promise<string> {
     try {
         const response = await fetch(`${COGNIFIT_API_BASE_URL}/description/versions/sdkjs?v=2.0`);
+        const responseText = await response.text(); // Get text first
+
         if (!response.ok) {
-            const errorData = await response.text();
-            console.error("CogniFit SDK Version API Error Response Text:", errorData);
-            throw new Error(`Failed to fetch SDK version: ${response.statusText} - ${errorData}`);
+            console.error(`CogniFit SDK Version API Error: ${response.status} ${response.statusText}. Response body: ${responseText}`);
+            throw new Error(`Failed to fetch SDK version (${response.status}): ${responseText || response.statusText}`);
         }
         
-        // The CogniFit documentation is slightly ambiguous here.
-        // It might return JSON like {"version": "X.Y.Z"} or just the version string.
-        // Let's try to parse as JSON first.
-        const contentType = response.headers.get("content-type");
-        if (contentType && contentType.includes("application/json")) {
-            const data = await response.json();
-            if (data && typeof data.version === 'string') {
-                return data.version;
-            } else if (data && typeof data === 'string') { // sometimes it's just a string in a json response
-                 return data.trim();
+        // Try to parse as JSON first, as this seems to be one expected format
+        try {
+            const jsonData = JSON.parse(responseText);
+            if (jsonData && typeof jsonData.version === 'string') {
+                return jsonData.version;
             }
-        }
-        
-        // If not JSON or JSON parsing failed/didn't find 'version', try as plain text.
-        // This requires re-cloning the response if already read as JSON, or careful handling.
-        // For simplicity, if the above fails, we assume it's plain text.
-        // A more robust solution might involve checking content-type more strictly or trying text() first.
-        // However, the initial call to response.json() consumes the body. 
-        // So, if it's plain text and json() fails, we need to fetch again or handle differently.
-        // Let's assume for now it's primarily JSON. If issues arise, this part may need refinement.
-        // Re-fetching as text if primary parsing fails:
-        const textData = await (await fetch(`${COGNIFIT_API_BASE_URL}/description/versions/sdkjs?v=2.0`)).text();
-        if (typeof textData === 'string' && /^\d+\.\d+\.\d+.*$/.test(textData.trim())) {
-             return textData.trim();
+            // Some APIs might return just a string within a JSON response body, e.g. "2.3.4"
+            if (jsonData && typeof jsonData === 'string' && /^\d+\.\d+\.\d+.*$/.test(jsonData.trim())) { // Regex to check for version-like string
+                return jsonData.trim();
+            }
+        } catch (e) {
+            // Not JSON, or JSON but not the expected structure. Proceed to check if plain text is the version.
         }
 
-        console.error("Unexpected SDK version response format. Tried JSON and Text. TextData:", textData);
-        throw new Error("Could not parse SDK version from CogniFit API.");
+        // If not valid JSON or not the expected JSON structure, check if the raw text is the version string
+        if (typeof responseText === 'string' && /^\d+\.\d+\.\d+.*$/.test(responseText.trim())) { // Regex to check for version-like string
+             return responseText.trim();
+        }
+
+        console.error("Unexpected SDK version response format. Response text:", responseText);
+        throw new Error("Could not parse SDK version from CogniFit API response.");
 
     } catch (error) {
         console.error("Error fetching CogniFit SDK version:", error);
-        if (error instanceof Error) {
-            throw new Error(`Failed to get CogniFit SDK version: ${error.message}`);
+        if (error instanceof Error && (error.message.startsWith("Failed to fetch SDK version") || error.message.startsWith("Could not parse SDK version"))) {
+            throw error;
         }
-        throw new Error("An unknown error occurred while fetching CogniFit SDK version.");
+        throw new Error(`An unknown error occurred while fetching CogniFit SDK version: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
+
