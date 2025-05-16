@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { COGNITIVE_GAMES, CognitiveGame, PROFILING_GAMES_COUNT, MULTIPLE_INTELLIGENCES } from '@/lib/constants';
 import type { IntelligenceId } from '@/lib/types';
@@ -14,7 +14,7 @@ import { useActivity } from '@/context/ActivityContext';
 
 export default function GamesPage() {
   const { isAuthenticated, isLoadingAuth } = useRequireAuth();
-  const { activities, aiResults } = useActivity();
+  const { activities, latestAIAnalysis } = useActivity(); // Use latestAIAnalysis
   const [selectedGame, setSelectedGame] = useState<CognitiveGame | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -29,27 +29,46 @@ export default function GamesPage() {
     setSelectedGame(null);
   };
 
-  const playedGameIds = useMemo(() => new Set(activities.map(act => act.gameId)), [activities]);
+  const latestAnalyzedTimestamp = useMemo(() => {
+    return latestAIAnalysis?.lastAnalyzed ? new Date(latestAIAnalysis.lastAnalyzed).getTime() : 0;
+  }, [latestAIAnalysis]);
+
+  // For determining if profiling milestone is met (based on all-time plays)
+  const allTimePlayedGameIds = useMemo(() => new Set(activities.map(act => act.gameId)), [activities]);
 
   const allProfilingGameModels = useMemo(() => COGNITIVE_GAMES.slice(0, PROFILING_GAMES_COUNT), []);
   const allEnhancementGameModels = useMemo(() => COGNITIVE_GAMES.slice(PROFILING_GAMES_COUNT), []);
 
   const isProfilingComplete = useMemo(() => {
     if (allProfilingGameModels.length === 0) return true;
-    return allProfilingGameModels.every(game => playedGameIds.has(game.id));
-  }, [allProfilingGameModels, playedGameIds]);
+    return allProfilingGameModels.every(game => allTimePlayedGameIds.has(game.id));
+  }, [allProfilingGameModels, allTimePlayedGameIds]);
+
+
+  // For display on GameCard (played since last analysis or ever if no analysis yet)
+  const getDisplayAsPlayedStatus = useCallback((gameId: string): boolean => {
+    const gameActivities = activities.filter(act => act.gameId === gameId);
+    if (gameActivities.length === 0) return false; // Never played
+
+    if (latestAnalyzedTimestamp === 0) { // No analysis performed yet
+        return true; // Any play counts as "played"
+    }
+
+    // Check if any play of this game occurred AFTER the last analysis timestamp
+    return gameActivities.some(act => new Date(act.timestamp).getTime() > latestAnalyzedTimestamp);
+  }, [activities, latestAnalyzedTimestamp]);
+  
 
   const recommendedGames = useMemo(() => {
-    if (!aiResults || !aiResults.intelligenceScores || aiResults.intelligenceScores.length === 0) {
+    if (!latestAIAnalysis || !latestAIAnalysis.intelligenceScores || latestAIAnalysis.intelligenceScores.length === 0) {
       return [];
     }
 
-    const scores = [...aiResults.intelligenceScores].sort((a, b) => a.score - b.score);
+    const scores = [...latestAIAnalysis.intelligenceScores].sort((a, b) => a.score - b.score);
     
     const recommendations: CognitiveGame[] = [];
     const recommendedGameIds = new Set<string>();
 
-    // Target 2 weakest, 1 strongest
     const weakestIntelligences = scores.slice(0, 2).map(s => s.intelligence);
     const strongestIntelligences = scores.length > 2 ? scores.slice(scores.length -1).map(s => s.intelligence) : [];
     
@@ -60,22 +79,22 @@ export default function GamesPage() {
 
 
     for (const targetInt of targetIntelligences) {
-      if (recommendations.length >= 3) break; // Max 3-4 recommendations
+      if (recommendations.length >= 3) break; 
 
       const gamesForIntelligence = COGNITIVE_GAMES.filter(game => 
         game.assessesIntelligences.includes(targetInt) && !recommendedGameIds.has(game.id)
       );
-
-      const unplayedGames = gamesForIntelligence.filter(game => !playedGameIds.has(game.id));
-      const playedGames = gamesForIntelligence.filter(game => playedGameIds.has(game.id));
+      
+      // Prioritize games not played in the current cycle (since last analysis)
+      const unplayedThisCycle = gamesForIntelligence.filter(game => !getDisplayAsPlayedStatus(game.id));
+      const playedThisCycle = gamesForIntelligence.filter(game => getDisplayAsPlayedStatus(game.id));
       
       let gameToRecommend: CognitiveGame | undefined = undefined;
 
-      if (unplayedGames.length > 0) {
-        gameToRecommend = unplayedGames[0]; // Pick the first unplayed one
-      } else if (playedGames.length > 0) {
-        // Optional: pick a played game that hasn't been played most recently, or just the first one
-        gameToRecommend = playedGames[0]; 
+      if (unplayedThisCycle.length > 0) {
+        gameToRecommend = unplayedThisCycle[0]; 
+      } else if (playedThisCycle.length > 0) {
+        gameToRecommend = playedThisCycle[0]; 
       }
 
       if (gameToRecommend) {
@@ -84,32 +103,34 @@ export default function GamesPage() {
       }
     }
     return recommendations;
-  }, [aiResults, playedGameIds]);
+  }, [latestAIAnalysis, getDisplayAsPlayedStatus]);
 
 
-  const filterAndSortGames = (games: CognitiveGame[]) => {
+  const filterAndSortGames = useCallback((games: CognitiveGame[]) => {
     const filtered = games.filter(game =>
       game.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       game.description.toLowerCase().includes(searchTerm.toLowerCase())
     );
-    const unplayed = filtered.filter(game => !playedGameIds.has(game.id));
-    const played = filtered.filter(game => playedGameIds.has(game.id));
-    return [...unplayed, ...played];
-  };
+    // Sort based on displayAsPlayed status: "unplayed" (for this cycle) first
+    const unplayedThisCycle = filtered.filter(game => !getDisplayAsPlayedStatus(game.id));
+    const playedThisCycle = filtered.filter(game => getDisplayAsPlayedStatus(game.id));
+    return [...unplayedThisCycle, ...playedThisCycle];
+  }, [searchTerm, getDisplayAsPlayedStatus]);
+
 
   const sortedFilteredProfilingGames = useMemo(
     () => filterAndSortGames(allProfilingGameModels),
-    [allProfilingGameModels, searchTerm, playedGameIds]
+    [allProfilingGameModels, filterAndSortGames] // filterAndSortGames depends on searchTerm and getDisplayAsPlayedStatus
   );
 
   const sortedFilteredEnhancementGames = useMemo(
     () => filterAndSortGames(allEnhancementGameModels),
-    [allEnhancementGameModels, searchTerm, playedGameIds]
+    [allEnhancementGameModels, filterAndSortGames]
   );
   
   const sortedFilteredRecommendedGames = useMemo(
     () => filterAndSortGames(recommendedGames),
-    [recommendedGames, searchTerm, playedGameIds]
+    [recommendedGames, filterAndSortGames]
   );
 
 
@@ -127,11 +148,11 @@ export default function GamesPage() {
   const recommendedGamesSection = sortedFilteredRecommendedGames.length > 0 && (
     <section className="space-y-4">
       <div className="flex items-center gap-2">
-        <Lightbulb className="h-6 w-6 text-destructive" /> {/* Changed icon to destructive for visibility */}
+        <Lightbulb className="h-6 w-6 text-destructive" />
         <h2 className="text-2xl font-semibold">Recommended For You</h2>
       </div>
       <p className="text-muted-foreground">
-        Based on your latest analysis, try these games to further develop your cognitive profile.
+        Based on your latest analysis, try these games to further develop your cognitive profile. Games played since your last analysis are at the bottom.
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
         {sortedFilteredRecommendedGames.map((game) => (
@@ -139,7 +160,7 @@ export default function GamesPage() {
             key={game.id}
             game={game}
             onPlay={handlePlayGame}
-            hasBeenPlayed={playedGameIds.has(game.id)}
+            hasBeenPlayed={getDisplayAsPlayedStatus(game.id)}
           />
         ))}
       </div>
@@ -153,9 +174,9 @@ export default function GamesPage() {
         <h2 className="text-2xl font-semibold">Profiling Analysis Games</h2>
       </div>
       <p className="text-muted-foreground">
-        {isProfilingComplete
-          ? `You've completed all ${PROFILING_GAMES_COUNT} profiling games! You can replay them below or proceed to enhancement games.`
-          : `Complete these ${PROFILING_GAMES_COUNT} games to build your initial Multiple Intelligence profile. Played games will move to the bottom of this list.`}
+        {isProfilingComplete // This check is based on all-time plays
+          ? `You've completed all ${PROFILING_GAMES_COUNT} profiling games! You can replay them below. Games played since your last analysis are at the bottom.`
+          : `Complete these ${PROFILING_GAMES_COUNT} games to build your initial Multiple Intelligence profile. Games played since your last analysis (or ever, if no analysis yet) are at the bottom.`}
       </p>
       {sortedFilteredProfilingGames.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -164,7 +185,7 @@ export default function GamesPage() {
               key={game.id}
               game={game}
               onPlay={handlePlayGame}
-              hasBeenPlayed={playedGameIds.has(game.id)}
+              hasBeenPlayed={getDisplayAsPlayedStatus(game.id)}
             />
           ))}
         </div>
@@ -183,8 +204,8 @@ export default function GamesPage() {
         <h2 className="text-2xl font-semibold">Profile Enhancement Games</h2>
       </div>
       <p className="text-muted-foreground">
-        {isProfilingComplete
-          ? "Now, enhance your profile with these games. Played games will move to the bottom of this list."
+        {isProfilingComplete // This check is based on all-time plays
+          ? "Now, enhance your profile with these games. Games played since your last analysis are at the bottom."
           : `After completing all ${PROFILING_GAMES_COUNT} profiling games, try these to further refine and enhance your cognitive skills.`}
       </p>
       {sortedFilteredEnhancementGames.length > 0 ? (
@@ -194,7 +215,7 @@ export default function GamesPage() {
               key={game.id}
               game={game}
               onPlay={handlePlayGame}
-              hasBeenPlayed={playedGameIds.has(game.id)}
+              hasBeenPlayed={getDisplayAsPlayedStatus(game.id)}
             />
           ))}
         </div>
@@ -214,7 +235,7 @@ export default function GamesPage() {
           <p className="text-muted-foreground">
             {isProfilingComplete
               ? "Enhance your cognitive profile or replay profiling games. Check out your recommendations below!"
-              : `Challenge your mind. Start with the ${PROFILING_GAMES_COUNT} Profiling Games to build your intelligence profile.`}
+              : `Challenge your mind. Start by playing all ${PROFILING_GAMES_COUNT} Profiling Games to build your intelligence profile.`}
           </p>
         </div>
 
@@ -231,7 +252,7 @@ export default function GamesPage() {
         
         {/* Render order logic */}
         {recommendedGamesSection}
-        {isProfilingComplete ? (
+        {isProfilingComplete ? ( // This condition is based on all-time plays
           <>
             {enhancementGamesSection}
             {profilingGamesSection} 
