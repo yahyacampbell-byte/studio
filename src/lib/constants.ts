@@ -7,7 +7,7 @@ import {
   Crosshair, ShieldAlert, Sigma, Minus, LineChart, Car, Gauge, Network, Bomb, Target,
   Dot, Rotate3d, Milestone, Copy, Image as ImageIcon, ToyBrick, Palette,
   Ship, Trees, HandHelping, TrendingUp, Route, Scale, Sparkles, ListChecks,
-  Layers, Scissors, Citrus, Hand, Box, Cuboid, Cube, CircleDot, CakeSlice, Flower2, // Replaced Balloon with Flower2
+  Layers, Scissors, Citrus, Hand, Box, Cuboid, CircleDot, CakeSlice, Flower2, // Replaced Balloon with Flower2
   Binary, CandyCane, Frog, Package, Dog, Rainbow, Rocket, Zap, Diamond // Added Diamond
 } from 'lucide-react';
 import type { IntelligenceId } from './types';
@@ -97,22 +97,22 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
     title: "Chess",
     description: "Strategic board game played against opponents or AI. Specifically trains perspective-taking and anticipatory social cognition through move prediction.",
     assessesIntelligences: ["Interpersonal", "Logical-Mathematical"],
-    iconName: "Crown", // Was "Chess"
+    iconName: "Crown",
     dataAiHint: "Track move prediction accuracy and response time to theory of mind."
   },
   {
     id: "SOLITAIRE",
     title: "Solitaire",
     description: "Classic card organization game played individually. Trains executive function through continuous self-assessment and strategy adjustment.",
-    assessesIntelligences: ["Intrapersonal", "Logical-Mathematical"], // Added Logical-Mathematical
-    iconName: "LayoutGrid", // Was "Cards"
+    assessesIntelligences: ["Intrapersonal", "Logical-Mathematical"],
+    iconName: "LayoutGrid",
     dataAiHint: "Analyze win rate and move efficiency for metacognitive skills."
   },
   {
     id: "ANT_ESCAPE",
     title: "Ant Escape",
-    description: "Navigation challenge through environmental obstacles, focusing on adaptive planning.", // Updated description
-    assessesIntelligences: ["Naturalistic", "Visual-Spatial"], // Added Visual-Spatial
+    description: "Navigation challenge through environmental obstacles, focusing on adaptive planning.",
+    assessesIntelligences: ["Naturalistic", "Visual-Spatial"],
     iconName: "Bug",
     dataAiHint: "Measure path optimization and error correction for ecological reasoning."
   },
@@ -122,32 +122,32 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
   {
     id: "WORD_QUEST",
     title: "Word Quest",
-    description: "Word search puzzle requiring players to find hidden terms in letter grids. Enhances vocabulary and logical deduction.", // Updated description
+    description: "Word search puzzle requiring players to find hidden terms in letter grids. Enhances vocabulary and logical deduction.",
     assessesIntelligences: ["Linguistic-Verbal", "Logical-Mathematical"],
-    iconName: "Search", // Was "SearchText"
+    iconName: "Search",
     dataAiHint: "Track scanning patterns (linear vs random) to assess search strategies."
   },
   {
     id: "CROSSROADS",
     title: "Crossroads",
-    description: "Traffic management simulation requiring strategic lane allocation. Enhances logical reasoning and spatial planning.", // Updated description
-    assessesIntelligences: ["Logical-Mathematical", "Visual-Spatial", "Interpersonal"], // Added Interpersonal
+    description: "Traffic management simulation requiring strategic lane allocation. Enhances logical reasoning and spatial planning.",
+    assessesIntelligences: ["Logical-Mathematical", "Visual-Spatial", "Interpersonal"],
     iconName: "TrafficCone",
     dataAiHint: "Analyze congestion patterns and decision latency under increasing complexity."
   },
   {
     id: "WINDOW_CLEANER", // This is "Butterfly Hunter"
     title: "Butterfly Hunter",
-    description: "Tracking game where players capture moving targets across a grid. Improves hand-eye coordination and visual tracking.", // Updated description
+    description: "Tracking game where players capture moving targets across a grid. Improves hand-eye coordination and visual tracking.",
     assessesIntelligences: ["Visual-Spatial", "Bodily-Kinesthetic"],
-    iconName: "Crosshair", // Was "Butterfly"
+    iconName: "Crosshair", // Replaced Butterfly
     dataAiHint: "Measure target acquisition speed and trajectory prediction accuracy."
   },
   {
     id: "LANE_SPLITTER", // This is "Lane Changer"
     title: "Lane Changer",
-    description: "Driving simulation requiring rapid lane switching decisions. Tests problem-solving and reaction speed.", // Updated description
-    assessesIntelligences: ["Bodily-Kinesthetic", "Visual-Spatial", "Logical-Mathematical"], // Added Logical-Mathematical
+    description: "Driving simulation requiring rapid lane switching decisions. Tests problem-solving and reaction speed.",
+    assessesIntelligences: ["Bodily-Kinesthetic", "Visual-Spatial", "Logical-Mathematical"],
     iconName: "Car",
     dataAiHint: "Track collision avoidance rate and steering correction frequency."
   },
@@ -167,7 +167,7 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
     title: "Piece Making",
     description: "Assembly puzzle requiring players to construct objects from scattered parts.",
     assessesIntelligences: ["Visual-Spatial", "Logical-Mathematical"],
-    iconName: "Puzzle", // Maintained Puzzle
+    iconName: "Puzzle",
     dataAiHint: "Measure rotation attempts and completion time to assess visual-spatial reasoning."
   },
   {
@@ -191,7 +191,7 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
     title: "Mahjong",
     description: "Tile-matching game pairing identical symbols under time pressure.",
     assessesIntelligences: ["Visual-Spatial"],
-    iconName: "LayoutGrid", // Was "Tiles"
+    iconName: "LayoutGrid", // Replaced Tiles
     dataAiHint: "Analyze tile selection speed and matching errors for visual processing speed."
   },
   {
@@ -255,7 +255,7 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
     title: "Tennis Bowling",
     description: "Hybrid sport game combining tennis mechanics with pin knockdown.",
     assessesIntelligences: ["Bodily-Kinesthetic"],
-    iconName: "Dot", // Was "Pin"
+    iconName: "Dot", // Replaced Pin
     dataAiHint: "Track spin application effectiveness through pin scattering patterns."
   },
   {
@@ -271,7 +271,7 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
     title: "Neuron Madness",
     description: "Modernized snake game with branching path mechanics.",
     assessesIntelligences: ["Visual-Spatial"],
-    iconName: "Milestone", // Was "Snake"
+    iconName: "Milestone", // Replaced Snake
     dataAiHint: "Analyze path prediction strategies in constrained environments."
   },
   {
@@ -287,7 +287,7 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
     title: "Visual Crossword",
     description: "Object naming game using fragmented visual clues.",
     assessesIntelligences: ["Linguistic-Verbal"],
-    iconName: "ImageIcon", // Using ImageIcon
+    iconName: "ImageIcon",
     dataAiHint: "Measure naming latency versus visual clue completeness percentage."
   },
   {
@@ -322,8 +322,6 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
     iconName: "Trees",
     dataAiHint: "Measure topographical memory and risk/reward choices in exploration."
   },
-
-  // --- New Games from user's latest list ---
   {
     id: "MIX_AND_MATCH",
     title: "Match it!",
@@ -361,7 +359,7 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
     title: "Bee Balloon",
     description: "Navigation game steering balloons through floral obstacle courses.",
     assessesIntelligences: ["Visual-Spatial", "Naturalistic"],
-    iconName: "Flower2", // Replaced Balloon with Flower2
+    iconName: "Flower2", // Replaced Balloon
     dataAiHint: "Track pollen collection route optimization in constrained spaces."
   },
   {
@@ -369,7 +367,7 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
     title: "Gem Breaker 3D", // Title updated
     description: "Three-dimensional brick breaker with depth perception challenges.",
     assessesIntelligences: ["Visual-Spatial", "Bodily-Kinesthetic"],
-    iconName: "Box", // Icon updated
+    iconName: "Box",
     dataAiHint: "Compare frontal vs depth-axis paddle accuracy for z-axis spatial awareness."
   },
   {
@@ -385,7 +383,7 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
     title: "Cube Foundry",
     description: "Spatial reasoning game extracting shapes from solid blocks.",
     assessesIntelligences: ["Visual-Spatial"],
-    iconName: "Cube",
+    iconName: "ToyBrick", // Replaced Cube
     dataAiHint: "Analyze waste material minimization during extraction processes."
   },
   {
@@ -449,7 +447,7 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
     title: "Color Rush",
     description: "Audio-visual reaction game matching colors to sound frequencies.",
     assessesIntelligences: ["Musical"],
-    iconName: "Palette", // Updated icon
+    iconName: "Palette",
     dataAiHint: "Track synesthesia-like cross-modal association strengths."
   },
   {
@@ -489,7 +487,7 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
     title: "Synaptix",
     description: "Neural pathway visualization game connecting cognitive concepts.",
     assessesIntelligences: ["Intrapersonal"],
-    iconName: "Brain", // Updated icon
+    iconName: "Brain",
     dataAiHint: "Measure concept association strength through connection density analysis."
   },
   {
@@ -513,7 +511,7 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
     title: "Chess Puzzle", // Title updated from CHESS_PVP
     description: "Tactical chess scenarios requiring optimal move sequences.",
     assessesIntelligences: ["Logical-Mathematical"],
-    iconName: "Crown", // Was ChessKing, using Crown for consistency
+    iconName: "Crown",
     dataAiHint: "Track move depth calculation and sacrifice evaluation accuracy."
   }
 ];
@@ -525,7 +523,7 @@ const iconMap: Record<string, LucideIcon> = {
   Crosshair, ShieldAlert, Sigma, Minus, LineChart, Car, Gauge, Network, Bomb, Target,
   Dot, Rotate3d, Milestone, Copy, ImageIcon, ToyBrick, Palette,
   Ship, Trees, HandHelping, TrendingUp, Route, Scale, Sparkles, ListChecks,
-  Layers, Scissors, Citrus, Hand, Box, Cuboid, Cube, CircleDot, CakeSlice, Flower2,
+  Layers, Scissors, Citrus, Hand, Box, Cuboid, CircleDot, CakeSlice, Flower2,
   Binary, CandyCane, Frog, Package, Dog, Rainbow, Rocket, Zap, Diamond
 };
 
@@ -549,10 +547,10 @@ export const COGNITIVE_GAMES: CognitiveGame[] = Array.from(gameDataMap.values())
 // IDs of the 4 games designated as "Profile Enhancement Games"
 // These will be excluded from the "Games by Intelligence" accordions and shown in their own section.
 export const ENHANCEMENT_GAME_IDS: string[] = [
-    "WORD_QUEST",       // Linguistic, Logical
-    "CROSSROADS",       // Logical, Spatial, Interpersonal (as per previous mapping)
-    "WINDOW_CLEANER",   // Spatial, Bodily-Kinesthetic (Butterfly Hunter)
-    "LANE_SPLITTER"     // Bodily-Kinesthetic, Spatial, Logical (Lane Changer)
+    "WORD_QUEST",
+    "CROSSROADS",
+    "WINDOW_CLEANER", // Butterfly Hunter
+    "LANE_SPLITTER"   // Lane Changer
 ];
 
 export interface Intelligence {
