@@ -53,20 +53,28 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           ))}
         </div>
         <div className="mt-auto pt-4 px-2">
-          {!isLoadingAuth && (
-            isAuthenticated ? (
-              <Button variant="outline" className="w-full justify-start" onClick={logout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                Logout
-              </Button>
-            ) : (
-              <Button variant="default" className="w-full justify-start" asChild>
-                <Link href="/auth/login">
-                  <LogIn className="mr-2 h-4 w-4" />
-                  Login
-                </Link>
-              </Button>
-            )
+          {isAuthenticated ? (
+            <Button 
+              variant="outline" 
+              className="w-full justify-start" 
+              onClick={logout} 
+              disabled={isLoadingAuth}
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Logout
+            </Button>
+          ) : (
+            <Button 
+              variant="default" 
+              className="w-full justify-start" 
+              asChild 
+              disabled={isLoadingAuth}
+            >
+              <Link href="/auth/login">
+                <LogIn className="mr-2 h-4 w-4" />
+                Login
+              </Link>
+            </Button>
           )}
         </div>
       </div>
@@ -96,19 +104,17 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </SheetContent>
           </Sheet>
           <div className="hidden lg:flex items-center gap-2">
-             {!isLoadingAuth && (
-                isAuthenticated ? (
-                <Button variant="ghost" onClick={logout} size="sm">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Logout
-                </Button>
-                ) : (
-                <Button asChild size="sm">
-                    <Link href="/auth/login">
-                        <LogIn className="mr-2 h-4 w-4" /> Login
-                    </Link>
-                </Button>
-                )
+            {isAuthenticated ? (
+              <Button variant="ghost" onClick={logout} size="sm" disabled={isLoadingAuth}>
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </Button>
+            ) : (
+              <Button asChild size="sm" disabled={isLoadingAuth}>
+                <Link href="/auth/login">
+                  <LogIn className="mr-2 h-4 w-4" /> Login
+                </Link>
+              </Button>
             )}
           </div>
         </header>
