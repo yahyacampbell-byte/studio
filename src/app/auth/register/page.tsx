@@ -19,9 +19,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DatePicker } from '@/components/ui/date-picker';
 import { useAuth, User } from '@/context/AuthContext';
 import { APP_NAME } from '@/lib/constants';
-// Removed: import { registerCognifitUser } from '@/services/cognifitService';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, UserPlus, User as UserIcon, Mail, Lock, UsersRound } from 'lucide-react'; // Renamed User to UserIcon
+import { Loader2, UserPlus, User as UserIcon, Mail, Lock, UsersRound } from 'lucide-react'; 
 
 const registrationFormSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
@@ -39,14 +38,14 @@ const registrationFormSchema = z.object({
 type RegistrationFormValues = z.infer<typeof registrationFormSchema>;
 
 export default function RegisterPage() {
-  const { login, isAuthenticated, isLoadingAuth } = useAuth();
+  const { login, isAuthenticated, isLoadingAuth, user } = useAuth(); // Added user from useAuth
   const router = useRouter();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const currentYear = new Date().getFullYear();
   const fromYear = currentYear - 100; 
-  const toYear = currentYear - 5; 
+  const toYear = currentYear - 5; // Users must be at least 5 years old
 
   const form = useForm<RegistrationFormValues>({
     resolver: zodResolver(registrationFormSchema),
@@ -57,6 +56,7 @@ export default function RegisterPage() {
       password: '',
       confirmPassword: '',
       sex: undefined,
+      birthDate: undefined, // Default to undefined
     },
   });
 
@@ -71,7 +71,6 @@ export default function RegisterPage() {
     try {
       const appUserId = uuidv4();
       
-      // CogniFit registration is deferred. Login to app with cognifitUserToken: null
       const appUser: User = {
         id: appUserId,
         email: data.email,
@@ -79,7 +78,7 @@ export default function RegisterPage() {
         lastName: data.lastName,
         birthDate: format(data.birthDate, "yyyy-MM-dd"),
         sex: data.sex as '1' | '2',
-        cognifitUserToken: null, // No CogniFit token at app registration
+        cognifitUserToken: null, 
       };
       
       login(appUser);
@@ -103,7 +102,7 @@ export default function RegisterPage() {
     }
   };
   
-  if (isLoadingAuth || (!isLoadingAuth && isAuthenticated)) {
+  if (isLoadingAuth || (!isLoadingAuth && isAuthenticated && user)) { // Added user check
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10">
         <Image 
@@ -112,7 +111,7 @@ export default function RegisterPage() {
             data-ai-hint="logo"
             width={48} 
             height={48}
-            className="h-12 w-12 animate-pulse text-primary"
+            className="h-12 w-12 animate-pulse"
         />
         <p className="ml-4 text-lg text-muted-foreground">Loading...</p>
       </div>
@@ -236,6 +235,7 @@ export default function RegisterPage() {
                           fromYear={fromYear}
                           toYear={toYear}
                           captionLayout="dropdown-buttons"
+                          showMonthDropdown={false} // Hide the month dropdown
                         />
                     </FormControl>
                     <FormMessage />

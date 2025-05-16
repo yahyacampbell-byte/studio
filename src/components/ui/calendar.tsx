@@ -1,20 +1,76 @@
+
 "use client"
 
 import * as React from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { DayPicker } from "react-day-picker"
+import { DayPicker, DropdownProps as DayPickerDropdownProps } from "react-day-picker"
 
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 
-export type CalendarProps = React.ComponentProps<typeof DayPicker>
+export interface CustomCalendarProps extends React.ComponentProps<typeof DayPicker> {
+  showMonthDropdown?: boolean;
+}
+
+// Custom Dropdown component to override react-day-picker's default
+const InternalDropdownOverride: React.FC<DayPickerDropdownProps & { showMonthDropdown?: boolean }> = ({ name, showMonthDropdown, children, ...props }) => {
+  if (name === 'months' && showMonthDropdown === false) {
+    return null; // Hide month dropdown if showMonthDropdown is false
+  }
+
+  // For years, or for months if showMonthDropdown is true (or undefined), render the default select with its options.
+  // Apply basic styling to match the calendar's look and feel.
+  const selectClassName = cn(
+    "rdp-dropdown", // Base class for react-day-picker dropdowns
+    "mx-1",
+    "h-7", // Adjust height to match button height in caption
+    "px-1", // Reduced padding for smaller text
+    "py-0", // Reduced padding
+    "text-xs", // Smaller text size for dropdowns
+    "rounded-md",
+    "border",
+    "border-input", // Use input border color from theme
+    "bg-background", // Use background color from theme
+    "focus:outline-none focus:ring-1 focus:ring-ring", // Focus state
+    name === 'months' ? "rdp-dropdown_month" : "rdp-dropdown_year"
+  );
+
+  return (
+    <select
+      name={name}
+      aria-label={props['aria-label']}
+      className={selectClassName}
+      value={props.value}
+      onChange={(e) => props.onChange?.(Number(e.target.value))}
+      disabled={props.disabled}
+    >
+      {children}
+    </select>
+  );
+};
+
 
 function Calendar({
   className,
   classNames,
   showOutsideDays = true,
+  showMonthDropdown = true, // New prop, defaults to true
   ...props
-}: CalendarProps) {
+}: CustomCalendarProps) { // Use CustomCalendarProps
+
+  const componentsConfig = {
+    IconLeft: ({ ...rest } : React.HTMLAttributes<SVGElement>) => <ChevronLeft className="h-4 w-4" {...rest} />,
+    IconRight: ({ ...rest }: React.HTMLAttributes<SVGElement>) => <ChevronRight className="h-4 w-4" {...rest} />,
+    // Conditionally override Dropdown component
+    Dropdown: undefined as (((props: DayPickerDropdownProps) => JSX.Element) | undefined)
+  };
+
+  if (showMonthDropdown === false && (props.captionLayout === 'dropdown' || props.captionLayout === 'dropdown-buttons')) {
+    componentsConfig.Dropdown = (dropdownProps: DayPickerDropdownProps) => (
+      <InternalDropdownOverride {...dropdownProps} showMonthDropdown={showMonthDropdown} />
+    );
+  }
+
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
@@ -23,7 +79,8 @@ function Calendar({
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
         caption: "flex justify-center pt-1 relative items-center",
-        caption_label: "text-sm font-medium",
+        caption_label: "text-sm font-medium", // This might display the month name if dropdown is hidden
+        caption_dropdowns: "flex gap-1", // Class for the container of dropdowns
         nav: "space-x-1 flex items-center",
         nav_button: cn(
           buttonVariants({ variant: "outline" }),
@@ -46,21 +103,14 @@ function Calendar({
           "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground",
         day_today: "bg-accent text-accent-foreground",
         day_outside:
-          "day-outside text-muted-foreground aria-selected:bg-accent/50 aria-selected:text-muted-foreground",
+          "day-outside text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
         day_disabled: "text-muted-foreground opacity-50",
         day_range_middle:
           "aria-selected:bg-accent aria-selected:text-accent-foreground",
         day_hidden: "invisible",
         ...classNames,
       }}
-      components={{
-        IconLeft: ({ className, ...props }) => (
-          <ChevronLeft className={cn("h-4 w-4", className)} {...props} />
-        ),
-        IconRight: ({ className, ...props }) => (
-          <ChevronRight className={cn("h-4 w-4", className)} {...props} />
-        ),
-      }}
+      components={componentsConfig}
       {...props}
     />
   )

@@ -7,7 +7,7 @@ import { Calendar as CalendarIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Calendar, type CalendarProps } from "@/components/ui/calendar" // Ensure CalendarProps is imported
+import { Calendar, type CustomCalendarProps } from "@/components/ui/calendar" 
 import {
   Popover,
   PopoverContent,
@@ -20,10 +20,11 @@ interface DatePickerProps {
   disabled?: (date: Date) => boolean;
   fromYear?: number;
   toYear?: number;
-  captionLayout?: CalendarProps['captionLayout'];
+  captionLayout?: CustomCalendarProps['captionLayout'];
+  showMonthDropdown?: boolean; // New prop
 }
 
-export function DatePicker({ value, onChange, disabled, fromYear, toYear, captionLayout = "buttons" }: DatePickerProps) {
+export function DatePicker({ value, onChange, disabled, fromYear, toYear, captionLayout = "buttons", showMonthDropdown = true }: DatePickerProps) {
   const currentYear = new Date().getFullYear();
   return (
     <Popover>
@@ -48,7 +49,8 @@ export function DatePicker({ value, onChange, disabled, fromYear, toYear, captio
           captionLayout={captionLayout}
           fromYear={fromYear}
           toYear={toYear}
-          defaultMonth={value || new Date(currentYear - 25, 0)} // Default to ~25 years ago if no value
+          showMonthDropdown={showMonthDropdown} // Pass the new prop
+          defaultMonth={value || new Date(toYear || currentYear, 0)} // Default to first month of toYear or currentYear
           initialFocus
         />
       </PopoverContent>
