@@ -25,7 +25,7 @@ export type PersonalizedInsightsInput = z.infer<typeof PersonalizedInsightsInput
 const PersonalizedInsightsOutputSchema = z.object({
   multipleIntelligencesSummary: z.string().describe('Personalized insights based on Multiple Intelligences mapping from gameplay data. This summary should reflect any MI analysis already performed (e.g., by another AI agent that calculated MI scores based on rubrics).'),
   broaderCognitiveInsights: z.string().optional().describe('Additional observations on general cognitive abilities like attention, memory, processing speed, or executive functions, inferred from game performance. Phrased as observations and areas for potential self-awareness or development.'),
-  actionableRecommendations: z.string().describe('Actionable recommendations for improvement or leveraging strengths, based on all insights.'),
+  actionableRecommendations: z.string().describe('Actionable recommendations for improvement or leveraging strengths, based on all insights. May include learning style suggestions.'),
 });
 export type PersonalizedInsightsOutput = z.infer<typeof PersonalizedInsightsOutputSchema>;
 
@@ -88,7 +88,17 @@ Based on this summary (and the original game data if needed for context: {{{orig
 
     Your observations should be framed as potential areas for self-awareness or general cognitive skill development. Do not output risk percentages, specific clinical correlations, or direct medical advice.
 
-3.  **Actionable Recommendations**: Offer clear, concise, and actionable recommendations. These should aim to help the user improve their cognitive skills, leverage their strengths, or explore areas for cognitive development based on ALL the insights generated (both MI summary and broader cognitive insights). Keep recommendations general and focused on cognitive exercises or learning strategies.
+3.  **Actionable Recommendations**: Offer clear, concise, and actionable recommendations. These should aim to help the user improve their cognitive skills, leverage their strengths, or explore areas for cognitive development based on ALL the insights generated (both MI summary and broader cognitive insights). 
+    Consider suggesting learning styles or approaches based on the user's apparent stronger intelligences. For example:
+    *   If Linguistic-Verbal intelligence seems prominent (e.g., from good performance in 'Words Birds', 'Scrambled', 'Word Quest'), you might suggest learning methods that involve reading, writing, storytelling, or verbal discussions.
+    *   If Logical-Mathematical intelligence appears strong (e.g., from 'Math Twins', 'Sudoku', 'Fuel a Car'), suggest activities that involve problem-solving, puzzles, or logical sequencing.
+    *   If Spatial intelligence is a highlight (e.g., from 'Jigsaw 9', '3D Art Puzzle', 'Star Architect'), recommend using diagrams, mind maps, or visual aids for learning.
+    *   If Bodily-Kinesthetic abilities stand out (e.g., from 'Reaction Field', 'Tennis Bomb', 'Twist It'), suggest hands-on activities, learning by doing, or physical movement.
+    *   If Musical intelligence is strong (e.g., from 'Melody Mayhem', 'Melodic Tennis'), recommend using rhythm, music, or mnemonics involving tunes.
+    *   If Interpersonal strengths are shown (e.g., in 'Chess', 'Traffic Manager'), suggest group study, discussions, or teaching others.
+    *   If Intrapersonal intelligence is evident (e.g., from 'Solitaire', 'Synaptix'), recommend self-reflection, journaling, or setting personal goals.
+    *   If Naturalistic intelligence seems developed (e.g., from 'Ant Escape', 'Water Lilies'), suggest learning in natural settings or making connections to the real world.
+    Keep recommendations general and focused on cognitive exercises or learning strategies.
 
 IMPORTANT: When mentioning specific games in your output, please use their full titles as provided in the summary (e.g., 'Math Twins', 'Jigsaw 9'). Do NOT use API keys or abbreviations.
 Structure your response according to the output schema, ensuring all required fields are populated.
