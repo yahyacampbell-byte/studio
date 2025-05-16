@@ -76,6 +76,7 @@ If a game is "hybrid," it contributes to two intelligences; score it for both.
 **Profiling Games (Primary Assessment):**
 
 1.  **Game: Math Madness**
+    *   Description: Fast-paced arithmetic challenges with time constraints. Uses adaptive difficulty to train both basic math skills and working memory under cognitive load.
     *   Assesses: Logical-Mathematical Intelligence
     *   Rubric (0-10 points for Logical-Mathematical):
         *   10 pts: 90–100% correct answers (or very high raw score if not percentage-based), rapid responses (e.g., low activityDuration relative to typical play if score doesn't reflect speed).
@@ -85,6 +86,7 @@ If a game is "hybrid," it contributes to two intelligences; score it for both.
     *   Mapping Raw Score: If 'Raw Score' looks like a percentage (0-100), use that. If it's a larger number (e.g., >500), assume higher is better and map it to these tiers.
 
 2.  **Game: Jigsaw 9**
+    *   Description: Digital jigsaw puzzle with rotating pieces. Trains mental rotation skills by requiring players to manipulate puzzle pieces in both 2D and 3D space.
     *   Assesses: Visual-Spatial Intelligence
     *   Rubric (0-10 points for Visual-Spatial):
         *   10 pts: Completes hardest puzzles quickly (e.g., high raw score suggesting complexity, or low activityDuration for a complex puzzle).
@@ -93,7 +95,8 @@ If a game is "hybrid," it contributes to two intelligences; score it for both.
         *   0 pts: Cannot complete simplest puzzles (low raw score).
     *   Mapping Raw Score: Assume higher raw score means more complex/faster completion.
 
-3.  **Game: Reaction Field** (Original name: WHACK_A_MOLE)
+3.  **Game: Reaction Field** (Original ID: WHACK_A_MOLE)
+    *   Description: Timed target-hitting game with moving stimuli. Measures and improves visual-motor reaction time with millisecond precision.
     *   Assesses: Bodily-Kinesthetic Intelligence
     *   Rubric (0-10 points for Bodily-Kinesthetic):
         *   10 pts: >90% accuracy (or very high raw score if score reflects accuracy), fastest reaction tier.
@@ -103,6 +106,7 @@ If a game is "hybrid," it contributes to two intelligences; score it for both.
     *   Mapping Raw Score: Assume raw score reflects accuracy and/or reaction speed. Higher is better.
 
 4.  **Game: Words Birds**
+    *   Description: Word recognition game where players identify flying words before they disappear. Specifically targets rapid word recognition under time pressure, training both visual word processing and lexical access speed.
     *   Assesses: Linguistic-Verbal Intelligence
     *   Rubric (0-10 points for Linguistic-Verbal):
         *   10 pts: Recognizes 95–100% of words (or very high raw score), fastest tier.
@@ -112,6 +116,7 @@ If a game is "hybrid," it contributes to two intelligences; score it for both.
     *   Mapping Raw Score: Assume raw score reflects accuracy/vocabulary size.
 
 5.  **Game: Melody Mayhem**
+    *   Description: Rhythm matching game with melodic patterns. Trains both rhythm perception and auditory working memory through layered musical patterns.
     *   Assesses: Musical Intelligence
     *   Rubric (0-10 points for Musical):
         *   10 pts: Perfect rhythm/tone matching, no mistakes (very high raw score).
@@ -121,6 +126,7 @@ If a game is "hybrid," it contributes to two intelligences; score it for both.
     *   Mapping Raw Score: Assume raw score reflects accuracy in rhythm/tone.
 
 6.  **Game: Chess PvP**
+    *   Description: Competitive strategic gameplay. Specifically trains perspective-taking and anticipatory social cognition through move prediction.
     *   Assesses: Interpersonal Intelligence (primary), also touches on Logical-Mathematical. For this analysis, focus on Interpersonal.
     *   Rubric (0-10 points for Interpersonal):
         *   10 pts: Wins consistently (high raw score if score reflects wins/ranking).
@@ -130,6 +136,7 @@ If a game is "hybrid," it contributes to two intelligences; score it for both.
     *   Mapping Raw Score: Assume raw score correlates with success/strategy.
 
 7.  **Game: Solitaire**
+    *   Description: Classic card organization game. Trains executive function through continuous self-assessment and strategy adjustment.
     *   Assesses: Intrapersonal Intelligence (primary), also Logical-Mathematical. Focus on Intrapersonal.
     *   Rubric (0-10 points for Intrapersonal):
         *   10 pts: Completes >80% of games, efficient moves (high raw score if score reflects completion/efficiency).
@@ -139,6 +146,7 @@ If a game is "hybrid," it contributes to two intelligences; score it for both.
     *   Mapping Raw Score: Assume raw score reflects completion rate/efficiency.
 
 8.  **Game: Ant Escape**
+    *   Description: Solo navigation through environmental puzzles, focusing on adaptive planning.
     *   Assesses: Naturalistic Intelligence
     *   Rubric (0-10 points for Naturalistic):
         *   10 pts: Solves complex paths quickly, adapts to obstacles (high raw score).
@@ -150,6 +158,7 @@ If a game is "hybrid," it contributes to two intelligences; score it for both.
 **Enhancement Games (Hybrid - Contribute to Multiple Intelligences):**
 
 9.  **Game: Sudoku** (Original ID: SUDOKU_PUZZLE)
+    *   Description: Classic number placement puzzle with varying difficulty. Enhances logical reasoning and pattern completion skills.
     *   Assesses: Logical-Mathematical AND Visual-Spatial Intelligence
     *   Logical-Mathematical Rubric (0-10 points):
         *   10 pts: Solves "hard" puzzles quickly (e.g., high raw score on difficult setting).
@@ -162,6 +171,7 @@ If a game is "hybrid," it contributes to two intelligences; score it for both.
     *   Mapping Raw Score: Interpret raw score for difficulty/speed for Logical. For Spatial, consider if score implies pattern recognition (this might be harder to infer, so lean on logical score or give moderate spatial score if logical is high).
 
 10. **Game: Gem Breaker** (Original ID: BREAKOUT)
+    *   Description: Improve hand-eye coordination and visual tracking.
     *   Assesses: Visual-Spatial AND Bodily-Kinesthetic Intelligence
     *   Visual-Spatial Rubric (0-10 points):
         *   10 pts: Predicts ball trajectories perfectly (high raw score, few misses).
@@ -172,6 +182,7 @@ If a game is "hybrid," it contributes to two intelligences; score it for both.
     *   Mapping Raw Score: Higher scores imply better trajectory prediction (Spatial) and paddle control (Kinesthetic).
 
 11. **Game: Fuel a Car**
+    *   Description: Resource management and driving game requiring path optimization and control. Tests problem-solving and reaction speed.
     *   Assesses: Logical-Mathematical AND Bodily-Kinesthetic Intelligence
     *   Logical-Mathematical Rubric (0-10 points):
         *   10 pts: Optimizes fuel use/path perfectly (high raw score if reflects efficiency).
@@ -182,6 +193,7 @@ If a game is "hybrid," it contributes to two intelligences; score it for both.
     *   Mapping Raw Score: Higher scores reflect better planning (Logical) and control (Kinesthetic).
 
 12. **Game: Word Quest**
+    *   Description: Word puzzle game requiring players to find hidden words in letter grids, challenging vocabulary and reasoning.
     *   Assesses: Linguistic-Verbal AND Logical-Mathematical Intelligence
     *   Linguistic-Verbal Rubric (0-10 points):
         *   10 pts: Solves complex word puzzles rapidly (high raw score if reflects vocabulary/speed).
@@ -261,4 +273,3 @@ const analyzeGameplayAndMapToIntelligencesFlow = ai.defineFlow(
     return { intelligenceMappings: fallbackMappings };
   }
 );
-

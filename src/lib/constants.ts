@@ -19,9 +19,9 @@ export interface CognitiveGame {
 export const COGNITIVE_GAMES: CognitiveGame[] = [
   // --- Profiling Games (8) ---
   {
-    id: "MATH_MADNESS", // Swapped to be first based on original user list order, but AI prompt expects specific order
+    id: "MATH_MADNESS",
     title: "Math Madness",
-    description: "Boost numerical speed and accuracy.",
+    description: "Fast-paced arithmetic challenges with time constraints. Uses adaptive difficulty to train both basic math skills and working memory under cognitive load.",
     icon: Calculator,
     dataAiHint: "math equations",
     assessesIntelligences: ['Logical-Mathematical'],
@@ -29,15 +29,15 @@ export const COGNITIVE_GAMES: CognitiveGame[] = [
   {
     id: "JIGSAW_9",
     title: "Jigsaw 9",
-    description: "Develop visual assembly and mental rotation.",
+    description: "Digital jigsaw puzzle with rotating pieces. Trains mental rotation skills by requiring players to manipulate puzzle pieces in both 2D and 3D space.",
     icon: Puzzle,
     dataAiHint: "jigsaw puzzle",
     assessesIntelligences: ['Visual-Spatial'],
   },
   {
-    id: "WHACK_A_MOLE", // Original name, maps to Reaction Field
+    id: "WHACK_A_MOLE",
     title: "Reaction Field",
-    description: "Improve reflexes and hand-eye coordination.",
+    description: "Timed target-hitting game with moving stimuli. Measures and improves visual-motor reaction time with millisecond precision.",
     icon: Bike,
     dataAiHint: "whack a mole",
     assessesIntelligences: ['Bodily-Kinesthetic'],
@@ -45,7 +45,7 @@ export const COGNITIVE_GAMES: CognitiveGame[] = [
   {
     id: "WORDS_BIRDS",
     title: "Words Birds",
-    description: "Expand vocabulary and word recognition.",
+    description: "Word recognition game where players identify flying words before they disappear. Specifically targets rapid word recognition under time pressure, training both visual word processing and lexical access speed.",
     icon: FileText,
     dataAiHint: "birds words",
     assessesIntelligences: ['Linguistic-Verbal'],
@@ -53,7 +53,7 @@ export const COGNITIVE_GAMES: CognitiveGame[] = [
   {
     id: "MELODY_MAYHEM",
     title: "Melody Mayhem",
-    description: "Test your auditory processing and rhythm.",
+    description: "Rhythm matching game with melodic patterns. Trains both rhythm perception and auditory working memory through layered musical patterns.",
     icon: Music,
     dataAiHint: "musical notes rhythm",
     assessesIntelligences: ['Musical'],
@@ -61,7 +61,7 @@ export const COGNITIVE_GAMES: CognitiveGame[] = [
   {
     id: "CHESS_PVP",
     title: "Chess PvP",
-    description: "Master strategy and social prediction.",
+    description: "Competitive strategic gameplay. Specifically trains perspective-taking and anticipatory social cognition through move prediction.",
     icon: Users,
     dataAiHint: "chess board people",
     assessesIntelligences: ['Interpersonal', 'Logical-Mathematical'],
@@ -69,7 +69,7 @@ export const COGNITIVE_GAMES: CognitiveGame[] = [
   {
     id: "SOLITAIRE",
     title: "Solitaire",
-    description: "Cultivate patience and self-reflection.",
+    description: "Classic card organization game. Trains executive function through continuous self-assessment and strategy adjustment.",
     icon: User,
     dataAiHint: "solitaire cards",
     assessesIntelligences: ['Intrapersonal', 'Logical-Mathematical'],
@@ -77,7 +77,7 @@ export const COGNITIVE_GAMES: CognitiveGame[] = [
   {
     id: "ANT_ESCAPE",
     title: "Ant Escape",
-    description: "Sharpen environmental reasoning and planning.",
+    description: "Solo navigation through environmental puzzles, focusing on adaptive planning.", // Simplified from "Self-monitoring, adaptive planning"
     icon: Leaf,
     dataAiHint: "ant maze nature",
     assessesIntelligences: ['Naturalistic', 'Visual-Spatial'],
@@ -86,32 +86,32 @@ export const COGNITIVE_GAMES: CognitiveGame[] = [
   {
     id: "SUDOKU_PUZZLE",
     title: "Sudoku",
-    description: "Enhance math and pattern recognition skills.",
-    icon: Calculator, // Re-using, could be more specific
+    description: "Classic number placement puzzle with varying difficulty. Enhances logical reasoning and pattern completion skills.",
+    icon: Calculator,
     dataAiHint: "sudoku grid",
     assessesIntelligences: ['Logical-Mathematical', 'Visual-Spatial'],
   },
   {
-    id: "BREAKOUT", // Original name, maps to Gem Breaker
+    id: "BREAKOUT", // This game was not in the user's latest detailed list, so its description remains from previous definitions.
     title: "Gem Breaker",
-    description: "Improve hand-eye coordination and visual tracking.",
-    icon: Gamepad2, // More game-like
+    description: "Improve hand-eye coordination and visual tracking.", // Kept original
+    icon: Gamepad2,
     dataAiHint: "gem breakout game",
     assessesIntelligences: ['Visual-Spatial', 'Bodily-Kinesthetic'],
   },
   {
     id: "FUEL_A_CAR",
     title: "Fuel a Car",
-    description: "Test problem-solving and reaction speed.",
-    icon: Brain, // Icon implies thinking
+    description: "Resource management and driving game requiring path optimization and control. Tests problem-solving and reaction speed.",
+    icon: Brain,
     dataAiHint: "car fuel logic",
     assessesIntelligences: ['Logical-Mathematical', 'Bodily-Kinesthetic'],
   },
   {
     id: "WORD_QUEST",
     title: "Word Quest",
-    description: "Challenge vocabulary and reasoning.",
-    icon: FileText, // Consistent with Words Birds
+    description: "Word puzzle game requiring players to find hidden words in letter grids, challenging vocabulary and reasoning.",
+    icon: FileText,
     dataAiHint: "word search",
     assessesIntelligences: ['Linguistic-Verbal', 'Logical-Mathematical'],
   },
@@ -119,13 +119,14 @@ export const COGNITIVE_GAMES: CognitiveGame[] = [
 
 
 export interface Intelligence {
-  id: IntelligenceId; 
+  id: IntelligenceId;
   name: string;
   description: string;
   icon: LucideIcon;
   color?: string;
 }
 
+// Order of intelligences here matches the AI prompt for consistency in chart output
 export const MULTIPLE_INTELLIGENCES: Intelligence[] = [
   { id: 'Logical-Mathematical', name: 'Logical-Mathematical', description: 'Reasoning, calculating, logical analysis.', icon: Calculator, color: 'var(--chart-3)' },
   { id: 'Visual-Spatial', name: 'Visual-Spatial', description: 'Thinking in pictures, visualizing outcomes.', icon: Eye, color: 'var(--chart-1)' },
@@ -148,3 +149,4 @@ export const NAV_LINKS = [
 export const LOCAL_STORAGE_ACTIVITY_KEY = 'xilloTruePotentialActivity';
 export const LOCAL_STORAGE_INSIGHTS_KEY = 'xilloTruePotentialInsights';
 export const LOCAL_STORAGE_AUTH_KEY = 'xilloTruePotentialAuth';
+
