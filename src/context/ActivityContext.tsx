@@ -27,16 +27,24 @@ export const ActivityProvider = ({ children }: { children: ReactNode }) => {
     try {
       const storedActivities = localStorage.getItem(LOCAL_STORAGE_ACTIVITY_KEY);
       if (storedActivities) {
-        setActivities(JSON.parse(storedActivities));
+        setActivities(JSON.parse(storedActivities) || []);
+      } else {
+        setActivities([]);
       }
+
       const storedAIAnalysisHistory = localStorage.getItem(LOCAL_STORAGE_INSIGHTS_KEY);
       if (storedAIAnalysisHistory) {
-        setAIAnalysisHistoryState(JSON.parse(storedAIAnalysisHistory));
+        const parsedHistory = JSON.parse(storedAIAnalysisHistory);
+        setAIAnalysisHistoryState(Array.isArray(parsedHistory) ? parsedHistory : []);
+      } else {
+        setAIAnalysisHistoryState([]);
       }
     } catch (error) {
       console.error("Error loading data from localStorage:", error);
       localStorage.removeItem(LOCAL_STORAGE_ACTIVITY_KEY);
       localStorage.removeItem(LOCAL_STORAGE_INSIGHTS_KEY);
+      setActivities([]);
+      setAIAnalysisHistoryState([]);
     }
   }, []);
 
@@ -63,7 +71,7 @@ export const ActivityProvider = ({ children }: { children: ReactNode }) => {
       timestamp: new Date().toISOString(),
     };
     setActivities(prevActivities => {
-      const updated = [...prevActivities, newActivity];
+      const updated = [...(prevActivities || []), newActivity];
       updateLocalStorageActivities(updated);
       return updated;
     });
@@ -71,7 +79,9 @@ export const ActivityProvider = ({ children }: { children: ReactNode }) => {
 
   const addAIAnalysisToHistory = useCallback((newAnalysis: AIAnalysisResults) => {
     setAIAnalysisHistoryState(prevHistory => {
-      const updatedHistory = [...prevHistory, newAnalysis];
+      // Ensure prevHistory is an array before spreading
+      const currentHistory = Array.isArray(prevHistory) ? prevHistory : [];
+      const updatedHistory = [...currentHistory, newAnalysis];
       updateLocalStorageAIAnalysisHistory(updatedHistory);
       return updatedHistory;
     });
