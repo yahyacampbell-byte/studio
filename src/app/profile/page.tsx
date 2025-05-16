@@ -12,17 +12,36 @@ import { format, parseISO } from 'date-fns';
 export default function ProfilePage() {
   const { user, isLoadingAuth, isAuthenticated } = useRequireAuth();
 
-  if (isLoadingAuth || !isAuthenticated || !user) {
+  if (isLoadingAuth) {
     return (
       <AppLayout>
         <div className="flex flex-col items-center justify-center h-[calc(100vh-10rem)]">
           <Brain className="h-16 w-16 animate-pulse text-primary mb-4" />
-          <p className="text-xl text-muted-foreground">Loading profile...</p>
+          <p className="text-xl text-muted-foreground">Authenticating...</p>
         </div>
       </AppLayout>
     );
   }
 
+  // At this point, isLoadingAuth is false.
+  // useRequireAuth hook will handle redirection if !isAuthenticated.
+  // This block catches the case where authentication is confirmed (isAuthenticated=true)
+  // but the user object might still be null (e.g. an issue in AuthContext logic or localStorage state).
+  if (!isAuthenticated || !user) {
+    // If !isAuthenticated, useRequireAuth should redirect.
+    // If isAuthenticated but !user, this indicates an issue needing investigation,
+    // but we show a loading/error state for robustness.
+    return (
+      <AppLayout>
+        <div className="flex flex-col items-center justify-center h-[calc(100vh-10rem)]">
+          <Brain className="h-16 w-16 animate-pulse text-primary mb-4" />
+          <p className="text-xl text-muted-foreground">Loading user data or redirecting...</p>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  // If we reach here, isLoadingAuth is false, isAuthenticated is true, and user is populated.
   const displayItems = [
     { label: "First Name", value: user.firstName, icon: UserIcon },
     { label: "Last Name", value: user.lastName, icon: UserIcon },
@@ -58,7 +77,7 @@ export default function ProfilePage() {
           </CardHeader>
           <CardContent className="space-y-6">
             {displayItems.map((item) => (
-              item.value ? (
+              item.value || item.label === "Birth Date" || item.label === "Gender" ? ( // Ensure "Not set" items are rendered
                 <div key={item.label} className="flex items-start space-x-3">
                   <item.icon className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
                   <div>
