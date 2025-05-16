@@ -19,6 +19,38 @@ export interface CognitiveGame {
 export const COGNITIVE_GAMES: CognitiveGame[] = [
   // --- Profiling Games (8) ---
   {
+    id: "MATH_MADNESS", // Swapped to be first based on original user list order, but AI prompt expects specific order
+    title: "Math Madness",
+    description: "Boost numerical speed and accuracy.",
+    icon: Calculator,
+    dataAiHint: "math equations",
+    assessesIntelligences: ['Logical-Mathematical'],
+  },
+  {
+    id: "JIGSAW_9",
+    title: "Jigsaw 9",
+    description: "Develop visual assembly and mental rotation.",
+    icon: Puzzle,
+    dataAiHint: "jigsaw puzzle",
+    assessesIntelligences: ['Visual-Spatial'],
+  },
+  {
+    id: "WHACK_A_MOLE", // Original name, maps to Reaction Field
+    title: "Reaction Field",
+    description: "Improve reflexes and hand-eye coordination.",
+    icon: Bike,
+    dataAiHint: "whack a mole",
+    assessesIntelligences: ['Bodily-Kinesthetic'],
+  },
+  {
+    id: "WORDS_BIRDS",
+    title: "Words Birds",
+    description: "Expand vocabulary and word recognition.",
+    icon: FileText,
+    dataAiHint: "birds words",
+    assessesIntelligences: ['Linguistic-Verbal'],
+  },
+  {
     id: "MELODY_MAYHEM",
     title: "Melody Mayhem",
     description: "Test your auditory processing and rhythm.",
@@ -50,44 +82,12 @@ export const COGNITIVE_GAMES: CognitiveGame[] = [
     dataAiHint: "ant maze nature",
     assessesIntelligences: ['Naturalistic', 'Visual-Spatial'],
   },
-  {
-    id: "MATH_MADNESS",
-    title: "Math Madness",
-    description: "Boost numerical speed and accuracy.",
-    icon: Calculator,
-    dataAiHint: "math equations",
-    assessesIntelligences: ['Logical-Mathematical'],
-  },
-  {
-    id: "JIGSAW_9",
-    title: "Jigsaw 9",
-    description: "Develop visual assembly and mental rotation.",
-    icon: Puzzle,
-    dataAiHint: "jigsaw puzzle",
-    assessesIntelligences: ['Visual-Spatial'],
-  },
-  {
-    id: "WHACK_A_MOLE", // Original name, maps to Reaction Field
-    title: "Reaction Field",
-    description: "Improve reflexes and hand-eye coordination.",
-    icon: Bike,
-    dataAiHint: "whack a mole",
-    assessesIntelligences: ['Bodily-Kinesthetic'],
-  },
-  {
-    id: "WORDS_BIRDS",
-    title: "Words Birds",
-    description: "Expand vocabulary and word recognition.",
-    icon: FileText,
-    dataAiHint: "birds words",
-    assessesIntelligences: ['Linguistic-Verbal'],
-  },
   // --- Enhancement Games (4) ---
   {
     id: "SUDOKU_PUZZLE",
     title: "Sudoku",
     description: "Enhance math and pattern recognition skills.",
-    icon: Calculator,
+    icon: Calculator, // Re-using, could be more specific
     dataAiHint: "sudoku grid",
     assessesIntelligences: ['Logical-Mathematical', 'Visual-Spatial'],
   },
@@ -95,7 +95,7 @@ export const COGNITIVE_GAMES: CognitiveGame[] = [
     id: "BREAKOUT", // Original name, maps to Gem Breaker
     title: "Gem Breaker",
     description: "Improve hand-eye coordination and visual tracking.",
-    icon: Gamepad2,
+    icon: Gamepad2, // More game-like
     dataAiHint: "gem breakout game",
     assessesIntelligences: ['Visual-Spatial', 'Bodily-Kinesthetic'],
   },
@@ -103,7 +103,7 @@ export const COGNITIVE_GAMES: CognitiveGame[] = [
     id: "FUEL_A_CAR",
     title: "Fuel a Car",
     description: "Test problem-solving and reaction speed.",
-    icon: Brain,
+    icon: Brain, // Icon implies thinking
     dataAiHint: "car fuel logic",
     assessesIntelligences: ['Logical-Mathematical', 'Bodily-Kinesthetic'],
   },
@@ -111,7 +111,7 @@ export const COGNITIVE_GAMES: CognitiveGame[] = [
     id: "WORD_QUEST",
     title: "Word Quest",
     description: "Challenge vocabulary and reasoning.",
-    icon: FileText,
+    icon: FileText, // Consistent with Words Birds
     dataAiHint: "word search",
     assessesIntelligences: ['Linguistic-Verbal', 'Logical-Mathematical'],
   },
@@ -119,7 +119,7 @@ export const COGNITIVE_GAMES: CognitiveGame[] = [
 
 
 export interface Intelligence {
-  id: IntelligenceId; // Now uses the IntelligenceId type
+  id: IntelligenceId; 
   name: string;
   description: string;
   icon: LucideIcon;
@@ -127,22 +127,22 @@ export interface Intelligence {
 }
 
 export const MULTIPLE_INTELLIGENCES: Intelligence[] = [
-  { id: 'Visual-Spatial', name: 'Visual-Spatial', description: 'Thinking in pictures, visualizing outcomes.', icon: Eye, color: 'var(--chart-1)' },
-  { id: 'Linguistic-Verbal', name: 'Linguistic-Verbal', description: 'Using words effectively, understanding language.', icon: FileText, color: 'var(--chart-2)' },
   { id: 'Logical-Mathematical', name: 'Logical-Mathematical', description: 'Reasoning, calculating, logical analysis.', icon: Calculator, color: 'var(--chart-3)' },
+  { id: 'Visual-Spatial', name: 'Visual-Spatial', description: 'Thinking in pictures, visualizing outcomes.', icon: Eye, color: 'var(--chart-1)' },
   { id: 'Bodily-Kinesthetic', name: 'Bodily-Kinesthetic', description: 'Using the body effectively, physical coordination.', icon: Bike, color: 'var(--chart-4)' },
+  { id: 'Linguistic-Verbal', name: 'Linguistic-Verbal', description: 'Using words effectively, understanding language.', icon: FileText, color: 'var(--chart-2)' },
   { id: 'Musical', name: 'Musical', description: 'Sensitivity to rhythm, pitch, melody.', icon: Music, color: 'var(--chart-5)' },
-  { id: 'Interpersonal', name: 'Interpersonal', description: 'Understanding and interacting with others.', icon: Users, color: 'var(--chart-1)' },
-  { id: 'Intrapersonal', name: 'Intrapersonal', description: 'Understanding oneself, self-reflection.', icon: User, color: 'var(--chart-2)' },
-  { id: 'Naturalistic', name: 'Naturalistic', description: 'Understanding nature, recognizing patterns in the natural world.', icon: Leaf, color: 'var(--chart-3)' },
+  { id: 'Interpersonal', name: 'Interpersonal', description: 'Understanding and interacting with others.', icon: Users, color: 'var(--chart-6)' },
+  { id: 'Intrapersonal', name: 'Intrapersonal', description: 'Understanding oneself, self-reflection.', icon: User, color: 'var(--chart-7)' },
+  { id: 'Naturalistic', name: 'Naturalistic', description: 'Understanding nature, recognizing patterns in the natural world.', icon: Leaf, color: 'var(--chart-8)' },
 ];
+
 
 export const NAV_LINKS = [
   { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
   { href: "/games", label: "Games", icon: Puzzle },
   { href: "/insights", label: "My Insights", icon: Lightbulb },
   { href: "/profile", label: "Profile", icon: UserCog },
-  // { href: "/settings", label: "Settings", icon: Settings }, // Example for future
 ];
 
 export const LOCAL_STORAGE_ACTIVITY_KEY = 'xilloTruePotentialActivity';

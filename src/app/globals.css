@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -32,11 +33,15 @@
     --input: 220 15% 90%;
     --ring: 235 59% 39%; /* Darker shade of new primary for focus rings */
 
-    --chart-1: 235 59% 44%; /* New Primary */
-    --chart-2: 51 95% 55%;  /* Adjusted Accent for charts (slightly less intense yellow) */
-    --chart-3: 235 40% 70%; /* New Secondary */
-    --chart-4: 210 50% 60%;  /* A complementary blue/cyan */
-    --chart-5: 30 80% 60%;   /* A complementary orange */
+    --chart-1: 235 59% 44%; /* New Primary - e.g., Visual-Spatial */
+    --chart-2: 51 95% 55%;  /* Adjusted Accent for charts - e.g., Linguistic-Verbal */
+    --chart-3: 120 60% 45%; /* A pleasant green - e.g., Logical-Mathematical */
+    --chart-4: 25 85% 60%;  /* An orange - e.g., Bodily-Kinesthetic */
+    --chart-5: 300 65% 60%; /* A purple/magenta - e.g., Musical */
+    --chart-6: 190 70% 50%; /* A teal/cyan - e.g., Interpersonal */
+    --chart-7: 0 60% 60%;   /* A soft red/coral - e.g., Intrapersonal */
+    --chart-8: 75 50% 45%;  /* An olive/muted green - e.g., Naturalistic */
+
 
     --radius: 0.5rem;
 
@@ -80,11 +85,14 @@
     --input: 220 10% 25%;
     --ring: 235 65% 65%; /* Lighter version of dark mode primary for rings */
 
-    --chart-1: 235 65% 58%;
-    --chart-2: 51 100% 60%; /* Adjusted Accent for charts */
-    --chart-3: 235 35% 45%;
-    --chart-4: 210 60% 70%;
-    --chart-5: 30 90% 70%;
+    --chart-1: 235 65% 58%; /* New Primary Dark */
+    --chart-2: 51 100% 60%; /* Adjusted Accent Dark */
+    --chart-3: 120 50% 60%; /* Green Dark */
+    --chart-4: 25 75% 70%;  /* Orange Dark */
+    --chart-5: 300 55% 70%; /* Purple/Magenta Dark */
+    --chart-6: 190 60% 65%; /* Teal/Cyan Dark */
+    --chart-7: 0 50% 70%;   /* Soft Red/Coral Dark */
+    --chart-8: 75 40% 60%;  /* Olive/Muted Green Dark */
 
     /* Sidebar specific colors for dark mode */
     --sidebar-background: 220 10% 10%;

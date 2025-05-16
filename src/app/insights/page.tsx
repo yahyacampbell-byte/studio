@@ -68,9 +68,10 @@ export default function InsightsPage() {
         reasoning: im.reasoning,
       }));
 
+      // Pass gameTitle instead of gameId for personalized insights
       const gameDataForInsights: PersonalizedInsightsInput['gameData'] = JSON.stringify(
         activities.map(act => ({
-          title: act.gameId, 
+          gameTitle: act.gameTitle, 
           score: act.score,
           timestamp: act.timestamp,
         }))
