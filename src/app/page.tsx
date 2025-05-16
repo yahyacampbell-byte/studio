@@ -60,17 +60,17 @@ export default function HomePage() {
       <main className="flex-1">
         <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-gradient-to-br from-primary/10 via-background to-secondary/10">
           <div className="container px-4 md:px-6">
-            <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
-              <div className="flex flex-col justify-center space-y-4">
+            <div className="grid gap-6 lg:grid-cols-1 lg:gap-12 xl:grid-cols-1"> {/* Adjusted grid for text-only hero */}
+              <div className="flex flex-col justify-center space-y-4 text-center lg:text-left">
                 <div className="space-y-2">
                   <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
                     Unlock Your True Cognitive Potential
                   </h1>
-                  <p className="max-w-[600px] text-muted-foreground md:text-xl">
+                  <p className="max-w-[600px] text-muted-foreground md:text-xl mx-auto lg:mx-0">
                     {APP_NAME} helps you understand your mind better. Play engaging cognitive games, track your progress, and discover your strengths across the 8 Multiple Intelligences.
                   </p>
                 </div>
-                <div className="flex flex-col gap-2 min-[400px]:flex-row">
+                <div className="flex flex-col gap-2 min-[400px]:flex-row justify-center lg:justify-start">
                   <Button asChild size="lg" className="shadow-lg hover:shadow-xl transition-shadow">
                     <Link href={getLink("/games")}>Start Playing</Link>
                   </Button>
@@ -79,14 +79,7 @@ export default function HomePage() {
                   </Button>
                 </div>
               </div>
-              <Image
-                src="https://placehold.co/600x400.png"
-                alt="Hero Brain Activity"
-                data-ai-hint="brain activity abstract"
-                width={600}
-                height={400}
-                className="mx-auto aspect-video overflow-hidden rounded-xl object-cover sm:w-full lg:order-last lg:aspect-square shadow-2xl"
-              />
+              {/* Image removed from here */}
             </div>
           </div>
         </section>
@@ -112,7 +105,7 @@ export default function HomePage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                   <Image src="https://placehold.co/400x250.png" alt="Cognitive Games" data-ai-hint="brain games" width={400} height={250} className="rounded-md object-cover"/>
+                   {/* Image removed from here */}
                 </CardContent>
               </Card>
               <Card className="hover:shadow-lg transition-shadow">
@@ -124,7 +117,7 @@ export default function HomePage() {
                   </CardDescription>
                 </CardHeader>
                  <CardContent>
-                   <Image src="https://placehold.co/400x250.png" alt="Activity Tracking" data-ai-hint="charts graphs" width={400} height={250} className="rounded-md object-cover"/>
+                   {/* Image removed from here */}
                 </CardContent>
               </Card>
               <Card className="hover:shadow-lg transition-shadow">
@@ -136,7 +129,7 @@ export default function HomePage() {
                   </CardDescription>
                 </CardHeader>
                  <CardContent>
-                   <Image src="https://placehold.co/400x250.png" alt="AI Insights" data-ai-hint="artificial intelligence brain" width={400} height={250} className="rounded-md object-cover"/>
+                   {/* Image removed from here */}
                 </CardContent>
               </Card>
             </div>
