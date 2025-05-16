@@ -1,7 +1,7 @@
 
 "use client";
 
-import React from 'react';
+import React, { useMemo } from 'react'; // Added useMemo
 import { AppLayout } from '@/components/layout/AppLayout';
 import { IntelligenceChart } from '@/components/dashboard/IntelligenceChart';
 import { PersonalizedInsightsDisplay } from '@/components/dashboard/PersonalizedInsightsDisplay';
@@ -11,6 +11,7 @@ import { AlertCircle, CheckCircle2, Brain } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
+import { COGNITIVE_GAMES, PROFILING_GAMES_COUNT } from '@/lib/constants'; // Added
 
 export default function DashboardPage() {
   const { isAuthenticated, isLoadingAuth } = useRequireAuth();
@@ -18,6 +19,18 @@ export default function DashboardPage() {
 
   const hasActivities = activities && activities.length > 0;
   const hasAIResults = aiResults && (aiResults.intelligenceScores.length > 0 || aiResults.personalizedInsights || aiResults.recommendations);
+
+  const profilingGameIds = useMemo(() => COGNITIVE_GAMES.slice(0, PROFILING_GAMES_COUNT).map(g => g.id), []);
+  
+  const allProfilingGamesPlayed = useMemo(() => {
+    if (!hasActivities || activities.length < PROFILING_GAMES_COUNT) return false;
+    const playedProfilingGameIds = new Set(
+      activities
+        .filter(act => profilingGameIds.includes(act.gameId))
+        .map(act => act.gameId)
+    );
+    return profilingGameIds.every(id => playedProfilingGameIds.has(id));
+  }, [activities, hasActivities, profilingGameIds]);
 
   if (isLoadingAuth || !isAuthenticated) {
     return (
@@ -50,13 +63,32 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <p className="text-primary/90">
-                You haven't played any games yet. Go to the <Link href="/games" className="font-semibold underline hover:text-primary">Games section</Link> to start building your cognitive profile.
+                You haven't played any games yet. Go to the <Link href="/games" className="font-semibold underline hover:text-primary">Games section</Link> to start building your cognitive profile by playing the {PROFILING_GAMES_COUNT} profiling games.
               </p>
             </CardContent>
           </Card>
         )}
         
-        {hasActivities && !hasAIResults && (
+        {hasActivities && !allProfilingGamesPlayed && !hasAIResults && (
+           <Card className="border-accent/50 bg-accent/5">
+           <CardHeader>
+             <CardTitle className="flex items-center text-accent">
+               <AlertCircle className="mr-2 h-5 w-5" />
+               Complete Profiling Games
+             </CardTitle>
+           </CardHeader>
+           <CardContent>
+             <p className="text-accent/90 mb-3">
+               You've played some games! Please complete all {PROFILING_GAMES_COUNT} Profiling Analysis Games. Then, head over to the <Link href="/insights" className="font-semibold underline hover:text-accent">My Insights page</Link> to analyze your activity and unlock personalized feedback.
+             </p>
+             <Button asChild variant="default" className="bg-accent hover:bg-accent/90 text-accent-foreground">
+                <Link href="/games">Go to Games</Link>
+             </Button>
+           </CardContent>
+         </Card>
+        )}
+
+        {hasActivities && allProfilingGamesPlayed && !hasAIResults && (
            <Card className="border-accent/50 bg-accent/5">
            <CardHeader>
              <CardTitle className="flex items-center text-accent">
@@ -66,7 +98,7 @@ export default function DashboardPage() {
            </CardHeader>
            <CardContent>
              <p className="text-accent/90 mb-3">
-               You've played some games! Now, head over to the <Link href="/insights" className="font-semibold underline hover:text-accent">My Insights page</Link> to analyze your activity and unlock personalized feedback.
+               You've completed the profiling games! Now, head over to the <Link href="/insights" className="font-semibold underline hover:text-accent">My Insights page</Link> to analyze your activity and unlock personalized feedback.
              </p>
              <Button asChild variant="default" className="bg-accent hover:bg-accent/90 text-accent-foreground">
                 <Link href="/insights">Analyze My Activity</Link>
@@ -90,7 +122,6 @@ export default function DashboardPage() {
              </CardContent>
            </Card>
         )}
-
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <div className="lg:col-span-2">

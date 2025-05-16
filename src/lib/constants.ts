@@ -1,8 +1,9 @@
 
 import type { LucideIcon } from 'lucide-react';
-import { Eye, FileText, Calculator, Bike, Music, Users, User, Leaf, Puzzle, Brain, BarChart3, Lightbulb, Settings, Bot, Gamepad2 } from 'lucide-react'; // Added Gamepad2 for generic game
+import { Eye, FileText, Calculator, Bike, Music, Users, User, Leaf, Puzzle, Brain, BarChart3, Lightbulb, Settings, Bot, Gamepad2, CheckCircle2 } from 'lucide-react';
 
 export const APP_NAME = "Xillo TruePotential";
+export const PROFILING_GAMES_COUNT = 8;
 
 export interface CognitiveGame {
   id: string; // Key like CANDY_FACTORY
@@ -33,7 +34,7 @@ export const COGNITIVE_GAMES: CognitiveGame[] = [
     id: "SOLITAIRE", 
     title: "Solitaire", 
     description: "Cultivate patience and self-reflection.", 
-    icon: User, // More fitting for intrapersonal
+    icon: User, 
     dataAiHint: "solitaire cards" 
   },
   { 
@@ -58,10 +59,10 @@ export const COGNITIVE_GAMES: CognitiveGame[] = [
     dataAiHint: "jigsaw puzzle" 
   },
   { 
-    id: "WHACK_A_MOLE", // This is "Reaction Field" in CogniFit's list
+    id: "WHACK_A_MOLE", 
     title: "Reaction Field", 
     description: "Improve reflexes and hand-eye coordination.", 
-    icon: Bike, // Represents kinesthetic/reaction
+    icon: Bike, 
     dataAiHint: "whack a mole" 
   },
   { 
@@ -80,17 +81,17 @@ export const COGNITIVE_GAMES: CognitiveGame[] = [
     dataAiHint: "sudoku grid" 
   },
   { 
-    id: "BREAKOUT", // User mentioned Gem Breaker (Breakout)
+    id: "BREAKOUT", 
     title: "Gem Breaker", 
     description: "Improve hand-eye coordination and visual tracking.", 
-    icon: Gamepad2, // Generic game icon or Puzzle
+    icon: Gamepad2, 
     dataAiHint: "gem breakout game" 
   },
   { 
     id: "FUEL_A_CAR", 
     title: "Fuel a Car", 
     description: "Test problem-solving and reaction speed.", 
-    icon: Brain, // Using Brain for problem-solving aspect
+    icon: Brain, 
     dataAiHint: "car fuel logic" 
   },
   { 
@@ -162,6 +163,3 @@ export const GAME_TO_INTELLIGENCE_MAPPING: Record<string, string> = {
   MATH_TWINS: 'Logical-Mathematical',
   SIMON_SAYS: 'Musical', // Drive me crazy
 };
-
-
-    

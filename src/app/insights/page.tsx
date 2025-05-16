@@ -1,7 +1,7 @@
 
 "use client";
 
-import React from 'react';
+import React, { useMemo } from 'react'; // Added useMemo
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useActivity } from '@/context/ActivityContext';
 import { Button } from '@/components/ui/button';
@@ -13,11 +13,24 @@ import type { AIAnalysisResults, IntelligenceScore } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
 import Link from 'next/link';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
+import { COGNITIVE_GAMES, PROFILING_GAMES_COUNT } from '@/lib/constants'; // Added
 
 export default function InsightsPage() {
   const { isAuthenticated, isLoadingAuth } = useRequireAuth();
   const { activities, aiResults, setAIResults, isLoadingAI, setIsLoadingAI, clearActivities } = useActivity();
   const { toast } = useToast();
+
+  const profilingGameIds = useMemo(() => COGNITIVE_GAMES.slice(0, PROFILING_GAMES_COUNT).map(g => g.id), []);
+  
+  const allProfilingGamesPlayed = useMemo(() => {
+    if (activities.length < PROFILING_GAMES_COUNT) return false;
+    const playedProfilingGameIds = new Set(
+      activities
+        .filter(act => profilingGameIds.includes(act.gameId))
+        .map(act => act.gameId)
+    );
+    return profilingGameIds.every(id => playedProfilingGameIds.has(id));
+  }, [activities, profilingGameIds]);
 
   const handleAnalyzeActivity = async () => {
     if (activities.length === 0) {
@@ -29,9 +42,18 @@ export default function InsightsPage() {
       return;
     }
 
+    if (!allProfilingGamesPlayed) {
+      toast({
+        title: "Profiling Incomplete",
+        description: `Please complete all ${PROFILING_GAMES_COUNT} Profiling Analysis Games before analyzing your activity.`,
+        variant: "destructive",
+        duration: 7000,
+      });
+      return;
+    }
+
     setIsLoadingAI(true);
     try {
-      // Prepare data for the first AI flow
       const gameplayDataForAnalysis: AnalyzeGameplayInput['gameplayData'] = activities.map(act => ({
         gameTitle: act.gameTitle,
         score: act.score,
@@ -94,6 +116,17 @@ export default function InsightsPage() {
     );
   }
 
+  let analysisCardDescription: string;
+  if (activities.length === 0) {
+    analysisCardDescription = "Play some games to log activity. Once you have some gameplay data, you can analyze it here.";
+  } else if (!allProfilingGamesPlayed) {
+    const remainingGames = PROFILING_GAMES_COUNT - new Set(activities.filter(act => profilingGameIds.includes(act.gameId)).map(act => act.gameId)).size;
+    analysisCardDescription = `You have ${activities.length} game activities logged. Please complete all ${PROFILING_GAMES_COUNT} Profiling Analysis Games to enable analysis. You have ${remainingGames} more profiling game(s) to play.`;
+  } else {
+    analysisCardDescription = `You have ${activities.length} game activities logged, including all profiling games. Click below to process them and reveal your cognitive strengths and insights.`;
+  }
+
+
   return (
     <AppLayout>
       <div className="space-y-8">
@@ -111,14 +144,12 @@ export default function InsightsPage() {
                 AI-Powered Analysis
             </CardTitle>
             <CardDescription>
-              {activities.length > 0 
-                ? `You have ${activities.length} game activities logged. Click below to process them and reveal your cognitive strengths and insights.`
-                : "Play some games to log activity. Once you have some gameplay data, you can analyze it here."}
+              {analysisCardDescription}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {activities.length > 0 ? (
-              <Button onClick={handleAnalyzeActivity} disabled={isLoadingAI} size="lg" className="w-full sm:w-auto">
+              <Button onClick={handleAnalyzeActivity} disabled={isLoadingAI || !allProfilingGamesPlayed} size="lg" className="w-full sm:w-auto">
                 {isLoadingAI ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -168,7 +199,7 @@ export default function InsightsPage() {
           </Card>
         )}
 
-        {!aiResults && !isLoadingAI && activities.length > 0 && (
+        {!aiResults && !isLoadingAI && activities.length > 0 && allProfilingGamesPlayed && (
            <Card className="bg-amber-50 border-amber-200 dark:bg-amber-900/30 dark:border-amber-700 shadow-md">
             <CardHeader>
               <CardTitle className="flex items-center text-amber-700 dark:text-amber-300">

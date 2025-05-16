@@ -1,19 +1,19 @@
 
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { COGNITIVE_GAMES, CognitiveGame } from '@/lib/constants';
+import { COGNITIVE_GAMES, CognitiveGame, PROFILING_GAMES_COUNT } from '@/lib/constants';
 import { GameCard } from '@/components/games/GameCard';
 import { SimulateGameModal } from '@/components/games/SimulateGameModal';
 import { Input } from '@/components/ui/input';
 import { Search, Brain, Sparkles, ListChecks } from 'lucide-react';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
-
-const PROFILING_GAMES_COUNT = 8;
+import { useActivity } from '@/context/ActivityContext'; // Added
 
 export default function GamesPage() {
   const { isAuthenticated, isLoadingAuth } = useRequireAuth();
+  const { activities } = useActivity(); // Added
   const [selectedGame, setSelectedGame] = useState<CognitiveGame | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -29,8 +29,10 @@ export default function GamesPage() {
   };
 
   const allGames = COGNITIVE_GAMES;
-  const profilingGames = allGames.slice(0, PROFILING_GAMES_COUNT);
-  const enhancementGames = allGames.slice(PROFILING_GAMES_COUNT);
+  const profilingGames = useMemo(() => allGames.slice(0, PROFILING_GAMES_COUNT), [allGames]);
+  const enhancementGames = useMemo(() => allGames.slice(PROFILING_GAMES_COUNT), [allGames]);
+
+  const playedGameIds = useMemo(() => new Set(activities.map(act => act.gameId)), [activities]);
 
   const filterGames = (games: CognitiveGame[]) => {
     if (!searchTerm) return games;
@@ -81,12 +83,17 @@ export default function GamesPage() {
             <h2 className="text-2xl font-semibold">Profiling Analysis Games</h2>
           </div>
           <p className="text-muted-foreground">
-            Complete these 8 games to build your initial Multiple Intelligence profile.
+            Complete these {PROFILING_GAMES_COUNT} games to build your initial Multiple Intelligence profile.
           </p>
           {filteredProfilingGames.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredProfilingGames.map((game) => (
-                <GameCard key={game.id} game={game} onPlay={handlePlayGame} />
+                <GameCard 
+                  key={game.id} 
+                  game={game} 
+                  onPlay={handlePlayGame} 
+                  hasBeenPlayed={playedGameIds.has(game.id)} 
+                />
               ))}
             </div>
           ) : (
@@ -107,7 +114,12 @@ export default function GamesPage() {
           {filteredEnhancementGames.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredEnhancementGames.map((game) => (
-                <GameCard key={game.id} game={game} onPlay={handlePlayGame} />
+                <GameCard 
+                  key={game.id} 
+                  game={game} 
+                  onPlay={handlePlayGame} 
+                  hasBeenPlayed={playedGameIds.has(game.id)}
+                />
               ))}
             </div>
           ) : (
@@ -122,6 +134,3 @@ export default function GamesPage() {
     </AppLayout>
   );
 }
-
-
-    
