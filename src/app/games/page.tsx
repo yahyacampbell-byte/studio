@@ -3,17 +3,18 @@
 
 import React, { useState, useMemo } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { COGNITIVE_GAMES, CognitiveGame, PROFILING_GAMES_COUNT } from '@/lib/constants';
+import { COGNITIVE_GAMES, CognitiveGame, PROFILING_GAMES_COUNT, MULTIPLE_INTELLIGENCES } from '@/lib/constants';
+import type { IntelligenceId } from '@/lib/types';
 import { GameCard } from '@/components/games/GameCard';
 import { SimulateGameModal } from '@/components/games/SimulateGameModal';
 import { Input } from '@/components/ui/input';
-import { Search, Brain, Sparkles, ListChecks } from 'lucide-react';
+import { Search, Brain, Sparkles, ListChecks, Lightbulb } from 'lucide-react';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { useActivity } from '@/context/ActivityContext';
 
 export default function GamesPage() {
   const { isAuthenticated, isLoadingAuth } = useRequireAuth();
-  const { activities } = useActivity();
+  const { activities, aiResults } = useActivity();
   const [selectedGame, setSelectedGame] = useState<CognitiveGame | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -34,11 +35,59 @@ export default function GamesPage() {
   const allEnhancementGameModels = useMemo(() => COGNITIVE_GAMES.slice(PROFILING_GAMES_COUNT), []);
 
   const isProfilingComplete = useMemo(() => {
-    if (allProfilingGameModels.length === 0) return true; // Or false, depending on desired behavior for empty profiling set
+    if (allProfilingGameModels.length === 0) return true;
     return allProfilingGameModels.every(game => playedGameIds.has(game.id));
   }, [allProfilingGameModels, playedGameIds]);
 
-  const filterAndSortGames = (games: CognitiveGame[], isSectionCompleteForHeaderText?: boolean) => {
+  const recommendedGames = useMemo(() => {
+    if (!aiResults || !aiResults.intelligenceScores || aiResults.intelligenceScores.length === 0) {
+      return [];
+    }
+
+    const scores = [...aiResults.intelligenceScores].sort((a, b) => a.score - b.score);
+    
+    const recommendations: CognitiveGame[] = [];
+    const recommendedGameIds = new Set<string>();
+
+    // Target 2 weakest, 1 strongest
+    const weakestIntelligences = scores.slice(0, 2).map(s => s.intelligence);
+    const strongestIntelligences = scores.length > 2 ? scores.slice(scores.length -1).map(s => s.intelligence) : [];
+    
+    const targetIntelligences = [
+        ...weakestIntelligences,
+        ...strongestIntelligences
+    ].filter(Boolean) as IntelligenceId[];
+
+
+    for (const targetInt of targetIntelligences) {
+      if (recommendations.length >= 3) break; // Max 3-4 recommendations
+
+      const gamesForIntelligence = COGNITIVE_GAMES.filter(game => 
+        game.assessesIntelligences.includes(targetInt) && !recommendedGameIds.has(game.id)
+      );
+
+      const unplayedGames = gamesForIntelligence.filter(game => !playedGameIds.has(game.id));
+      const playedGames = gamesForIntelligence.filter(game => playedGameIds.has(game.id));
+      
+      let gameToRecommend: CognitiveGame | undefined = undefined;
+
+      if (unplayedGames.length > 0) {
+        gameToRecommend = unplayedGames[0]; // Pick the first unplayed one
+      } else if (playedGames.length > 0) {
+        // Optional: pick a played game that hasn't been played most recently, or just the first one
+        gameToRecommend = playedGames[0]; 
+      }
+
+      if (gameToRecommend) {
+        recommendations.push(gameToRecommend);
+        recommendedGameIds.add(gameToRecommend.id);
+      }
+    }
+    return recommendations;
+  }, [aiResults, playedGameIds]);
+
+
+  const filterAndSortGames = (games: CognitiveGame[]) => {
     const filtered = games.filter(game =>
       game.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       game.description.toLowerCase().includes(searchTerm.toLowerCase())
@@ -57,6 +106,12 @@ export default function GamesPage() {
     () => filterAndSortGames(allEnhancementGameModels),
     [allEnhancementGameModels, searchTerm, playedGameIds]
   );
+  
+  const sortedFilteredRecommendedGames = useMemo(
+    () => filterAndSortGames(recommendedGames),
+    [recommendedGames, searchTerm, playedGameIds]
+  );
+
 
   if (isLoadingAuth || !isAuthenticated) {
     return (
@@ -68,6 +123,28 @@ export default function GamesPage() {
       </AppLayout>
     );
   }
+  
+  const recommendedGamesSection = sortedFilteredRecommendedGames.length > 0 && (
+    <section className="space-y-4">
+      <div className="flex items-center gap-2">
+        <Lightbulb className="h-6 w-6 text-destructive" /> {/* Changed icon to destructive for visibility */}
+        <h2 className="text-2xl font-semibold">Recommended For You</h2>
+      </div>
+      <p className="text-muted-foreground">
+        Based on your latest analysis, try these games to further develop your cognitive profile.
+      </p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {sortedFilteredRecommendedGames.map((game) => (
+          <GameCard
+            key={game.id}
+            game={game}
+            onPlay={handlePlayGame}
+            hasBeenPlayed={playedGameIds.has(game.id)}
+          />
+        ))}
+      </div>
+    </section>
+  );
 
   const profilingGamesSection = (
     <section className="space-y-4">
@@ -136,7 +213,7 @@ export default function GamesPage() {
           <h1 className="text-3xl font-bold tracking-tight">Cognitive Games</h1>
           <p className="text-muted-foreground">
             {isProfilingComplete
-              ? "Enhance your cognitive profile or replay profiling games."
+              ? "Enhance your cognitive profile or replay profiling games. Check out your recommendations below!"
               : `Challenge your mind. Start with the ${PROFILING_GAMES_COUNT} Profiling Games to build your intelligence profile.`}
           </p>
         </div>
@@ -151,11 +228,13 @@ export default function GamesPage() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-
+        
+        {/* Render order logic */}
+        {recommendedGamesSection}
         {isProfilingComplete ? (
           <>
             {enhancementGamesSection}
-            {profilingGamesSection}
+            {profilingGamesSection} 
           </>
         ) : (
           <>
