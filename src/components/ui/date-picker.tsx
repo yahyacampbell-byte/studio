@@ -36,15 +36,20 @@ export function DatePicker({ value, onChange, disabled, fromYear, toYear, captio
   React.useEffect(() => {
     if (value) {
       // Check if the new value's month is different from the current displayedMonth
+      // This check helps prevent unnecessary updates if the month is already correct
       if (value.getFullYear() !== displayedMonth.getFullYear() || value.getMonth() !== displayedMonth.getMonth()) {
         setDisplayedMonth(new Date(value.getFullYear(), value.getMonth(), 1));
       }
     } else {
       // If value is cleared, reset displayedMonth to a default
       // (e.g., first month of `toYear` or current year)
-      setDisplayedMonth(new Date(toYear || currentYear, 0, 1));
+      // Check if displayedMonth is already the default to prevent loop if toYear/currentYear changes unnecessarily
+      const defaultResetDate = new Date(toYear || currentYear, 0, 1);
+      if (displayedMonth.getFullYear() !== defaultResetDate.getFullYear() || displayedMonth.getMonth() !== defaultResetDate.getMonth()) {
+        setDisplayedMonth(defaultResetDate);
+      }
     }
-  }, [value, toYear, currentYear, displayedMonth]);
+  }, [value, toYear, currentYear]); // Removed displayedMonth from dependencies
   
   const handleDateSelect = (selectedDate?: Date) => {
     onChange(selectedDate); // Propagate to form hook
@@ -90,4 +95,3 @@ export function DatePicker({ value, onChange, disabled, fromYear, toYear, captio
     </Popover>
   )
 }
-
