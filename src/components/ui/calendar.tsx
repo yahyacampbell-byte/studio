@@ -4,34 +4,36 @@
 import * as React from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { DayPicker, DropdownProps as DayPickerDropdownProps } from "react-day-picker"
+import type { Locale } from "date-fns"
+
 
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 
-export interface CustomCalendarProps extends React.ComponentProps<typeof DayPicker> {
+export interface CustomCalendarProps extends Omit<React.ComponentProps<typeof DayPicker>, 'month' | 'onMonthChange'> {
   showMonthDropdown?: boolean;
+  month?: Date; // Make month prop explicit for controlled component
+  onMonthChange?: (date: Date) => void; // Make onMonthChange prop explicit
 }
 
-// Custom Dropdown component to override react-day-picker's default
+
 const InternalDropdownOverride: React.FC<DayPickerDropdownProps & { showMonthDropdown?: boolean }> = ({ name, showMonthDropdown, children, ...props }) => {
   if (name === 'months' && showMonthDropdown === false) {
-    return null; // Hide month dropdown if showMonthDropdown is false
+    return null; 
   }
 
-  // For years, or for months if showMonthDropdown is true (or undefined), render the default select with its options.
-  // Apply basic styling to match the calendar's look and feel.
   const selectClassName = cn(
-    "rdp-dropdown", // Base class for react-day-picker dropdowns
+    "rdp-dropdown", 
     "mx-1",
-    "h-7", // Adjust height to match button height in caption
-    "px-1", // Reduced padding for smaller text
-    "py-0", // Reduced padding
-    "text-xs", // Smaller text size for dropdowns
+    "h-7", 
+    "px-1", 
+    "py-0", 
+    "text-xs", 
     "rounded-md",
     "border",
-    "border-input", // Use input border color from theme
-    "bg-background", // Use background color from theme
-    "focus:outline-none focus:ring-1 focus:ring-ring", // Focus state
+    "border-input", 
+    "bg-background", 
+    "focus:outline-none focus:ring-1 focus:ring-ring", 
     name === 'months' ? "rdp-dropdown_month" : "rdp-dropdown_year"
   );
 
@@ -41,7 +43,9 @@ const InternalDropdownOverride: React.FC<DayPickerDropdownProps & { showMonthDro
       aria-label={props['aria-label']}
       className={selectClassName}
       value={props.value}
-      onChange={(e) => props.onChange?.(Number(e.target.value))}
+      onChange={(e) => {
+        props.onChange?.(Number(e.target.value)) 
+      }}
       disabled={props.disabled}
     >
       {children}
@@ -54,22 +58,32 @@ function Calendar({
   className,
   classNames,
   showOutsideDays = true,
-  showMonthDropdown = true, // New prop, defaults to true
+  showMonthDropdown = true, 
+  month: controlledMonth, // Use the controlled month prop
+  onMonthChange: controlledOnMonthChange, // Use the controlled onMonthChange prop
   ...props
-}: CustomCalendarProps) { // Use CustomCalendarProps
+}: CustomCalendarProps) { 
 
-  const componentsConfig = {
+  const componentsConfig: React.ComponentProps<typeof DayPicker>['components'] = {
     IconLeft: ({ ...rest } : React.HTMLAttributes<SVGElement>) => <ChevronLeft className="h-4 w-4" {...rest} />,
     IconRight: ({ ...rest }: React.HTMLAttributes<SVGElement>) => <ChevronRight className="h-4 w-4" {...rest} />,
-    // Conditionally override Dropdown component
-    Dropdown: undefined as (((props: DayPickerDropdownProps) => JSX.Element) | undefined)
+    Dropdown: undefined
   };
 
-  if (showMonthDropdown === false && (props.captionLayout === 'dropdown' || props.captionLayout === 'dropdown-buttons')) {
+  if ((props.captionLayout === 'dropdown' || props.captionLayout === 'dropdown-buttons')) {
     componentsConfig.Dropdown = (dropdownProps: DayPickerDropdownProps) => (
       <InternalDropdownOverride {...dropdownProps} showMonthDropdown={showMonthDropdown} />
     );
   }
+  
+  // If month is controlled, defaultMonth and initialFocus are ignored by DayPicker.
+  // If not controlled, DayPicker manages its own state.
+  const dayPickerProps = {
+    ...props,
+    month: controlledMonth,
+    onMonthChange: controlledOnMonthChange,
+  };
+
 
   return (
     <DayPicker
@@ -79,8 +93,8 @@ function Calendar({
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
         caption: "flex justify-center pt-1 relative items-center",
-        caption_label: "text-sm font-medium", // This might display the month name if dropdown is hidden
-        caption_dropdowns: "flex gap-1", // Class for the container of dropdowns
+        caption_label: "text-sm font-medium", 
+        caption_dropdowns: "flex gap-1", 
         nav: "space-x-1 flex items-center",
         nav_button: cn(
           buttonVariants({ variant: "outline" }),
@@ -111,10 +125,11 @@ function Calendar({
         ...classNames,
       }}
       components={componentsConfig}
-      {...props}
+      {...dayPickerProps} // Spread all props, including controlled month/onMonthChange
     />
   )
 }
 Calendar.displayName = "Calendar"
 
 export { Calendar }
+
