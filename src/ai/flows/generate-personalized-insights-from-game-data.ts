@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Generates personalized insights and recommendations based on user gameplay data and Multiple Intelligences mapping.
@@ -38,7 +39,11 @@ export async function generatePersonalizedInsights(
 const getAssessedIntelligencesForGame = (gameTitle: string): string => {
     const game = COGNITIVE_GAMES.find(g => g.title === gameTitle);
     if (game && game.assessesIntelligences.length > 0) {
-        return game.assessesIntelligences.join(', ');
+        const intelligenceNames = game.assessesIntelligences.map(id => {
+            const mi = MULTIPLE_INTELLIGENCES.find(m => m.id === id);
+            return mi ? mi.name : id; 
+        });
+        return intelligenceNames.join(', ');
     }
     return 'General Cognitive Skill';
 };
@@ -53,7 +58,7 @@ const personalizedInsightsPrompt = ai.definePrompt({
   name: 'personalizedInsightsPrompt',
   input: {schema: PersonalizedInsightsPromptInputSchemaInternal}, 
   output: {schema: PersonalizedInsightsOutputSchema},
-  prompt: `You are an AI expert in cognitive psychology and multiple intelligences.
+  prompt: `You are an AI expert in cognitive psychology and multiple intelligences, focused on providing general wellness insights.
 Analyze the user's game data summarized below.
 
 Game Performance Summary (Game Title, Score, Assessed Intelligence(s)):
@@ -66,19 +71,22 @@ Based on this summary (and the original game data if needed for context: {{{orig
 2.  **Broader Cognitive Insights (Optional)**:
     Based on the types of games played and the general performance (scores), provide observations on general cognitive abilities. Phrase these as potential observations or areas that might warrant further exploration for self-awareness or general cognitive skill development. **Crucially, DO NOT make any medical diagnoses, suggest clinical conditions, or advise medical consultation. Stick to general cognitive function observations.**
 
-    Consider these cognitive domains and how game performance might relate:
-    *   **Working Memory**: (e.g., 'Math Twins', 'Digits', 'Candy Factory', 'Simon Says' / 'Drive me crazy'). If scores in games requiring holding and manipulating information are consistently high, this might suggest strong working memory capacity. Consistently low scores could indicate this as an area for general cognitive exercise.
-    *   **Processing Speed**: (e.g., 'Reaction Field', 'Color Frenzy', 'Dragster Racing'). High performance in timed reaction games might suggest efficient information processing. Slower performance could indicate an area for practice in rapid responding.
-    *   **Attention (Selective/Sustained)**: (e.g., 'Reaction Field' / 'Whack-a-Mole', 'Traffic Manager', 'Words Birds'). Strong performance in games demanding focus could indicate good attention skills. If scores are inconsistent or low in such games, sustained focus might be an area to work on.
-    *   **Executive Function (Planning, Strategy, Problem-Solving, Cognitive Flexibility)**: (e.g., 'Sudoku', 'Chess', 'Solitaire', 'Ant Escape', 'Crossroads', 'Cube Foundry'). High scores in strategy or puzzle games might reflect strong executive functions. Difficulty might suggest these skills could be enhanced with practice.
-    *   **Visuospatial Skills**: (e.g., 'Jigsaw 9', 'Penguin Explorer', 'Star Architect', '3D Art Puzzle'). Strong performance here might indicate good spatial reasoning. Lower scores could point to this as an area for development.
-    *   **Verbal Abilities**: (e.g., 'Words Birds', 'Scrambled', 'Visual Crossword' / 'Name Me'). High performance could indicate strong vocabulary or verbal processing. Lower scores might suggest an area for language skill enhancement.
+    Consider these cognitive domains and how game performance might relate. Synthesize information from multiple relevant games if possible:
+    *   **Working Memory**: (e.g., performance in games like 'Math Twins', 'Digits', 'Candy Factory', 'Drive me crazy'). If scores in games requiring holding and manipulating information are consistently notable (high or low), this might offer general insights into working memory capacity as an area for self-awareness.
+    *   **Processing Speed**: (e.g., performance in games like 'Reaction Field', 'Color Frenzy', 'Dragster Racing'). Consistent performance in timed reaction games might offer general insights into information processing efficiency.
+    *   **Attention (Selective/Sustained)**: (e.g., performance in games like 'Reaction Field', 'Traffic Manager', 'Words Birds'). Consistent performance in games demanding focus could provide general observations about attention skills.
+    *   **Executive Function (Planning, Strategy, Problem-Solving, Cognitive Flexibility)**: (e.g., performance in games like 'Sudoku', 'Chess', 'Solitaire', 'Ant Escape', 'Crossroads', 'Cube Foundry'). Consistent performance patterns in strategy or puzzle games might relate to executive functions.
+    *   **Visuospatial Skills**: (e.g., performance in games like 'Jigsaw 9', 'Penguin Explorer', 'Star Architect', '3D Art Puzzle'). Consistent performance here might offer general insights into spatial reasoning abilities.
+    *   **Verbal Abilities**: (e.g., performance in games like 'Words Birds', 'Scrambled', 'Visual Crossword'). Consistent performance could provide general observations related to vocabulary or verbal processing.
+    *   **Motor Skills**: (e.g., performance in games like 'Reaction Field', 'Tennis Bomb', 'Twist It', 'Perfect Tension', 'Tennis Bowling'). Consistent patterns here might relate to general hand-eye coordination or fine motor control.
 
-    Frame observations carefully, for example:
-    "Consistent high scores in games like 'Reaction Field' and 'Color Frenzy' might suggest quick mental processing and response capabilities."
-    "If performance across several strategy games like 'Chess' and 'Solitaire' is strong, this could point to well-developed planning and executive function skills."
-    "Difficulty in games primarily testing working memory, such as 'Digits' or 'Math Twins', might indicate that this cognitive area could benefit from targeted exercises."
+    Frame observations carefully and supportively, for example:
+    "Consistent performance patterns across games like 'Reaction Field' and 'Color Frenzy' might offer general insights into your responsiveness, which could be an interesting area for personal exploration."
+    "If performance across several strategy games like 'Chess' and 'Solitaire' shows consistent patterns, this could point towards general strengths or areas for development in planning and problem-solving approaches."
     "Observing performance across games like 'Jigsaw 9' and 'Star Architect' can offer general insights into visuospatial processing skills."
+    "If you notice particular trends in games primarily testing working memory, such as 'Digits' or 'Math Twins', this might highlight that cognitive area as one for further self-awareness or practice."
+
+    Your observations should be framed as potential areas for self-awareness or general cognitive skill development. Do not output risk percentages, specific clinical correlations, or direct medical advice.
 
 3.  **Actionable Recommendations**: Offer clear, concise, and actionable recommendations. These should aim to help the user improve their cognitive skills, leverage their strengths, or explore areas for cognitive development based on ALL the insights generated (both MI summary and broader cognitive insights). Keep recommendations general and focused on cognitive exercises or learning strategies.
 
@@ -120,7 +128,7 @@ const generatePersonalizedInsightsFlow = ai.defineFlow(
     
     return {
         multipleIntelligencesSummary: output?.multipleIntelligencesSummary || "Could not generate a summary for Multiple Intelligences.",
-        broaderCognitiveInsights: output?.broaderCognitiveInsights,
+        broaderCognitiveInsights: output?.broaderCognitiveInsights, // This can be undefined/null if AI doesn't generate it
         actionableRecommendations: output?.actionableRecommendations || "Play more games and analyze your activity to receive personalized recommendations.",
     };
   }
