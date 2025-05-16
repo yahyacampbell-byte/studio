@@ -3,7 +3,7 @@
 
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
-import { COGNITIVE_GAMES, CognitiveGame, PROFILING_GAMES_COUNT, MULTIPLE_INTELLIGENCES } from '@/lib/constants';
+import { COGNITIVE_GAMES, CognitiveGame, PROFILING_GAMES_COUNT, MULTIPLE_INTELLIGENCES, ENHANCEMENT_GAME_IDS } from '@/lib/constants';
 import type { IntelligenceId } from '@/lib/types';
 import { GameCard } from '@/components/games/GameCard';
 import { SimulateGameModal } from '@/components/games/SimulateGameModal';
@@ -13,7 +13,6 @@ import { Search, Brain, Sparkles, ListChecks, Lightbulb } from 'lucide-react';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { useActivity } from '@/context/ActivityContext';
 
-const ENHANCEMENT_GAME_IDS: string[] = ["SUDOKU_PUZZLE", "BREAKOUT", "FUEL_A_CAR", "WORD_QUEST"];
 
 export default function GamesPage() {
   const { isAuthenticated, isLoadingAuth } = useRequireAuth();
@@ -30,10 +29,9 @@ export default function GamesPage() {
     const gameActivities = activities.filter(act => act.gameId === gameId);
     if (gameActivities.length === 0) return false;
 
-    if (latestAnalyzedTimestamp === 0) { // No analysis done yet, any play marks it as "played"
+    if (latestAnalyzedTimestamp === 0) {
       return true;
     }
-    // After analysis, only mark as "played" if played *since* the last analysis
     return gameActivities.some(act => new Date(act.timestamp).getTime() > latestAnalyzedTimestamp);
   }, [activities, latestAnalyzedTimestamp]);
 
@@ -47,7 +45,7 @@ export default function GamesPage() {
   const enhancementGameModels = useMemo(() => 
     COGNITIVE_GAMES.filter(game => game && game.id && ENHANCEMENT_GAME_IDS.includes(game.id))
   , []);
-
+  
   const isInitialProfilingComplete = useMemo(() => {
     if (profilingGameModels.length === 0) return true;
     return profilingGameModels.every(game => game && game.id && allTimePlayedGameIds.has(game.id));
@@ -101,7 +99,7 @@ export default function GamesPage() {
         recommendedGameIds.add(gameToRecommend.id);
       }
     }
-    return recommendations.filter(game => game && game.id); // Ensure all games in array are valid
+    return recommendations.filter(game => game && game.id);
   }, [latestAIAnalysis, getDisplayAsPlayedStatus]);
 
 
@@ -124,17 +122,17 @@ export default function GamesPage() {
     setIsModalOpen(true);
   }, []); 
 
-  const handleCloseModal = () => {
+  const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
     setSelectedGame(null);
-  };
+  }, []);
 
   const renderGameCards = useCallback((games: CognitiveGame[]) => {
     if (!Array.isArray(games)) { 
         console.error("renderGameCards received non-array:", games);
         return <p className="text-center text-destructive py-8 col-span-full">Error: Could not load games.</p>;
     }
-    const validGames = games.filter(game => game && game.id); // Filter out null/undefined games
+    const validGames = games.filter(game => game && game.id);
 
     if (validGames.length === 0 && searchTerm) {
       return <p className="text-center text-muted-foreground py-8 col-span-full">No games found matching your search in this section.</p>;
@@ -200,13 +198,9 @@ export default function GamesPage() {
             const sortedGames = filterAndSortGames(gamesForThisIntelligence);
             
             if (sortedGames.length === 0 && searchTerm && gamesForThisIntelligence.length > 0) { 
-                // If search yields no result but games exist for this intelligence, render the accordion but with "no games matching search"
             } else if (gamesForThisIntelligence.length === 0) { 
-                // If no games for this intelligence even without search (excluding enhancement), don't render accordion item.
-                // Unless we want to show empty accordions, in which case this check is removed.
                 return null;
             }
-
 
             const IconComponent = intelligence.icon;
 
@@ -239,7 +233,8 @@ export default function GamesPage() {
 
 
   const profilingGamesSection = useMemo(() => {
-    if (latestAIAnalysis && isInitialProfilingComplete) return null; 
+    // This section is only shown if no AI analysis has been performed yet.
+    if (latestAIAnalysis) return null; 
     
     const sortedGames = filterAndSortGames(profilingGameModels);
     
@@ -335,12 +330,12 @@ export default function GamesPage() {
     );
   }
   
-  const pageTitle = latestAIAnalysis && isInitialProfilingComplete
+  const pageTitle = latestAIAnalysis
     ? "Explore Games by Recommendation or Intelligence" 
     : `Play ${PROFILING_GAMES_COUNT} Profiling Games to Start`;
   
-  const pageDescription = latestAIAnalysis && isInitialProfilingComplete
-    ? "Dive into recommended games or explore specific intelligences via the accordions. Replay games to see how your profile evolves!"
+  const pageDescription = latestAIAnalysis
+    ? "Dive into recommended games, explore specific intelligences via the accordions, or try our enhancement games. Replay games to see how your profile evolves!"
     : `Challenge your mind. Start by playing all ${PROFILING_GAMES_COUNT} Profiling Games to build your intelligence profile, then move to enhancement games.`;
 
 
@@ -367,12 +362,12 @@ export default function GamesPage() {
           <>
             {recommendedGamesSection}
             {gamesByIntelligenceSection}
-            {profilingGamesSection} {/* Shows if initial profiling is NOT complete, even if AI results exist from a partial analysis */}
+            {/* Profiling Games Section is INTENTIONALLY OMITTED HERE as per request */}
             {enhancementGamesSection} 
           </>
         ) : ( 
           <>
-            {profilingGamesSection}
+            {profilingGamesSection} {/* Shown only if no analysis has been done */}
             {enhancementGamesSection}
           </>
         )}
@@ -382,3 +377,4 @@ export default function GamesPage() {
     </AppLayout>
   );
 }
+
