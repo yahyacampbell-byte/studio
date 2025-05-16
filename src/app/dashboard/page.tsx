@@ -5,7 +5,8 @@ import React, { useMemo } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { IntelligenceChart } from '@/components/dashboard/IntelligenceChart';
 import { PersonalizedInsightsDisplay } from '@/components/dashboard/PersonalizedInsightsDisplay';
-import { ProgressTrendChart } from '@/components/dashboard/ProgressTrendChart'; // New import
+import { ProgressTrendChart } from '@/components/dashboard/ProgressTrendChart';
+import { KeyCognitiveAreasCard } from '@/components/dashboard/KeyCognitiveAreasCard'; // New import
 import { useActivity } from '@/context/ActivityContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { AlertCircle, CheckCircle2, Brain } from 'lucide-react';
@@ -16,7 +17,7 @@ import { COGNITIVE_GAMES, PROFILING_GAMES_COUNT } from '@/lib/constants';
 
 export default function DashboardPage() {
   const { isAuthenticated, isLoadingAuth } = useRequireAuth();
-  const { activities, aiAnalysisHistory, latestAIAnalysis } = useActivity(); // Updated context values
+  const { activities, aiAnalysisHistory, latestAIAnalysis } = useActivity();
 
   const hasActivities = activities && activities.length > 0;
   const hasAIAnalysis = latestAIAnalysis !== null;
@@ -125,14 +126,17 @@ export default function DashboardPage() {
         )}
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            <div className="lg:col-span-2"> {/* Radar chart takes 2/3 width */}
+            <div className="lg:col-span-2">
                  <IntelligenceChart aiResults={latestAIAnalysis} />
             </div>
-            <div className="lg:col-span-1"> {/* Trend chart takes 1/3 width */}
-                <ProgressTrendChart aiAnalysisHistory={aiAnalysisHistory} />
+            <div className="lg:col-span-1">
+                <KeyCognitiveAreasCard aiResults={latestAIAnalysis} />
             </div>
-            <div className="lg:col-span-3"> {/* Insights display takes full width */}
+            <div className="lg:col-span-2">
                 <PersonalizedInsightsDisplay aiResults={latestAIAnalysis} />
+            </div>
+             <div className="lg:col-span-1">
+                <ProgressTrendChart aiAnalysisHistory={aiAnalysisHistory} />
             </div>
         </div>
       </div>
