@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from 'react';
@@ -5,14 +6,16 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { useActivity } from '@/context/ActivityContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { AlertTriangle, CheckCircle, Loader2, BarChartBig, Bot } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Loader2, BarChartBig, Bot, Brain } from 'lucide-react';
 import { analyzeGameplayAndMapToIntelligences, AnalyzeGameplayInput } from '@/ai/flows/analyze-gameplay-and-map-to-intelligences';
 import { generatePersonalizedInsights, PersonalizedInsightsInput } from '@/ai/flows/generate-personalized-insights-from-game-data';
 import type { AIAnalysisResults, IntelligenceScore } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
 import Link from 'next/link';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
 
 export default function InsightsPage() {
+  const { isAuthenticated, isLoadingAuth } = useRequireAuth();
   const { activities, aiResults, setAIResults, isLoadingAI, setIsLoadingAI, clearActivities } = useActivity();
   const { toast } = useToast();
 
@@ -38,15 +41,14 @@ export default function InsightsPage() {
       const analysisResult = await analyzeGameplayAndMapToIntelligences({ gameplayData: gameplayDataForAnalysis });
       
       const intelligenceScores: IntelligenceScore[] = analysisResult.intelligenceMappings.map(im => ({
-        intelligence: im.intelligence as AIAnalysisResults['intelligenceScores'][0]['intelligence'], // Cast might be needed if AI returns slightly different strings
+        intelligence: im.intelligence as AIAnalysisResults['intelligenceScores'][0]['intelligence'],
         score: im.score,
         reasoning: im.reasoning,
       }));
 
-      // Prepare data for the second AI flow
       const gameDataForInsights: PersonalizedInsightsInput['gameData'] = JSON.stringify(
         activities.map(act => ({
-          title: act.gameId, // This uses the game KEY (e.g., CANDY_FACTORY)
+          title: act.gameId, 
           score: act.score,
           timestamp: act.timestamp,
         }))
@@ -75,11 +77,22 @@ export default function InsightsPage() {
         description: "An error occurred during AI analysis. Please try again.",
         variant: "destructive",
       });
-      setAIResults(null); // Clear previous results on error
+      setAIResults(null);
     } finally {
       setIsLoadingAI(false);
     }
   };
+  
+  if (isLoadingAuth || !isAuthenticated) {
+    return (
+      <AppLayout>
+        <div className="flex flex-col items-center justify-center h-[calc(100vh-10rem)]">
+          <Brain className="h-16 w-16 animate-pulse text-primary mb-4" />
+          <p className="text-xl text-muted-foreground">Loading insights...</p>
+        </div>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>

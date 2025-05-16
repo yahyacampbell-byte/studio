@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from 'react';
@@ -6,15 +7,28 @@ import { IntelligenceChart } from '@/components/dashboard/IntelligenceChart';
 import { PersonalizedInsightsDisplay } from '@/components/dashboard/PersonalizedInsightsDisplay';
 import { useActivity } from '@/context/ActivityContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Brain } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
 
 export default function DashboardPage() {
+  const { isAuthenticated, isLoadingAuth } = useRequireAuth();
   const { activities, aiResults } = useActivity();
 
   const hasActivities = activities && activities.length > 0;
   const hasAIResults = aiResults && (aiResults.intelligenceScores.length > 0 || aiResults.personalizedInsights || aiResults.recommendations);
+
+  if (isLoadingAuth || !isAuthenticated) {
+    return (
+      <AppLayout>
+        <div className="flex flex-col items-center justify-center h-[calc(100vh-10rem)]">
+          <Brain className="h-16 w-16 animate-pulse text-primary mb-4" />
+          <p className="text-xl text-muted-foreground">Loading your dashboard...</p>
+        </div>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>

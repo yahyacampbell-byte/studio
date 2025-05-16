@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect } from 'react';
@@ -6,12 +7,14 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { COGNITIVE_GAMES, CognitiveGame } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { ArrowLeft, PlayCircle } from 'lucide-react';
+import { ArrowLeft, PlayCircle, Brain as BrainIcon } from 'lucide-react'; // Renamed Brain to BrainIcon
 import Image from 'next/image';
 import { SimulateGameModal } from '@/components/games/SimulateGameModal';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
 
 export default function GameDetailsPage() {
+  const { isAuthenticated, isLoadingAuth } = useRequireAuth();
   const router = useRouter();
   const params = useParams();
   const gameId = params.gameId as string;
@@ -20,9 +23,11 @@ export default function GameDetailsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-    const foundGame = COGNITIVE_GAMES.find(g => g.id === gameId);
-    setGame(foundGame || null); // null if not found after "loading"
-  }, [gameId]);
+    if (isAuthenticated) { // Only load game details if authenticated
+      const foundGame = COGNITIVE_GAMES.find(g => g.id === gameId);
+      setGame(foundGame || null); // null if not found after "loading"
+    }
+  }, [gameId, isAuthenticated]);
 
   const handlePlayGame = () => {
     if (game) {
@@ -33,8 +38,19 @@ export default function GameDetailsPage() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
   };
+  
+  if (isLoadingAuth || !isAuthenticated) {
+    return (
+      <AppLayout>
+        <div className="flex flex-col items-center justify-center h-[calc(100vh-10rem)]">
+          <BrainIcon className="h-16 w-16 animate-pulse text-primary mb-4" />
+          <p className="text-xl text-muted-foreground">Loading game details...</p>
+        </div>
+      </AppLayout>
+    );
+  }
 
-  if (game === undefined) {
+  if (game === undefined && isAuthenticated) { // Show skeleton only if authenticated and game data is loading
     return (
       <AppLayout>
         <div className="space-y-6">
@@ -50,7 +66,7 @@ export default function GameDetailsPage() {
     );
   }
 
-  if (!game) {
+  if (!game && isAuthenticated) { // Show not found only if authenticated and game is truly not found
     return (
       <AppLayout>
         <div className="text-center py-10">
@@ -60,6 +76,8 @@ export default function GameDetailsPage() {
       </AppLayout>
     );
   }
+  
+  if (!game) return null; // Should be covered by above, or if not authenticated yet
 
   const GameIcon = game.icon;
 

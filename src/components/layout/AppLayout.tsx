@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from 'react';
@@ -6,13 +7,15 @@ import { usePathname } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Menu, Brain } from 'lucide-react';
+import { Menu, Brain, LogIn, LogOut } from 'lucide-react';
 import { APP_NAME, NAV_LINKS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { Toaster } from "@/components/ui/toaster";
+import { useAuth } from '@/context/AuthContext';
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { isAuthenticated, logout, isLoadingAuth } = useAuth();
 
   const sidebarContent = (
     <ScrollArea className="h-full py-4">
@@ -41,6 +44,23 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </Button>
           ))}
         </div>
+        <div className="mt-auto pt-4 px-2">
+          {!isLoadingAuth && (
+            isAuthenticated ? (
+              <Button variant="outline" className="w-full justify-start" onClick={logout}>
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </Button>
+            ) : (
+              <Button variant="default" className="w-full justify-start" asChild>
+                <Link href="/auth/login">
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Login
+                </Link>
+              </Button>
+            )
+          )}
+        </div>
       </div>
     </ScrollArea>
   );
@@ -67,8 +87,22 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               {sidebarContent}
             </SheetContent>
           </Sheet>
-          {/* Placeholder for User Profile Dropdown if needed in future */}
-          {/* <UserNav /> */}
+          <div className="hidden lg:flex items-center gap-2">
+             {!isLoadingAuth && (
+                isAuthenticated ? (
+                <Button variant="ghost" onClick={logout} size="sm">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Logout
+                </Button>
+                ) : (
+                <Button asChild size="sm">
+                    <Link href="/auth/login">
+                        <LogIn className="mr-2 h-4 w-4" /> Login
+                    </Link>
+                </Button>
+                )
+            )}
+          </div>
         </header>
         <main className="flex-1 p-4 md:p-6 lg:p-8">
           {children}

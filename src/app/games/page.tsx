@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState } from 'react';
@@ -6,9 +7,11 @@ import { COGNITIVE_GAMES, CognitiveGame } from '@/lib/constants';
 import { GameCard } from '@/components/games/GameCard';
 import { SimulateGameModal } from '@/components/games/SimulateGameModal';
 import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import { Search, Brain } from 'lucide-react';
+import { useRequireAuth } from '@/hooks/useRequireAuth';
 
 export default function GamesPage() {
+  const { isAuthenticated, isLoadingAuth } = useRequireAuth();
   const [selectedGame, setSelectedGame] = useState<CognitiveGame | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -27,6 +30,17 @@ export default function GamesPage() {
     game.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     game.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  if (isLoadingAuth || !isAuthenticated) {
+    return (
+      <AppLayout>
+        <div className="flex flex-col items-center justify-center h-[calc(100vh-10rem)]">
+          <Brain className="h-16 w-16 animate-pulse text-primary mb-4" />
+          <p className="text-xl text-muted-foreground">Loading games...</p>
+        </div>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>

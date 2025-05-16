@@ -1,11 +1,23 @@
+
+"use client";
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Brain, Zap, BarChart3, Lightbulb } from 'lucide-react';
+import { Brain, Zap, BarChart3, Lightbulb, LogIn } from 'lucide-react';
 import Image from 'next/image';
 import { APP_NAME } from '@/lib/constants';
+import { useAuth } from '@/context/AuthContext';
 
 export default function HomePage() {
+  const { isAuthenticated, isLoadingAuth } = useAuth();
+
+  const getLink = (path: string) => {
+    if (isLoadingAuth) return "#"; // Or some loading indicator / disabled state
+    return isAuthenticated ? path : '/auth/login';
+  };
+
+
   return (
     <div className="flex flex-col min-h-screen">
       <header className="px-4 lg:px-6 h-16 flex items-center border-b">
@@ -13,21 +25,28 @@ export default function HomePage() {
           <Brain className="h-6 w-6 text-primary" />
           <span className="ml-2 text-xl font-semibold">{APP_NAME}</span>
         </Link>
-        <nav className="ml-auto flex gap-4 sm:gap-6">
+        <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
           <Link
-            href="/dashboard"
+            href={getLink("/dashboard")}
             className="text-sm font-medium hover:underline underline-offset-4 text-foreground/80"
             prefetch={false}
           >
             Dashboard
           </Link>
           <Link
-            href="/games"
+            href={getLink("/games")}
             className="text-sm font-medium hover:underline underline-offset-4 text-foreground/80"
             prefetch={false}
           >
             Play Games
           </Link>
+          {!isLoadingAuth && !isAuthenticated && (
+            <Button asChild size="sm">
+              <Link href="/auth/login">
+                <LogIn className="mr-2 h-4 w-4" /> Login
+              </Link>
+            </Button>
+          )}
         </nav>
       </header>
 
@@ -46,10 +65,10 @@ export default function HomePage() {
                 </div>
                 <div className="flex flex-col gap-2 min-[400px]:flex-row">
                   <Button asChild size="lg" className="shadow-lg hover:shadow-xl transition-shadow">
-                    <Link href="/games">Start Playing</Link>
+                    <Link href={getLink("/games")}>Start Playing</Link>
                   </Button>
                   <Button asChild variant="outline" size="lg" className="shadow-lg hover:shadow-xl transition-shadow">
-                    <Link href="/dashboard">View My Dashboard</Link>
+                    <Link href={getLink("/dashboard")}>View My Dashboard</Link>
                   </Button>
                 </div>
               </div>
