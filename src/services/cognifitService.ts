@@ -1,4 +1,6 @@
 
+'use server';
+
 // This service handles interactions with the CogniFit API.
 
 const COGNIFIT_API_BASE_URL = process.env.COGNIFIT_API_BASE_URL || "https://api.cognifit.com";
@@ -92,37 +94,46 @@ export async function registerCognifitUser(
 
 /**
  * Fetches the current version of the CogniFit HTML5 SDK.
+ * This should be called from the client-side or a server route accessible by the client,
+ * as the SDK version is needed to construct the script URL for the html5Loader.js.
  * @returns The SDK version string.
  */
 export async function getCognifitSDKVersion(): Promise<string> {
     try {
         const response = await fetch(`${COGNIFIT_API_BASE_URL}/description/versions/sdkjs?v=2.0`);
         if (!response.ok) {
-            throw new Error(`Failed to fetch SDK version: ${response.statusText}`);
+            const errorData = await response.text();
+            console.error("CogniFit SDK Version API Error Response Text:", errorData);
+            throw new Error(`Failed to fetch SDK version: ${response.statusText} - ${errorData}`);
         }
-        const data = await response.json();
-        // Assuming the version is directly in a field like 'version' or the first key
-        // Adjust based on actual API response structure
-        if (data && typeof data.version === 'string') {
-             return data.version;
-        }
-        // Fallback or more specific parsing if needed. Example from docs was just the version string.
-        // The CogniFit documentation implies the endpoint returns the version string directly or in a simple structure.
-        // If it's just a string: return await response.text();
-        // For now, assuming a simple JSON like {"version": "X.Y.Z"}
-        // If the API directly returns the string, the .json() will fail.
-        // Let's try text() first if json fails or doesn't have .version
-        try {
-            const textData = await response.text(); // Re-fetch as text if primary parsing fails
-            // Basic check if it looks like a version string
-            if (typeof textData === 'string' && /^\d+\.\d+\.\d+.*$/.test(textData)) {
-                return textData.trim();
+        
+        // The CogniFit documentation is slightly ambiguous here.
+        // It might return JSON like {"version": "X.Y.Z"} or just the version string.
+        // Let's try to parse as JSON first.
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+            const data = await response.json();
+            if (data && typeof data.version === 'string') {
+                return data.version;
+            } else if (data && typeof data === 'string') { // sometimes it's just a string in a json response
+                 return data.trim();
             }
-        } catch (textError) {
-            // ignore, primary parse failed and text parse also failed
+        }
+        
+        // If not JSON or JSON parsing failed/didn't find 'version', try as plain text.
+        // This requires re-cloning the response if already read as JSON, or careful handling.
+        // For simplicity, if the above fails, we assume it's plain text.
+        // A more robust solution might involve checking content-type more strictly or trying text() first.
+        // However, the initial call to response.json() consumes the body. 
+        // So, if it's plain text and json() fails, we need to fetch again or handle differently.
+        // Let's assume for now it's primarily JSON. If issues arise, this part may need refinement.
+        // Re-fetching as text if primary parsing fails:
+        const textData = await (await fetch(`${COGNIFIT_API_BASE_URL}/description/versions/sdkjs?v=2.0`)).text();
+        if (typeof textData === 'string' && /^\d+\.\d+\.\d+.*$/.test(textData.trim())) {
+             return textData.trim();
         }
 
-        console.error("Unexpected SDK version response format:", data);
+        console.error("Unexpected SDK version response format. Tried JSON and Text. TextData:", textData);
         throw new Error("Could not parse SDK version from CogniFit API.");
 
     } catch (error) {
