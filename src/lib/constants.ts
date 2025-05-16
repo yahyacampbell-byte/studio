@@ -1,6 +1,6 @@
 
 import type { LucideIcon } from 'lucide-react';
-import { Eye, FileText, Calculator, Bike, Music, Users, User, Leaf, Puzzle, Brain, BarChart3, Lightbulb, Settings, Bot, Gamepad2, CheckCircle2 } from 'lucide-react';
+import { Eye, FileText, Calculator, Bike, Music, Users, User, Leaf, Puzzle, Brain, BarChart3, Lightbulb, Settings, Bot, Gamepad2, CheckCircle2, UserCog } from 'lucide-react';
 
 export const APP_NAME = "Xillo TruePotential";
 export const PROFILING_GAMES_COUNT = 8;
@@ -127,6 +127,7 @@ export const NAV_LINKS = [
   { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
   { href: "/games", label: "Games", icon: Puzzle },
   { href: "/insights", label: "My Insights", icon: Lightbulb },
+  { href: "/profile", label: "Profile", icon: UserCog },
   // { href: "/settings", label: "Settings", icon: Settings }, // Example for future
 ];
 
