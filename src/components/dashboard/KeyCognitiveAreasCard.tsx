@@ -5,67 +5,78 @@ import type { AIAnalysisResults, IntelligenceScore } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp, Target, Info } from 'lucide-react';
-import { MULTIPLE_INTELLIGENCES } from '@/lib/constants';
+import { MULTIPLE_INTELLIGENCES, Intelligence } from '@/lib/constants';
 
 interface KeyCognitiveAreasCardProps {
   aiResults: AIAnalysisResults | null;
 }
 
 export function KeyCognitiveAreasCard({ aiResults }: KeyCognitiveAreasCardProps) {
-  if (!aiResults || !aiResults.intelligenceScores || aiResults.intelligenceScores.length < 3) {
+  if (!aiResults || !aiResults.intelligenceScores || aiResults.intelligenceScores.length < 1) { // Changed to < 1 for flexibility with 1-2 items.
     return (
-      <Card>
+      <Card className="shadow-lg">
         <CardHeader>
           <CardTitle className="flex items-center">
             <Info className="mr-2 h-5 w-5 text-muted-foreground" />
             Key Cognitive Areas
           </CardTitle>
-          <CardDescription>Highlights will appear here after more analysis.</CardDescription>
+          <CardDescription>Highlights will appear here after analysis.</CardDescription>
         </CardHeader>
-        <CardContent className="h-[200px] flex items-center justify-center"> {/* Adjusted height */}
+        <CardContent className="h-[200px] flex items-center justify-center">
           <p className="text-muted-foreground text-center">
-            Complete more game analyses to see your key cognitive strengths and areas for growth.
+            Complete game analyses to see your key cognitive strengths and areas for growth.
           </p>
         </CardContent>
       </Card>
     );
   }
 
+  // Sort scores: highest to lowest
   const sortedScores = [...aiResults.intelligenceScores].sort((a, b) => b.score - a.score);
   
   let strengths: IntelligenceScore[] = [];
   let opportunities: IntelligenceScore[] = [];
 
-  if (sortedScores.length >= 1) {
-    strengths.push(sortedScores[0]);
-  }
-  if (sortedScores.length >= 2 && sortedScores.length >= 4) { // Only add a second strength if there are at least 4 scores to pick from
-    strengths.push(sortedScores[1]);
-  }
+  if (sortedScores.length > 0) {
+    strengths.push(sortedScores[0]); // Top strength
+    if (sortedScores.length > 2) { // Only add a second strength if there are at least 3 scores
+      strengths.push(sortedScores[1]);
+    }
 
-  if (sortedScores.length >= 1) {
-    opportunities.push(sortedScores[sortedScores.length - 1]);
+    opportunities.push(sortedScores[sortedScores.length - 1]); // Bottom opportunity
+    if (sortedScores.length > 3 && sortedScores.length - 2 >= 0) { // Only add a second opportunity if there are at least 4 scores and it's distinct from strengths
+      // Ensure the second opportunity is not also a strength (can happen with few scores)
+      const secondOpportunityIndex = sortedScores.length - 2;
+      if (!strengths.some(s => s.intelligence === sortedScores[secondOpportunityIndex].intelligence)) {
+        opportunities.push(sortedScores[secondOpportunityIndex]);
+      }
+    }
   }
-  if (sortedScores.length >= 2 && sortedScores.length >= 4) { // Only add a second opportunity if there are at least 4 scores
-     if (sortedScores.length - 2 >= 0 && sortedScores[sortedScores.length - 2].score < strengths[strengths.length-1].score) { // ensure it's not same as a strength
-        opportunities.push(sortedScores[sortedScores.length - 2]);
-     } else if (sortedScores.length >= 3 && sortedScores[sortedScores.length-1].intelligence !== sortedScores[sortedScores.length-2].intelligence && sortedScores[sortedScores.length-2].score < strengths[strengths.length-1].score) {
-        // If only 3 items, and middle is not same as top, and it's lower than top strength, then bottom 2 could be same.
-        // This logic is getting complex, simplify for now: only one opportunity if 3 scores.
-     }
-  }
-  if (sortedScores.length === 3) {
-      // For 3 scores, it's top 1 strength, bottom 1 opportunity.
-      // `opportunities` already has the bottom one.
-      // `strengths` already has the top one.
-      // No need to add a second opportunity.
-      if (opportunities.length > 1) opportunities = [opportunities[0]];
+  
+  // If only 1 score, it's a strength, no opportunity.
+  // If 2 scores, top is strength, bottom is opportunity.
+  if (sortedScores.length === 1) {
+    opportunities = [];
+  } else if (sortedScores.length === 2) {
+    // strengths has sortedScores[0], opportunities has sortedScores[1] - this is correct.
   }
 
 
-  const getIntelligenceDisplayName = (id: string) => {
-    const mi = MULTIPLE_INTELLIGENCES.find(m => m.id === id || m.name === id);
-    return mi ? mi.name : id;
+  const getIntelligenceDetails = (intelligenceId: string): Intelligence | undefined => {
+    return MULTIPLE_INTELLIGENCES.find(mi => mi.id === intelligenceId || mi.name === intelligenceId);
+  };
+
+  const renderIntelligenceItem = (scoreItem: IntelligenceScore) => {
+    const details = getIntelligenceDetails(scoreItem.intelligence);
+    if (!details) return null;
+    const IconComponent = details.icon;
+    return (
+      <div key={details.id} className="flex items-center gap-2 p-2 rounded-md bg-muted/50">
+        {IconComponent && <IconComponent className="h-5 w-5" style={{ color: details.color }} />}
+        <span className="font-medium">{details.name}:</span>
+        <span className="text-foreground font-semibold">{scoreItem.score}</span>
+      </div>
+    );
   };
 
   return (
@@ -81,19 +92,15 @@ export function KeyCognitiveAreasCard({ aiResults }: KeyCognitiveAreasCardProps)
           )}
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
         {strengths.length > 0 && (
           <div>
             <h3 className="flex items-center text-md font-semibold mb-2 text-green-600 dark:text-green-400">
               <TrendingUp className="mr-2 h-5 w-5" />
               Top Strengths
             </h3>
-            <div className="flex flex-wrap gap-2">
-              {strengths.map((item) => (
-                <Badge key={item.intelligence} variant="secondary" className="text-sm bg-green-100 text-green-700 dark:bg-green-800/30 dark:text-green-300">
-                  {getIntelligenceDisplayName(item.intelligence)}
-                </Badge>
-              ))}
+            <div className="space-y-2">
+              {strengths.map(renderIntelligenceItem)}
             </div>
           </div>
         )}
@@ -104,14 +111,13 @@ export function KeyCognitiveAreasCard({ aiResults }: KeyCognitiveAreasCardProps)
               <Target className="mr-2 h-5 w-5" />
               Areas for Growth
             </h3>
-            <div className="flex flex-wrap gap-2">
-              {opportunities.map((item) => (
-                <Badge key={item.intelligence} variant="secondary" className="text-sm bg-amber-100 text-amber-700 dark:bg-amber-800/30 dark:text-amber-300">
-                  {getIntelligenceDisplayName(item.intelligence)}
-                </Badge>
-              ))}
+            <div className="space-y-2">
+              {opportunities.map(renderIntelligenceItem)}
             </div>
           </div>
+        )}
+         {(strengths.length === 0 && opportunities.length === 0 && aiResults.intelligenceScores.length > 0) && (
+            <p className="text-sm text-muted-foreground">More distinct scoring patterns are needed to highlight specific strengths and growth areas.</p>
         )}
       </CardContent>
     </Card>
