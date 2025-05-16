@@ -14,7 +14,7 @@ import { useActivity } from '@/context/ActivityContext';
 
 export default function GamesPage() {
   const { isAuthenticated, isLoadingAuth } = useRequireAuth();
-  const { activities, latestAIAnalysis } = useActivity(); // Use latestAIAnalysis
+  const { activities, latestAIAnalysis } = useActivity();
   const [selectedGame, setSelectedGame] = useState<CognitiveGame | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -33,39 +33,30 @@ export default function GamesPage() {
     return latestAIAnalysis?.lastAnalyzed ? new Date(latestAIAnalysis.lastAnalyzed).getTime() : 0;
   }, [latestAIAnalysis]);
 
-  // For determining if profiling milestone is met (based on all-time plays)
-  const allTimePlayedGameIds = useMemo(() => new Set(activities.map(act => act.gameId)), [activities]);
-
-  const allProfilingGameModels = useMemo(() => COGNITIVE_GAMES.slice(0, PROFILING_GAMES_COUNT), []);
-  const allEnhancementGameModels = useMemo(() => COGNITIVE_GAMES.slice(PROFILING_GAMES_COUNT), []);
-
-  const isProfilingComplete = useMemo(() => {
-    if (allProfilingGameModels.length === 0) return true;
-    return allProfilingGameModels.every(game => allTimePlayedGameIds.has(game.id));
-  }, [allProfilingGameModels, allTimePlayedGameIds]);
-
-
-  // For display on GameCard (played since last analysis or ever if no analysis yet)
   const getDisplayAsPlayedStatus = useCallback((gameId: string): boolean => {
     const gameActivities = activities.filter(act => act.gameId === gameId);
-    if (gameActivities.length === 0) return false; // Never played
+    if (gameActivities.length === 0) return false;
 
-    if (latestAnalyzedTimestamp === 0) { // No analysis performed yet
-        return true; // Any play counts as "played"
+    if (latestAnalyzedTimestamp === 0) {
+      return true;
     }
-
-    // Check if any play of this game occurred AFTER the last analysis timestamp
     return gameActivities.some(act => new Date(act.timestamp).getTime() > latestAnalyzedTimestamp);
   }, [activities, latestAnalyzedTimestamp]);
-  
+
+  const allTimePlayedGameIds = useMemo(() => new Set(activities.map(act => act.gameId)), [activities]);
+  const profilingGameModels = useMemo(() => COGNITIVE_GAMES.slice(0, PROFILING_GAMES_COUNT), []);
+  const enhancementGameModels = useMemo(() => COGNITIVE_GAMES.slice(PROFILING_GAMES_COUNT), []);
+
+  const isInitialProfilingComplete = useMemo(() => {
+    if (profilingGameModels.length === 0) return true;
+    return profilingGameModels.every(game => allTimePlayedGameIds.has(game.id));
+  }, [profilingGameModels, allTimePlayedGameIds]);
 
   const recommendedGames = useMemo(() => {
     if (!latestAIAnalysis || !latestAIAnalysis.intelligenceScores || latestAIAnalysis.intelligenceScores.length === 0) {
       return [];
     }
-
     const scores = [...latestAIAnalysis.intelligenceScores].sort((a, b) => a.score - b.score);
-    
     const recommendations: CognitiveGame[] = [];
     const recommendedGameIds = new Set<string>();
 
@@ -77,26 +68,15 @@ export default function GamesPage() {
         ...strongestIntelligences
     ].filter(Boolean) as IntelligenceId[];
 
-
     for (const targetInt of targetIntelligences) {
-      if (recommendations.length >= 3) break; 
-
+      if (recommendations.length >= 3) break;
       const gamesForIntelligence = COGNITIVE_GAMES.filter(game => 
         game.assessesIntelligences.includes(targetInt) && !recommendedGameIds.has(game.id)
       );
-      
-      // Prioritize games not played in the current cycle (since last analysis)
       const unplayedThisCycle = gamesForIntelligence.filter(game => !getDisplayAsPlayedStatus(game.id));
       const playedThisCycle = gamesForIntelligence.filter(game => getDisplayAsPlayedStatus(game.id));
       
-      let gameToRecommend: CognitiveGame | undefined = undefined;
-
-      if (unplayedThisCycle.length > 0) {
-        gameToRecommend = unplayedThisCycle[0]; 
-      } else if (playedThisCycle.length > 0) {
-        gameToRecommend = playedThisCycle[0]; 
-      }
-
+      let gameToRecommend: CognitiveGame | undefined = unplayedThisCycle[0] || playedThisCycle[0];
       if (gameToRecommend) {
         recommendations.push(gameToRecommend);
         recommendedGameIds.add(gameToRecommend.id);
@@ -105,34 +85,15 @@ export default function GamesPage() {
     return recommendations;
   }, [latestAIAnalysis, getDisplayAsPlayedStatus]);
 
-
   const filterAndSortGames = useCallback((games: CognitiveGame[]) => {
     const filtered = games.filter(game =>
       game.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       game.description.toLowerCase().includes(searchTerm.toLowerCase())
     );
-    // Sort based on displayAsPlayed status: "unplayed" (for this cycle) first
     const unplayedThisCycle = filtered.filter(game => !getDisplayAsPlayedStatus(game.id));
     const playedThisCycle = filtered.filter(game => getDisplayAsPlayedStatus(game.id));
     return [...unplayedThisCycle, ...playedThisCycle];
   }, [searchTerm, getDisplayAsPlayedStatus]);
-
-
-  const sortedFilteredProfilingGames = useMemo(
-    () => filterAndSortGames(allProfilingGameModels),
-    [allProfilingGameModels, filterAndSortGames] // filterAndSortGames depends on searchTerm and getDisplayAsPlayedStatus
-  );
-
-  const sortedFilteredEnhancementGames = useMemo(
-    () => filterAndSortGames(allEnhancementGameModels),
-    [allEnhancementGameModels, filterAndSortGames]
-  );
-  
-  const sortedFilteredRecommendedGames = useMemo(
-    () => filterAndSortGames(recommendedGames),
-    [recommendedGames, filterAndSortGames]
-  );
-
 
   if (isLoadingAuth || !isAuthenticated) {
     return (
@@ -144,99 +105,162 @@ export default function GamesPage() {
       </AppLayout>
     );
   }
+
+  const renderGameCards = (games: CognitiveGame[]) => {
+    if (games.length === 0 && searchTerm) {
+      return <p className="text-center text-muted-foreground py-8 col-span-full">No games found matching your search in this section.</p>;
+    }
+    if (games.length === 0 && !searchTerm) {
+        return <p className="text-center text-muted-foreground py-8 col-span-full">No games available in this section currently.</p>;
+    }
+    return games.map((game) => (
+      <GameCard
+        key={game.id}
+        game={game}
+        onPlay={handlePlayGame}
+        hasBeenPlayed={getDisplayAsPlayedStatus(game.id)}
+      />
+    ));
+  };
+
+  const recommendedGamesSection = useMemo(() => {
+    const sortedGames = filterAndSortGames(recommendedGames);
+    if (!latestAIAnalysis || sortedGames.length === 0 && !searchTerm) return null; // Don't render section if no recommendations or AI results
+     if (sortedGames.length === 0 && searchTerm) { // Still show section header if search yields no results but recommendations exist
+        return (
+            <section className="space-y-4">
+                <div className="flex items-center gap-2">
+                    <Lightbulb className="h-6 w-6 text-destructive" />
+                    <h2 className="text-2xl font-semibold">Recommended For You</h2>
+                </div>
+                <p className="text-muted-foreground">
+                    Based on your latest analysis. Games played since your last analysis are at the bottom.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {renderGameCards(sortedGames)}
+                </div>
+            </section>
+        );
+    }
+    if (sortedGames.length === 0) return null;
+
+
+    return (
+      <section className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Lightbulb className="h-6 w-6 text-destructive" />
+          <h2 className="text-2xl font-semibold">Recommended For You</h2>
+        </div>
+        <p className="text-muted-foreground">
+          Based on your latest analysis. Games played since your last analysis are at the bottom.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {renderGameCards(sortedGames)}
+        </div>
+      </section>
+    );
+  }, [recommendedGames, latestAIAnalysis, filterAndSortGames, searchTerm, renderGameCards]);
+
+
+  const gamesByIntelligenceSection = useMemo(() => {
+    if (!latestAIAnalysis) return null;
+
+    return (
+      <section className="space-y-6">
+        <div className="flex items-center gap-2">
+            <Brain className="h-6 w-6 text-primary" />
+            <h2 className="text-2xl font-semibold">Games by Intelligence Type</h2>
+        </div>
+        <p className="text-muted-foreground">
+            Explore games targeting specific cognitive intelligences. Games played since your last analysis appear at the bottom of each list.
+        </p>
+        {MULTIPLE_INTELLIGENCES.map(intelligence => {
+          const gamesForThisIntelligence = COGNITIVE_GAMES.filter(game => 
+            game.assessesIntelligences.includes(intelligence.id)
+          );
+          const sortedGames = filterAndSortGames(gamesForThisIntelligence);
+          if (sortedGames.length === 0 && !searchTerm) return null; // Skip rendering if no games for this intelligence or no search match
+
+          const IconComponent = intelligence.icon;
+
+          return (
+            <div key={intelligence.id} className="space-y-3 pt-2">
+              <div className="flex items-center gap-2 border-b pb-2">
+                {IconComponent && <IconComponent className="h-5 w-5" style={{ color: intelligence.color || 'hsl(var(--foreground))' }} />}
+                <h3 className="text-xl font-medium">{intelligence.name} Games</h3>
+              </div>
+              {sortedGames.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {renderGameCards(sortedGames)}
+                </div>
+              ) : (
+                 searchTerm && <p className="text-center text-muted-foreground py-4">No {intelligence.name} games found matching your search.</p>
+              )}
+            </div>
+          );
+        })}
+      </section>
+    );
+  }, [latestAIAnalysis, filterAndSortGames, searchTerm, renderGameCards]);
+
+
+  const profilingGamesSection = useMemo(() => {
+    if (latestAIAnalysis) return null; // This section is replaced if analysis has been done
+    const sortedGames = filterAndSortGames(profilingGameModels);
+    return (
+      <section className="space-y-4">
+        <div className="flex items-center gap-2">
+          <ListChecks className="h-6 w-6 text-primary" />
+          <h2 className="text-2xl font-semibold">Profiling Analysis Games</h2>
+        </div>
+        <p className="text-muted-foreground">
+          {isInitialProfilingComplete
+            ? `You've played all ${PROFILING_GAMES_COUNT} initial profiling games! Replay them or proceed to Enhancement Games. Games played recently are at the bottom.`
+            : `Complete these ${PROFILING_GAMES_COUNT} games to build your initial Multiple Intelligence profile. Games played recently are at the bottom.`}
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {renderGameCards(sortedGames)}
+        </div>
+      </section>
+    );
+  }, [profilingGameModels, latestAIAnalysis, isInitialProfilingComplete, filterAndSortGames, searchTerm, renderGameCards]);
+
+  const enhancementGamesSection = useMemo(() => {
+    const sortedGames = filterAndSortGames(enhancementGameModels);
+    const title = latestAIAnalysis ? "Further Profile Enhancement" : "Profile Enhancement Games";
+    return (
+      <section className="space-y-4">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-6 w-6 text-accent" />
+          <h2 className="text-2xl font-semibold">{title}</h2>
+        </div>
+        <p className="text-muted-foreground">
+          {isInitialProfilingComplete
+            ? "Challenge yourself with these games to further refine and enhance your cognitive skills. Games played since your last analysis are at the bottom."
+            : `After completing all ${PROFILING_GAMES_COUNT} profiling games, try these. Games played recently are at the bottom.`}
+        </p>
+         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {renderGameCards(sortedGames)}
+        </div>
+      </section>
+    );
+  }, [enhancementGameModels, isInitialProfilingComplete, latestAIAnalysis, filterAndSortGames, searchTerm, renderGameCards]);
   
-  const recommendedGamesSection = sortedFilteredRecommendedGames.length > 0 && (
-    <section className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Lightbulb className="h-6 w-6 text-destructive" />
-        <h2 className="text-2xl font-semibold">Recommended For You</h2>
-      </div>
-      <p className="text-muted-foreground">
-        Based on your latest analysis, try these games to further develop your cognitive profile. Games played since your last analysis are at the bottom.
-      </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {sortedFilteredRecommendedGames.map((game) => (
-          <GameCard
-            key={game.id}
-            game={game}
-            onPlay={handlePlayGame}
-            hasBeenPlayed={getDisplayAsPlayedStatus(game.id)}
-          />
-        ))}
-      </div>
-    </section>
-  );
+  const pageTitle = latestAIAnalysis 
+    ? "Explore Games by Recommendation or Intelligence" 
+    : `Play ${PROFILING_GAMES_COUNT} Profiling Games to Start`;
+  
+  const pageDescription = latestAIAnalysis
+    ? "Dive into recommended games or explore specific intelligences. Replay games to see how your profile evolves!"
+    : `Challenge your mind. Start by playing all ${PROFILING_GAMES_COUNT} Profiling Games to build your intelligence profile, then move to enhancement games.`;
 
-  const profilingGamesSection = (
-    <section className="space-y-4">
-      <div className="flex items-center gap-2">
-        <ListChecks className="h-6 w-6 text-primary" />
-        <h2 className="text-2xl font-semibold">Profiling Analysis Games</h2>
-      </div>
-      <p className="text-muted-foreground">
-        {isProfilingComplete // This check is based on all-time plays
-          ? `You've completed all ${PROFILING_GAMES_COUNT} profiling games! You can replay them below. Games played since your last analysis are at the bottom.`
-          : `Complete these ${PROFILING_GAMES_COUNT} games to build your initial Multiple Intelligence profile. Games played since your last analysis (or ever, if no analysis yet) are at the bottom.`}
-      </p>
-      {sortedFilteredProfilingGames.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {sortedFilteredProfilingGames.map((game) => (
-            <GameCard
-              key={game.id}
-              game={game}
-              onPlay={handlePlayGame}
-              hasBeenPlayed={getDisplayAsPlayedStatus(game.id)}
-            />
-          ))}
-        </div>
-      ) : (
-        <p className="text-center text-muted-foreground py-8">
-          {searchTerm ? "No profiling games found matching your search." : "No profiling games available."}
-        </p>
-      )}
-    </section>
-  );
-
-  const enhancementGamesSection = (
-    <section className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Sparkles className="h-6 w-6 text-accent" />
-        <h2 className="text-2xl font-semibold">Profile Enhancement Games</h2>
-      </div>
-      <p className="text-muted-foreground">
-        {isProfilingComplete // This check is based on all-time plays
-          ? "Now, enhance your profile with these games. Games played since your last analysis are at the bottom."
-          : `After completing all ${PROFILING_GAMES_COUNT} profiling games, try these to further refine and enhance your cognitive skills.`}
-      </p>
-      {sortedFilteredEnhancementGames.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {sortedFilteredEnhancementGames.map((game) => (
-            <GameCard
-              key={game.id}
-              game={game}
-              onPlay={handlePlayGame}
-              hasBeenPlayed={getDisplayAsPlayedStatus(game.id)}
-            />
-          ))}
-        </div>
-      ) : (
-        <p className="text-center text-muted-foreground py-8">
-          {searchTerm ? "No enhancement games found matching your search." : "No enhancement games available yet."}
-        </p>
-      )}
-    </section>
-  );
 
   return (
     <AppLayout>
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Cognitive Games</h1>
-          <p className="text-muted-foreground">
-            {isProfilingComplete
-              ? "Enhance your cognitive profile or replay profiling games. Check out your recommendations below!"
-              : `Challenge your mind. Start by playing all ${PROFILING_GAMES_COUNT} Profiling Games to build your intelligence profile.`}
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight">{pageTitle}</h1>
+          <p className="text-muted-foreground">{pageDescription}</p>
         </div>
 
         <div className="relative">
@@ -250,12 +274,12 @@ export default function GamesPage() {
           />
         </div>
         
-        {/* Render order logic */}
-        {recommendedGamesSection}
-        {isProfilingComplete ? ( // This condition is based on all-time plays
+        {/* Conditional Rendering Logic */}
+        {latestAIAnalysis ? (
           <>
+            {recommendedGamesSection}
+            {gamesByIntelligenceSection}
             {enhancementGamesSection}
-            {profilingGamesSection} 
           </>
         ) : (
           <>
@@ -269,3 +293,4 @@ export default function GamesPage() {
     </AppLayout>
   );
 }
+
