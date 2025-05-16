@@ -1,3 +1,4 @@
+
 import type { COGNITIVE_GAMES, MULTIPLE_INTELLIGENCES } from './constants';
 
 export type GameId = typeof COGNITIVE_GAMES[number]['id'];
@@ -20,7 +21,8 @@ export interface IntelligenceScore {
 
 export interface AIAnalysisResults {
   intelligenceScores: IntelligenceScore[];
-  personalizedInsights?: string;
-  recommendations?: string;
+  multipleIntelligencesSummary: string;
+  broaderCognitiveInsights?: string;
+  actionableRecommendations: string;
   lastAnalyzed?: string; // ISO string timestamp of when analysis was run
 }

@@ -35,7 +35,6 @@ export const ActivityProvider = ({ children }: { children: ReactNode }) => {
       }
     } catch (error) {
       console.error("Error loading data from localStorage:", error);
-      // Optionally clear corrupted data
       localStorage.removeItem(LOCAL_STORAGE_ACTIVITY_KEY);
       localStorage.removeItem(LOCAL_STORAGE_INSIGHTS_KEY);
     }
@@ -77,7 +76,7 @@ export const ActivityProvider = ({ children }: { children: ReactNode }) => {
   const clearActivities = useCallback(() => {
     setActivities([]);
     updateLocalStorageActivities([]);
-    setAIResultsState(null); // Also clear AI results when activities are cleared
+    setAIResultsState(null); 
     updateLocalStorageAIResults(null);
   }, [updateLocalStorageActivities, updateLocalStorageAIResults]);
 

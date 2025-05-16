@@ -1,15 +1,16 @@
+
 "use client";
 
 import type { AIAnalysisResults } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Lightbulb, ArrowUpCircle, Info } from 'lucide-react';
+import { Lightbulb, ArrowUpCircle, Info, Brain, Activity } from 'lucide-react'; // Added Brain, Activity icons
 
 interface PersonalizedInsightsDisplayProps {
   aiResults: AIAnalysisResults | null;
 }
 
 export function PersonalizedInsightsDisplay({ aiResults }: PersonalizedInsightsDisplayProps) {
-  if (!aiResults || (!aiResults.personalizedInsights && !aiResults.recommendations)) {
+  if (!aiResults || (!aiResults.multipleIntelligencesSummary && !aiResults.actionableRecommendations && !aiResults.broaderCognitiveInsights)) {
     return (
         <Card>
         <CardHeader>
@@ -26,37 +27,59 @@ export function PersonalizedInsightsDisplay({ aiResults }: PersonalizedInsightsD
     );
   }
 
+  const lastAnalyzedText = aiResults.lastAnalyzed 
+    ? `Insights from analysis on: ${new Date(aiResults.lastAnalyzed).toLocaleString()}` 
+    : 'Analysis complete.';
+
   return (
     <div className="space-y-6">
-      {aiResults.personalizedInsights && (
+      {aiResults.multipleIntelligencesSummary && (
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center text-xl">
               <Lightbulb className="mr-3 h-6 w-6 text-accent" />
-              Your Personalized Insights
+              Multiple Intelligences Snapshot
             </CardTitle>
-             {aiResults.lastAnalyzed && (
-                <CardDescription className="text-xs text-muted-foreground mt-1">
-                Insights from analysis on: {new Date(aiResults.lastAnalyzed).toLocaleString()}
-                </CardDescription>
-            )}
+            <CardDescription className="text-xs text-muted-foreground mt-1">
+                {lastAnalyzedText}
+            </CardDescription>
           </CardHeader>
           <CardContent className="prose prose-sm dark:prose-invert max-w-none">
-            <p>{aiResults.personalizedInsights}</p>
+            <p>{aiResults.multipleIntelligencesSummary}</p>
           </CardContent>
         </Card>
       )}
 
-      {aiResults.recommendations && (
+      {aiResults.broaderCognitiveInsights && (
+        <Card className="shadow-lg">
+          <CardHeader>
+            <CardTitle className="flex items-center text-xl">
+              <Brain className="mr-3 h-6 w-6 text-primary" />
+              Broader Cognitive Observations
+            </CardTitle>
+            <CardDescription className="text-xs text-muted-foreground mt-1">
+                These are general observations based on game patterns.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="prose prose-sm dark:prose-invert max-w-none">
+            <p>{aiResults.broaderCognitiveInsights}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {aiResults.actionableRecommendations && (
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center text-xl">
               <ArrowUpCircle className="mr-3 h-6 w-6 text-secondary" />
-              Growth Recommendations
+              Actionable Recommendations
             </CardTitle>
+             <CardDescription className="text-xs text-muted-foreground mt-1">
+                Suggestions for your cognitive development.
+            </CardDescription>
           </CardHeader>
           <CardContent className="prose prose-sm dark:prose-invert max-w-none">
-             <p>{aiResults.recommendations}</p>
+             <p>{aiResults.actionableRecommendations}</p>
           </CardContent>
         </Card>
       )}

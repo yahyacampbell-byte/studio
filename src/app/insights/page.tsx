@@ -1,19 +1,19 @@
 
 "use client";
 
-import React, { useMemo } from 'react'; // Added useMemo
+import React, { useMemo } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { useActivity } from '@/context/ActivityContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { AlertTriangle, CheckCircle, Loader2, BarChartBig, Bot, Brain } from 'lucide-react';
 import { analyzeGameplayAndMapToIntelligences, AnalyzeGameplayInput } from '@/ai/flows/analyze-gameplay-and-map-to-intelligences';
-import { generatePersonalizedInsights, PersonalizedInsightsInput } from '@/ai/flows/generate-personalized-insights-from-game-data';
+import { generatePersonalizedInsights, PersonalizedInsightsInput, PersonalizedInsightsOutput } from '@/ai/flows/generate-personalized-insights-from-game-data';
 import type { AIAnalysisResults, IntelligenceScore } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
 import Link from 'next/link';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
-import { COGNITIVE_GAMES, PROFILING_GAMES_COUNT } from '@/lib/constants'; // Added
+import { COGNITIVE_GAMES, PROFILING_GAMES_COUNT } from '@/lib/constants';
 
 export default function InsightsPage() {
   const { isAuthenticated, isLoadingAuth } = useRequireAuth();
@@ -68,7 +68,6 @@ export default function InsightsPage() {
         reasoning: im.reasoning,
       }));
 
-      // Pass gameTitle instead of gameId for personalized insights
       const gameDataForInsights: PersonalizedInsightsInput['gameData'] = JSON.stringify(
         activities.map(act => ({
           gameTitle: act.gameTitle, 
@@ -77,12 +76,13 @@ export default function InsightsPage() {
         }))
       );
       
-      const personalizedInsightsResult = await generatePersonalizedInsights({ gameData: gameDataForInsights });
+      const personalizedOutput: PersonalizedInsightsOutput = await generatePersonalizedInsights({ gameData: gameDataForInsights });
 
       const newAIResults: AIAnalysisResults = {
         intelligenceScores,
-        personalizedInsights: personalizedInsightsResult.insights,
-        recommendations: personalizedInsightsResult.recommendations,
+        multipleIntelligencesSummary: personalizedOutput.multipleIntelligencesSummary,
+        broaderCognitiveInsights: personalizedOutput.broaderCognitiveInsights,
+        actionableRecommendations: personalizedOutput.actionableRecommendations,
         lastAnalyzed: new Date().toISOString(),
       };
       
@@ -100,7 +100,7 @@ export default function InsightsPage() {
         description: "An error occurred during AI analysis. Please try again.",
         variant: "destructive",
       });
-      setAIResults(null);
+      setAIResults(null); // Clear results on failure
     } finally {
       setIsLoadingAI(false);
     }
@@ -195,7 +195,7 @@ export default function InsightsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-                <p className="text-sm text-muted-foreground">Last analyzed: {new Date(aiResults.lastAnalyzed!).toLocaleString()}</p>
+                <p className="text-sm text-muted-foreground">Last analyzed: {aiResults.lastAnalyzed ? new Date(aiResults.lastAnalyzed).toLocaleString() : 'N/A'}</p>
             </CardContent>
           </Card>
         )}
