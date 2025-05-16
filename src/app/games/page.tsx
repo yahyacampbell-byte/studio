@@ -30,29 +30,27 @@ export default function GamesPage() {
     const gameActivities = activities.filter(act => act.gameId === gameId);
     if (gameActivities.length === 0) return false;
 
-    if (latestAnalyzedTimestamp === 0) {
+    if (latestAnalyzedTimestamp === 0) { // No analysis done yet, any play marks it as "played"
       return true;
     }
+    // After analysis, only mark as "played" if played *since* the last analysis
     return gameActivities.some(act => new Date(act.timestamp).getTime() > latestAnalyzedTimestamp);
   }, [activities, latestAnalyzedTimestamp]);
 
   const allTimePlayedGameIds = useMemo(() => new Set(activities.map(act => act.gameId)), [activities]);
   const profilingGameModels = useMemo(() => COGNITIVE_GAMES.slice(0, PROFILING_GAMES_COUNT), []);
   
-  // Filter out the 4 enhancement games from the main list for the intelligence accordions
   const gamesForIntelligenceAccordions = useMemo(() => 
-    COGNITIVE_GAMES.filter(game => !ENHANCEMENT_GAME_IDS.includes(game.id))
+    COGNITIVE_GAMES.filter(game => game && game.id && !ENHANCEMENT_GAME_IDS.includes(game.id))
   , []);
 
-  // Keep the 4 enhancement games separate
   const enhancementGameModels = useMemo(() => 
-    COGNITIVE_GAMES.filter(game => ENHANCEMENT_GAME_IDS.includes(game.id))
+    COGNITIVE_GAMES.filter(game => game && game.id && ENHANCEMENT_GAME_IDS.includes(game.id))
   , []);
-
 
   const isInitialProfilingComplete = useMemo(() => {
-    if (profilingGameModels.length === 0) return true; // Or handle as error if profilingGameModels should never be empty
-    return profilingGameModels.every(game => allTimePlayedGameIds.has(game.id));
+    if (profilingGameModels.length === 0) return true;
+    return profilingGameModels.every(game => game && game.id && allTimePlayedGameIds.has(game.id));
   }, [profilingGameModels, allTimePlayedGameIds]);
 
   const recommendedGames = useMemo(() => {
@@ -84,18 +82,17 @@ export default function GamesPage() {
     const targetIntelligences = [
         ...weakestIntelligences,
         ...strongestIntelligences
-    ].filter(Boolean); // Filter out any undefined values if scores array was too short
+    ].filter(Boolean); 
 
-    // Use all games for recommendations, including enhancement games
     for (const targetInt of targetIntelligences) {
       if (recommendations.length >= 3) break; 
       
       const gamesForIntelligence = COGNITIVE_GAMES.filter(game => 
-        Array.isArray(game.assessesIntelligences) && game.assessesIntelligences.includes(targetInt) && !recommendedGameIds.has(game.id)
+        game && game.id && Array.isArray(game.assessesIntelligences) && game.assessesIntelligences.includes(targetInt) && !recommendedGameIds.has(game.id)
       );
       
-      const unplayedThisCycle = gamesForIntelligence.filter(game => !getDisplayAsPlayedStatus(game.id));
-      const playedThisCycle = gamesForIntelligence.filter(game => getDisplayAsPlayedStatus(game.id));
+      const unplayedThisCycle = gamesForIntelligence.filter(game => game && game.id && !getDisplayAsPlayedStatus(game.id));
+      const playedThisCycle = gamesForIntelligence.filter(game => game && game.id && getDisplayAsPlayedStatus(game.id));
       
       let gameToRecommend: CognitiveGame | undefined = unplayedThisCycle[0] || playedThisCycle[0];
 
@@ -104,7 +101,7 @@ export default function GamesPage() {
         recommendedGameIds.add(gameToRecommend.id);
       }
     }
-    return recommendations;
+    return recommendations.filter(game => game && game.id); // Ensure all games in array are valid
   }, [latestAIAnalysis, getDisplayAsPlayedStatus]);
 
 
@@ -117,8 +114,8 @@ export default function GamesPage() {
       game.description.toLowerCase().includes(searchTerm.toLowerCase()))
     );
     
-    const unplayedThisCycle = filtered.filter(game => game && !getDisplayAsPlayedStatus(game.id));
-    const playedThisCycle = filtered.filter(game => game && getDisplayAsPlayedStatus(game.id));
+    const unplayedThisCycle = filtered.filter(game => game && game.id && !getDisplayAsPlayedStatus(game.id));
+    const playedThisCycle = filtered.filter(game => game && game.id && getDisplayAsPlayedStatus(game.id));
     return [...unplayedThisCycle, ...playedThisCycle];
   }, [searchTerm, getDisplayAsPlayedStatus]);
 
@@ -137,26 +134,22 @@ export default function GamesPage() {
         console.error("renderGameCards received non-array:", games);
         return <p className="text-center text-destructive py-8 col-span-full">Error: Could not load games.</p>;
     }
-    if (games.length === 0 && searchTerm) {
+    const validGames = games.filter(game => game && game.id); // Filter out null/undefined games
+
+    if (validGames.length === 0 && searchTerm) {
       return <p className="text-center text-muted-foreground py-8 col-span-full">No games found matching your search in this section.</p>;
     }
-    if (games.length === 0 && !searchTerm) {
-        // This condition might be too broad now with accordions; content might be empty pre-search
-        // Let's make it more specific for sections that are expected to have games.
-        // For accordions, an empty state might be fine if no games match an intelligence + search.
+    if (validGames.length === 0 && !searchTerm) {
         return <p className="text-center text-muted-foreground py-8 col-span-full">No games available in this section.</p>;
     }
-    return games.map((game) => {
-      if (!game || !game.id) return null;
-      return (
+    return validGames.map((game) => (
         <GameCard
             key={game.id}
             game={game}
             onPlay={handlePlayGame}
             hasBeenPlayed={getDisplayAsPlayedStatus(game.id)}
         />
-      );
-    });
+    ));
   }, [searchTerm, handlePlayGame, getDisplayAsPlayedStatus]);
 
   const recommendedGamesSection = useMemo(() => {
@@ -166,7 +159,7 @@ export default function GamesPage() {
     return (
       <section className="space-y-4">
         <div className="flex items-center gap-2">
-          <Lightbulb className="h-6 w-6 text-destructive" /> {/* Changed icon to destructive for visibility */}
+          <Lightbulb className="h-6 w-6 text-destructive" />
           <h2 className="text-2xl font-semibold">Recommended For You</h2>
         </div>
         <p className="text-muted-foreground">
@@ -195,22 +188,24 @@ export default function GamesPage() {
         </div>
         <p className="text-muted-foreground">
             Explore games targeting specific cognitive intelligences. Games played since your last analysis appear at the bottom of each list.
-            The 4 Profile Enhancement games are listed separately below.
+            The {ENHANCEMENT_GAME_IDS.length} Profile Enhancement games are listed separately below.
         </p>
-        <Accordion type="multiple" className="w-full space-y-2">
+        <Accordion type="single" collapsible className="w-full space-y-2">
           {MULTIPLE_INTELLIGENCES.map(intelligence => {
             if (!intelligence || !intelligence.id) return null;
             
-            // Use gamesForIntelligenceAccordions which already excludes enhancement games
             const gamesForThisIntelligence = gamesForIntelligenceAccordions.filter(game => 
               game && Array.isArray(game.assessesIntelligences) && game.assessesIntelligences.includes(intelligence.id)
             );
             const sortedGames = filterAndSortGames(gamesForThisIntelligence);
             
-            // Don't render accordion item if search yields no results for this intelligence
-            if (sortedGames.length === 0 && searchTerm) return null;
-            // Don't render if no games for this intelligence even without search (unless you want empty accordions)
-            // if (gamesForThisIntelligence.length === 0 && !searchTerm) return null;
+            if (sortedGames.length === 0 && searchTerm && gamesForThisIntelligence.length > 0) { 
+                // If search yields no result but games exist for this intelligence, render the accordion but with "no games matching search"
+            } else if (gamesForThisIntelligence.length === 0) { 
+                // If no games for this intelligence even without search (excluding enhancement), don't render accordion item.
+                // Unless we want to show empty accordions, in which case this check is removed.
+                return null;
+            }
 
 
             const IconComponent = intelligence.icon;
@@ -248,8 +243,6 @@ export default function GamesPage() {
     
     const sortedGames = filterAndSortGames(profilingGameModels);
     
-    // This guard ensures the section is not rendered if search filters out all profiling games
-    // but the section itself should still exist conceptually.
     if (sortedGames.length === 0 && searchTerm && profilingGameModels.length > 0) {
         return (
             <section className="space-y-4">
@@ -266,7 +259,7 @@ export default function GamesPage() {
             </section>
         );
     }
-    if (profilingGameModels.length === 0 && !searchTerm) return null; // Should not happen if constants are correct
+    if (profilingGameModels.length === 0 && !searchTerm) return null;
 
     return (
       <section className="space-y-4">
@@ -284,7 +277,6 @@ export default function GamesPage() {
                 {renderGameCards(sortedGames)}
             </div>
         ) : (
-            // This case should ideally be handled by the search term check above or if profilingGameModels is empty
             <p className="text-center text-muted-foreground py-8 col-span-full">No profiling games available.</p>
         )}
       </section>
@@ -292,11 +284,10 @@ export default function GamesPage() {
   }, [profilingGameModels, latestAIAnalysis, isInitialProfilingComplete, filterAndSortGames, searchTerm, renderGameCards]);
 
   const enhancementGamesSection = useMemo(() => {
-    // This section should always show the 4 enhancement games, regardless of AI analysis state for its existence
     const sortedGames = filterAndSortGames(enhancementGameModels);
     const title = "Profile Enhancement Games";
 
-    if (enhancementGameModels.length === 0) return null; // Should not happen if constants are correct
+    if (enhancementGameModels.length === 0) return null; 
 
     if (sortedGames.length === 0 && searchTerm) {
          return (
@@ -372,13 +363,14 @@ export default function GamesPage() {
           />
         </div>
         
-        {latestAIAnalysis ? ( // Post-analysis view
+        {latestAIAnalysis ? ( 
           <>
             {recommendedGamesSection}
             {gamesByIntelligenceSection}
+            {profilingGamesSection} {/* Shows if initial profiling is NOT complete, even if AI results exist from a partial analysis */}
             {enhancementGamesSection} 
           </>
-        ) : ( // Pre-analysis view
+        ) : ( 
           <>
             {profilingGamesSection}
             {enhancementGamesSection}
@@ -390,5 +382,3 @@ export default function GamesPage() {
     </AppLayout>
   );
 }
-
-    
