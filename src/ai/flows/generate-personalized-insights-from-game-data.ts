@@ -19,6 +19,9 @@ const PersonalizedInsightsInputSchema = z.object({
     .describe(
       'A stringified JSON object containing the user game data, including gameTitle, score, and timestamp.'
     ),
+  intelligenceProfileData: z.string().optional().describe(
+    'An optional stringified JSON array of the user\'s analyzed Multiple Intelligence scores and reasoning. Each item contains: {intelligence: string, score: number, reasoning: string}'
+  ),
 });
 export type PersonalizedInsightsInput = z.infer<typeof PersonalizedInsightsInputSchema>;
 
@@ -51,6 +54,9 @@ const getAssessedIntelligencesForGame = (gameTitle: string): string => {
 const PersonalizedInsightsPromptInputSchemaInternal = z.object({
   originalGameData: z.string().describe('The original stringified JSON game data, for context if needed by the LLM.'),
   summarizedGameDataString: z.string().describe('A pre-summarized string of game data, with games mapped to Multiple Intelligences based on their titles.'),
+  intelligenceProfileString: z.string().optional().describe(
+    'A string representing the user\'s analyzed Multiple Intelligence profile (scores and reasoning), if available. E.g., "Logical-Mathematical: 80/100 (Reasoning: Strong performance in Math Twins), Visual-Spatial: 60/100 (Reasoning: Good in Jigsaw 9), ..."'
+  ),
 });
 
 
@@ -59,19 +65,29 @@ const personalizedInsightsPrompt = ai.definePrompt({
   input: {schema: PersonalizedInsightsPromptInputSchemaInternal}, 
   output: {schema: PersonalizedInsightsOutputSchema},
   prompt: `You are an AI expert in cognitive psychology and multiple intelligences, focused on providing general wellness insights.
-Analyze the user's game data summarized below.
+Analyze the user's game performance summarized below.
 
 Game Performance Summary (Game Title, Score, Assessed Intelligence(s)):
 {{{summarizedGameDataString}}}
 
-Based on this summary (and the original game data if needed for context: {{{originalGameData}}}):
+{{#if intelligenceProfileString}}
+User's Current Multiple Intelligences Profile (Scores 0-100, with reasoning):
+{{{intelligenceProfileString}}}
+{{/if}}
 
-1.  **Multiple Intelligences Summary**: Provide personalized insights about the user's strengths and weaknesses across different Multiple Intelligences. This summary should be consistent with any quantitative MI scores that might have been previously calculated (though those scores themselves are not part of this input). Focus on the qualitative aspects and patterns emerging from the game performance relative to the assessed intelligences.
+Based on ALL available information (game summary AND MI profile if provided):
+
+1.  **Multiple Intelligences Summary**: Provide personalized insights about the user's strengths and weaknesses across different Multiple Intelligences.
+    {{#if intelligenceProfileString}}
+    This summary should directly reflect the provided MI profile, highlighting dominant intelligences, areas that are less developed, and any notable patterns or reasoning from the MI scores.
+    {{else}}
+    Focus on the qualitative aspects and patterns emerging from the game performance relative to the assessed intelligences.
+    {{/if}}
 
 2.  **Broader Cognitive Insights (Optional)**:
-    Based on the types of games played and the general performance (scores), provide observations on general cognitive abilities. Phrase these as potential observations or areas that might warrant further exploration for self-awareness or general cognitive skill development. **Crucially, DO NOT make any medical diagnoses, suggest clinical conditions, or advise medical consultation. Stick to general cognitive function observations.**
+    Based on the types of games played, general performance (scores), and the MI profile (if available), provide observations on general cognitive abilities. Phrase these as potential observations or areas that might warrant further exploration for self-awareness or general cognitive skill development. **Crucially, DO NOT make any medical diagnoses, suggest clinical conditions, or advise medical consultation. Stick to general cognitive function observations.**
 
-    Consider these cognitive domains and how game performance might relate. Synthesize information from multiple relevant games if possible:
+    Consider these cognitive domains and how game performance (and MI scores if available) might relate. Synthesize information from multiple relevant games if possible:
     *   **Working Memory**: (e.g., performance in games like 'Math Twins', 'Digits', 'Candy Factory', 'Drive me crazy'). If scores in games requiring holding and manipulating information are consistently notable (high or low), this might offer general insights into working memory capacity as an area for self-awareness.
     *   **Processing Speed**: (e.g., performance in games like 'Reaction Field', 'Color Frenzy', 'Dragster Racing'). Consistent performance in timed reaction games might offer general insights into information processing efficiency.
     *   **Attention (Selective/Sustained)**: (e.g., performance in games like 'Reaction Field', 'Traffic Manager', 'Words Birds'). Consistent performance in games demanding focus could provide general observations about attention skills.
@@ -85,11 +101,14 @@ Based on this summary (and the original game data if needed for context: {{{orig
     "If performance across several strategy games like 'Chess' and 'Solitaire' shows consistent patterns, this could point towards general strengths or areas for development in planning and problem-solving approaches."
     "Observing performance across games like 'Jigsaw 9' and 'Star Architect' can offer general insights into visuospatial processing skills."
     "If you notice particular trends in games primarily testing working memory, such as 'Digits' or 'Math Twins', this might highlight that cognitive area as one for further self-awareness or practice."
+    {{#if intelligenceProfileString}}
+    Connect these observations to the MI profile where appropriate (e.g., "Your strong Visual-Spatial score aligns with your performance in 'Jigsaw 9'.")
+    {{/if}}
 
     Your observations should be framed as potential areas for self-awareness or general cognitive skill development. Do not output risk percentages, specific clinical correlations, or direct medical advice.
 
-3.  **Actionable Recommendations**: Offer clear, concise, and actionable recommendations. These should aim to help the user improve their cognitive skills, leverage their strengths, or explore areas for cognitive development based on ALL the insights generated (both MI summary and broader cognitive insights). 
-    Consider suggesting learning styles or approaches based on the user's apparent stronger intelligences. For example:
+3.  **Actionable Recommendations**: Offer clear, concise, and actionable recommendations. These should aim to help the user improve their cognitive skills, leverage their strengths, or explore areas for cognitive development based on ALL the insights generated (MI summary, broader cognitive insights, and the MI profile scores if provided). 
+    Consider suggesting learning styles or approaches based on the user's apparent stronger intelligences from the MI profile (if available) or inferred from game performance. For example:
     *   If Linguistic-Verbal intelligence seems prominent (e.g., from good performance in 'Words Birds', 'Scrambled', 'Word Quest'), you might suggest learning methods that involve reading, writing, storytelling, or verbal discussions.
     *   If Logical-Mathematical intelligence appears strong (e.g., from 'Math Twins', 'Sudoku', 'Fuel a Car'), suggest activities that involve problem-solving, puzzles, or logical sequencing.
     *   If Spatial intelligence is a highlight (e.g., from 'Jigsaw 9', '3D Art Puzzle', 'Star Architect'), recommend using diagrams, mind maps, or visual aids for learning.
@@ -102,7 +121,7 @@ Based on this summary (and the original game data if needed for context: {{{orig
 
 IMPORTANT: When mentioning specific games in your output, please use their full titles as provided in the summary (e.g., 'Math Twins', 'Jigsaw 9'). Do NOT use API keys or abbreviations.
 Structure your response according to the output schema, ensuring all required fields are populated.
-Focus on patterns emerging from the summarized data.
+Focus on patterns emerging from the summarized data and the provided MI profile.
 `,
 });
 
@@ -129,9 +148,25 @@ const generatePersonalizedInsightsFlow = ai.defineFlow(
       summarizedGameDataString = "Error processing game data for summarization.";
     }
 
-    const promptInputArgs = {
+    let intelligenceProfileString: string | undefined = undefined;
+    if (flowInput.intelligenceProfileData) {
+      try {
+        const parsedMIApiData: Array<{intelligence: string; score: number; reasoning?: string}> = JSON.parse(flowInput.intelligenceProfileData);
+        if (Array.isArray(parsedMIApiData) && parsedMIApiData.length > 0) {
+          intelligenceProfileString = parsedMIApiData.map(
+            item => `${item.intelligence}: ${item.score}/100${item.reasoning ? ` (Reasoning: ${item.reasoning})` : ''}`
+          ).join('; ');
+        }
+      } catch (e) {
+        console.error("Error parsing intelligenceProfileData for personalized insights:", e);
+        // If parsing fails, intelligenceProfileString remains undefined, and the prompt handles it.
+      }
+    }
+
+    const promptInputArgs: z.infer<typeof PersonalizedInsightsPromptInputSchemaInternal> = {
       originalGameData: flowInput.gameData,
       summarizedGameDataString: summarizedGameDataString,
+      intelligenceProfileString: intelligenceProfileString,
     };
 
     const {output} = await personalizedInsightsPrompt(promptInputArgs);

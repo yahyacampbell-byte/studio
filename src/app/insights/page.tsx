@@ -63,7 +63,7 @@ export default function InsightsPage() {
       const analysisResult = await analyzeGameplayAndMapToIntelligences({ gameplayData: gameplayDataForAnalysis });
       
       const intelligenceScores: IntelligenceScore[] = analysisResult.intelligenceMappings.map(im => ({
-        intelligence: im.intelligence as AIAnalysisResults['intelligenceScores'][0]['intelligence'],
+        intelligence: im.intelligence as AIAnalysisResults['intelligenceScores'][0]['intelligence'], // Type assertion
         score: im.score,
         reasoning: im.reasoning,
       }));
@@ -75,8 +75,14 @@ export default function InsightsPage() {
           timestamp: act.timestamp,
         }))
       );
+
+      const intelligenceProfileDataForInsights: PersonalizedInsightsInput['intelligenceProfileData'] = 
+        JSON.stringify(analysisResult.intelligenceMappings);
       
-      const personalizedOutput: PersonalizedInsightsOutput = await generatePersonalizedInsights({ gameData: gameDataForInsights });
+      const personalizedOutput: PersonalizedInsightsOutput = await generatePersonalizedInsights({ 
+        gameData: gameDataForInsights,
+        intelligenceProfileData: intelligenceProfileDataForInsights,
+      });
 
       const newAIResults: AIAnalysisResults = {
         intelligenceScores,
@@ -100,7 +106,6 @@ export default function InsightsPage() {
         description: "An error occurred during AI analysis. Please try again.",
         variant: "destructive",
       });
-      // Do not clear history on failure, previous analyses remain
     } finally {
       setIsLoadingAI(false);
     }
@@ -213,3 +218,4 @@ export default function InsightsPage() {
     </AppLayout>
   );
 }
+
