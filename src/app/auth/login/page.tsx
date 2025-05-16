@@ -9,6 +9,7 @@ import { Brain, LogIn } from 'lucide-react';
 import { APP_NAME } from '@/lib/constants';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { Separator } from '@/components/ui/separator';
 
 export default function LoginPage() {
   const { login, isAuthenticated, isLoadingAuth } = useAuth();
@@ -16,19 +17,15 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!isLoadingAuth && isAuthenticated) {
-      router.replace('/dashboard'); // Redirect if already logged in
+      router.replace('/dashboard'); 
     }
   }, [isAuthenticated, isLoadingAuth, router]);
 
   const handleDemoLogin = () => {
-    // In a real app, you'd get user details and a real cognifitUserToken
-    // from your backend after successful authentication/registration.
-    // The cognifitUserToken would typically be obtained by calling `registerCognifitUser`
-    // from `cognifitService.ts` as part of a registration flow.
     login({ 
       id: 'demo-user-123', 
       email: 'demo@example.com',
-      cognifitUserToken: 'DEMO_COGNIFIT_USER_TOKEN' // IMPORTANT: Replace with a real token for CogniFit games
+      cognifitUserToken: 'DEMO_COGNIFIT_USER_TOKEN' 
     });
     router.push('/dashboard');
   };
@@ -55,25 +52,23 @@ export default function LoginPage() {
           <CardDescription>Sign in to continue your cognitive journey.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Replace with actual form fields for username/password in a real app */}
+          {/* 
+            This is where a full login form (email/password) would go.
+            For now, we only have the demo login.
+          */}
+           <p className="text-center text-sm text-muted-foreground">
+            Actual login form coming soon. Use Demo Login for now.
+          </p>
           <Button onClick={handleDemoLogin} className="w-full" size="lg">
             <LogIn className="mr-2 h-5 w-5" /> Login as Demo User
           </Button>
-          <p className="text-center text-sm text-muted-foreground">
-            This is a demo login. No actual registration is implemented yet.
-          </p>
-          {/* 
           <Separator />
-          <Button variant="outline" className="w-full">
-            <Chrome className="mr-2 h-5 w-5" /> Sign in with Google
-          </Button>
           <p className="text-center text-sm">
             Don&apos;t have an account?{' '}
             <Link href="/auth/register" className="font-medium text-primary hover:underline">
               Sign up
             </Link>
           </p>
-          */}
         </CardContent>
       </Card>
     </div>
