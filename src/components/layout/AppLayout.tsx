@@ -6,9 +6,9 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"; // Added SheetHeader, SheetTitle
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Menu, LogIn, LogOut, User } from 'lucide-react'; // Added User icon
+import { Menu, LogIn, LogOut, User } from 'lucide-react';
 import { APP_NAME, NAV_LINKS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { Toaster } from "@/components/ui/toaster";
@@ -111,11 +111,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="flex flex-col p-0 w-64">
+              {/* Add SheetTitle here for accessibility */}
+              <SheetTitle className="sr-only">Main Navigation Menu</SheetTitle>
               {sidebarContent}
             </SheetContent>
           </Sheet>
           
-          <div className="hidden lg:flex items-center gap-2">
+          <div className="flex items-center gap-2"> {/* Changed: Removed hidden lg:flex to make it always flex for consistency */}
             {isLoadingAuth ? (
               <Button variant="ghost" size="sm" disabled>
                 Loading...
