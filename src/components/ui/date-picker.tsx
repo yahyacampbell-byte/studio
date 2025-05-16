@@ -7,7 +7,7 @@ import { Calendar as CalendarIcon } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
+import { Calendar, type CalendarProps } from "@/components/ui/calendar" // Ensure CalendarProps is imported
 import {
   Popover,
   PopoverContent,
@@ -18,9 +18,13 @@ interface DatePickerProps {
   value?: Date;
   onChange: (date?: Date) => void;
   disabled?: (date: Date) => boolean;
+  fromYear?: number;
+  toYear?: number;
+  captionLayout?: CalendarProps['captionLayout'];
 }
 
-export function DatePicker({ value, onChange, disabled }: DatePickerProps) {
+export function DatePicker({ value, onChange, disabled, fromYear, toYear, captionLayout = "buttons" }: DatePickerProps) {
+  const currentYear = new Date().getFullYear();
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -41,6 +45,10 @@ export function DatePicker({ value, onChange, disabled }: DatePickerProps) {
           selected={value}
           onSelect={onChange}
           disabled={disabled}
+          captionLayout={captionLayout}
+          fromYear={fromYear}
+          toYear={toYear}
+          defaultMonth={value || new Date(currentYear - 25, 0)} // Default to ~25 years ago if no value
           initialFocus
         />
       </PopoverContent>

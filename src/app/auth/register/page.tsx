@@ -44,6 +44,10 @@ export default function RegisterPage() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const currentYear = new Date().getFullYear();
+  const fromYear = currentYear - 100; // Allow selection up to 100 years ago
+  const toYear = currentYear - 5; // Minimum age of 5, for example
+
   const form = useForm<RegistrationFormValues>({
     resolver: zodResolver(registrationFormSchema),
     defaultValues: {
@@ -106,7 +110,14 @@ export default function RegisterPage() {
   if (isLoadingAuth || (!isLoadingAuth && isAuthenticated)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10">
-        <Brain className="h-12 w-12 animate-pulse text-primary" />
+        <Image 
+            src="https://www.xillo.io/wp-content/uploads/2023/07/Xillo.svg" 
+            alt={`${APP_NAME} Logo`}
+            data-ai-hint="logo"
+            width={48} 
+            height={48}
+            className="h-12 w-12 animate-pulse text-primary" // Replaced Brain Icon with Image
+        />
         <p className="ml-4 text-lg text-muted-foreground">Loading...</p>
       </div>
     );
@@ -225,7 +236,10 @@ export default function RegisterPage() {
                        <DatePicker 
                           value={field.value} 
                           onChange={field.onChange} 
-                          disabled={(date) => date > new Date() || date < new Date("1900-01-01")}
+                          disabled={(date) => date > new Date(toYear, 11, 31) || date < new Date(fromYear, 0, 1)}
+                          fromYear={fromYear}
+                          toYear={toYear}
+                          captionLayout="dropdown-buttons"
                         />
                     </FormControl>
                     <FormMessage />
