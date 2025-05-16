@@ -1,24 +1,25 @@
 
 "use client";
 
-import React, { useMemo } from 'react'; // Added useMemo
+import React, { useMemo } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { IntelligenceChart } from '@/components/dashboard/IntelligenceChart';
 import { PersonalizedInsightsDisplay } from '@/components/dashboard/PersonalizedInsightsDisplay';
+import { ProgressTrendChart } from '@/components/dashboard/ProgressTrendChart'; // New import
 import { useActivity } from '@/context/ActivityContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { AlertCircle, CheckCircle2, Brain } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
-import { COGNITIVE_GAMES, PROFILING_GAMES_COUNT } from '@/lib/constants'; // Added
+import { COGNITIVE_GAMES, PROFILING_GAMES_COUNT } from '@/lib/constants';
 
 export default function DashboardPage() {
   const { isAuthenticated, isLoadingAuth } = useRequireAuth();
-  const { activities, aiResults } = useActivity();
+  const { activities, aiAnalysisHistory, latestAIAnalysis } = useActivity(); // Updated context values
 
   const hasActivities = activities && activities.length > 0;
-  const hasAIResults = aiResults && (aiResults.intelligenceScores.length > 0 || aiResults.personalizedInsights || aiResults.recommendations);
+  const hasAIAnalysis = latestAIAnalysis !== null;
 
   const profilingGameIds = useMemo(() => COGNITIVE_GAMES.slice(0, PROFILING_GAMES_COUNT).map(g => g.id), []);
   
@@ -69,7 +70,7 @@ export default function DashboardPage() {
           </Card>
         )}
         
-        {hasActivities && !allProfilingGamesPlayed && !hasAIResults && (
+        {hasActivities && !allProfilingGamesPlayed && !hasAIAnalysis && (
            <Card className="border-accent/50 bg-accent/5">
            <CardHeader>
              <CardTitle className="flex items-center text-accent">
@@ -88,7 +89,7 @@ export default function DashboardPage() {
          </Card>
         )}
 
-        {hasActivities && allProfilingGamesPlayed && !hasAIResults && (
+        {hasActivities && allProfilingGamesPlayed && !hasAIAnalysis && (
            <Card className="border-accent/50 bg-accent/5">
            <CardHeader>
              <CardTitle className="flex items-center text-accent">
@@ -107,7 +108,7 @@ export default function DashboardPage() {
          </Card>
         )}
 
-        {hasAIResults && (
+        {hasAIAnalysis && (
              <Card className="border-secondary/50 bg-secondary/5">
              <CardHeader>
                <CardTitle className="flex items-center text-secondary">
@@ -123,12 +124,15 @@ export default function DashboardPage() {
            </Card>
         )}
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <div className="lg:col-span-2">
-                 <IntelligenceChart aiResults={aiResults} />
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <div className="lg:col-span-2"> {/* Radar chart takes 2/3 width */}
+                 <IntelligenceChart aiResults={latestAIAnalysis} />
             </div>
-            <div className="lg:col-span-2">
-                <PersonalizedInsightsDisplay aiResults={aiResults} />
+            <div className="lg:col-span-1"> {/* Trend chart takes 1/3 width */}
+                <ProgressTrendChart aiAnalysisHistory={aiAnalysisHistory} />
+            </div>
+            <div className="lg:col-span-3"> {/* Insights display takes full width */}
+                <PersonalizedInsightsDisplay aiResults={latestAIAnalysis} />
             </div>
         </div>
       </div>

@@ -17,7 +17,7 @@ import { COGNITIVE_GAMES, PROFILING_GAMES_COUNT } from '@/lib/constants';
 
 export default function InsightsPage() {
   const { isAuthenticated, isLoadingAuth } = useRequireAuth();
-  const { activities, aiResults, setAIResults, isLoadingAI, setIsLoadingAI } = useActivity();
+  const { activities, addAIAnalysisToHistory, latestAIAnalysis, isLoadingAI, setIsLoadingAI } = useActivity();
   const { toast } = useToast();
 
   const profilingGameIds = useMemo(() => COGNITIVE_GAMES.slice(0, PROFILING_GAMES_COUNT).map(g => g.id), []);
@@ -86,7 +86,7 @@ export default function InsightsPage() {
         lastAnalyzed: new Date().toISOString(),
       };
       
-      setAIResults(newAIResults);
+      addAIAnalysisToHistory(newAIResults);
 
       toast({
         title: "Analysis Complete!",
@@ -100,7 +100,7 @@ export default function InsightsPage() {
         description: "An error occurred during AI analysis. Please try again.",
         variant: "destructive",
       });
-      setAIResults(null); // Clear results on failure
+      // Do not clear history on failure, previous analyses remain
     } finally {
       setIsLoadingAI(false);
     }
@@ -178,7 +178,7 @@ export default function InsightsPage() {
           </div>
         )}
 
-        {aiResults && !isLoadingAI && (
+        {latestAIAnalysis && !isLoadingAI && (
           <Card className="bg-green-50 border-green-200 dark:bg-green-900/30 dark:border-green-700 shadow-md">
             <CardHeader>
               <CardTitle className="flex items-center text-green-700 dark:text-green-300">
@@ -190,12 +190,12 @@ export default function InsightsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-                <p className="text-sm text-muted-foreground">Last analyzed: {aiResults.lastAnalyzed ? new Date(aiResults.lastAnalyzed).toLocaleString() : 'N/A'}</p>
+                <p className="text-sm text-muted-foreground">Last analyzed: {latestAIAnalysis.lastAnalyzed ? new Date(latestAIAnalysis.lastAnalyzed).toLocaleString() : 'N/A'}</p>
             </CardContent>
           </Card>
         )}
 
-        {!aiResults && !isLoadingAI && activities.length > 0 && allProfilingGamesPlayed && (
+        {!latestAIAnalysis && !isLoadingAI && activities.length > 0 && allProfilingGamesPlayed && (
            <Card className="bg-amber-50 border-amber-200 dark:bg-amber-900/30 dark:border-amber-700 shadow-md">
             <CardHeader>
               <CardTitle className="flex items-center text-amber-700 dark:text-amber-300">

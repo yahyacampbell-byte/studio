@@ -9,9 +9,9 @@ import { v4 as uuidv4 } from 'uuid';
 interface ActivityContextType {
   activities: GameActivity[];
   addActivity: (activityData: { gameId: GameId; gameTitle: string; score: number; activityDuration: number }) => void;
-  // clearActivities: () => void; // Removed
-  aiResults: AIAnalysisResults | null;
-  setAIResults: (results: AIAnalysisResults | null) => void;
+  aiAnalysisHistory: AIAnalysisResults[];
+  addAIAnalysisToHistory: (results: AIAnalysisResults) => void;
+  latestAIAnalysis: AIAnalysisResults | null;
   isLoadingAI: boolean;
   setIsLoadingAI: (loading: boolean) => void;
 }
@@ -20,7 +20,7 @@ const ActivityContext = createContext<ActivityContextType | undefined>(undefined
 
 export const ActivityProvider = ({ children }: { children: ReactNode }) => {
   const [activities, setActivities] = useState<GameActivity[]>([]);
-  const [aiResults, setAIResultsState] = useState<AIAnalysisResults | null>(null);
+  const [aiAnalysisHistory, setAIAnalysisHistoryState] = useState<AIAnalysisResults[]>([]);
   const [isLoadingAI, setIsLoadingAI] = useState<boolean>(false);
 
   useEffect(() => {
@@ -29,9 +29,9 @@ export const ActivityProvider = ({ children }: { children: ReactNode }) => {
       if (storedActivities) {
         setActivities(JSON.parse(storedActivities));
       }
-      const storedAIResults = localStorage.getItem(LOCAL_STORAGE_INSIGHTS_KEY);
-      if (storedAIResults) {
-        setAIResultsState(JSON.parse(storedAIResults));
+      const storedAIAnalysisHistory = localStorage.getItem(LOCAL_STORAGE_INSIGHTS_KEY);
+      if (storedAIAnalysisHistory) {
+        setAIAnalysisHistoryState(JSON.parse(storedAIAnalysisHistory));
       }
     } catch (error) {
       console.error("Error loading data from localStorage:", error);
@@ -48,15 +48,11 @@ export const ActivityProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
   
-  const updateLocalStorageAIResults = useCallback((updatedResults: AIAnalysisResults | null) => {
+  const updateLocalStorageAIAnalysisHistory = useCallback((updatedHistory: AIAnalysisResults[]) => {
     try {
-      if (updatedResults) {
-        localStorage.setItem(LOCAL_STORAGE_INSIGHTS_KEY, JSON.stringify(updatedResults));
-      } else {
-        localStorage.removeItem(LOCAL_STORAGE_INSIGHTS_KEY);
-      }
+      localStorage.setItem(LOCAL_STORAGE_INSIGHTS_KEY, JSON.stringify(updatedHistory));
     } catch (error) {
-      console.error("Error saving AI results to localStorage:", error);
+      console.error("Error saving AI analysis history to localStorage:", error);
     }
   }, []);
 
@@ -73,22 +69,26 @@ export const ActivityProvider = ({ children }: { children: ReactNode }) => {
     });
   }, [updateLocalStorageActivities]);
 
-  // Removed clearActivities function
-  // const clearActivities = useCallback(() => {
-  //   setActivities([]);
-  //   updateLocalStorageActivities([]);
-  //   setAIResultsState(null); 
-  //   updateLocalStorageAIResults(null);
-  // }, [updateLocalStorageActivities, updateLocalStorageAIResults]);
-
-  const setAIResults = useCallback((results: AIAnalysisResults | null) => {
-    setAIResultsState(results);
-    updateLocalStorageAIResults(results);
-  }, [updateLocalStorageAIResults]);
-
+  const addAIAnalysisToHistory = useCallback((newAnalysis: AIAnalysisResults) => {
+    setAIAnalysisHistoryState(prevHistory => {
+      const updatedHistory = [...prevHistory, newAnalysis];
+      updateLocalStorageAIAnalysisHistory(updatedHistory);
+      return updatedHistory;
+    });
+  }, [updateLocalStorageAIAnalysisHistory]);
+  
+  const latestAIAnalysis = aiAnalysisHistory.length > 0 ? aiAnalysisHistory[aiAnalysisHistory.length - 1] : null;
 
   return (
-    <ActivityContext.Provider value={{ activities, addActivity, aiResults, setAIResults, isLoadingAI, setIsLoadingAI }}>
+    <ActivityContext.Provider value={{ 
+        activities, 
+        addActivity, 
+        aiAnalysisHistory, 
+        addAIAnalysisToHistory, 
+        latestAIAnalysis,
+        isLoadingAI, 
+        setIsLoadingAI 
+      }}>
       {children}
     </ActivityContext.Provider>
   );

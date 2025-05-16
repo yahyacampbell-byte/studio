@@ -19,10 +19,11 @@ export interface IntelligenceScore {
   reasoning?: string;
 }
 
+// Represents a single snapshot of AI analysis results
 export interface AIAnalysisResults {
   intelligenceScores: IntelligenceScore[];
   multipleIntelligencesSummary: string;
   broaderCognitiveInsights?: string;
   actionableRecommendations: string;
-  lastAnalyzed?: string; // ISO string timestamp of when analysis was run
+  lastAnalyzed: string; // ISO string timestamp of when analysis was run
 }
