@@ -1,3 +1,4 @@
+
 "use client";
 
 import type { GameActivity, AIAnalysisResults, GameId } from '@/lib/types';

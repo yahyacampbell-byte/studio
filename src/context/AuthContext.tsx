@@ -3,8 +3,8 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { LOCAL_STORAGE_AUTH_KEY } from '@/lib/constants';
 
-const LOCAL_STORAGE_AUTH_KEY = 'brainBloomAuth';
 
 interface User {
   id: string;

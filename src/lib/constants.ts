@@ -1,7 +1,7 @@
 import type { LucideIcon } from 'lucide-react';
 import { Eye, FileText, Calculator, Bike, Music, Users, User, Leaf, Puzzle, Brain, BarChart3, Lightbulb, Settings, Bot } from 'lucide-react';
 
-export const APP_NAME = "BrainBloom";
+export const APP_NAME = "Xillo TruePotential";
 
 export interface CognitiveGame {
   id: string; // Key like CANDY_FACTORY
@@ -59,8 +59,10 @@ export const NAV_LINKS = [
   // { href: "/settings", label: "Settings", icon: Settings }, // Example for future
 ];
 
-export const LOCAL_STORAGE_ACTIVITY_KEY = 'brainBloomActivity';
-export const LOCAL_STORAGE_INSIGHTS_KEY = 'brainBloomInsights';
+export const LOCAL_STORAGE_ACTIVITY_KEY = 'xilloTruePotentialActivity';
+export const LOCAL_STORAGE_INSIGHTS_KEY = 'xilloTruePotentialInsights';
+export const LOCAL_STORAGE_AUTH_KEY = 'xilloTruePotentialAuth';
+
 
 // Mapping game keys to intelligences, similar to the one in generatePersonalizedInsightsFromGameData AI flow for consistency if needed client-side.
 // This is a partial list for example.

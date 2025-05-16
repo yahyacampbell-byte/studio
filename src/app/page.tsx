@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Brain, Zap, BarChart3, Lightbulb, LogIn } from 'lucide-react';
+import { Zap, BarChart3, Lightbulb, LogIn } from 'lucide-react';
 import Image from 'next/image';
 import { APP_NAME } from '@/lib/constants';
 import { useAuth } from '@/context/AuthContext';
@@ -22,8 +22,15 @@ export default function HomePage() {
     <div className="flex flex-col min-h-screen">
       <header className="px-4 lg:px-6 h-16 flex items-center border-b">
         <Link href="/" className="flex items-center justify-center" prefetch={false}>
-          <Brain className="h-6 w-6 text-primary" />
-          <span className="ml-2 text-xl font-semibold">{APP_NAME}</span>
+          <Image 
+            src="https://www.xillo.io/wp-content/uploads/2023/07/Xillo.svg" 
+            alt={`${APP_NAME} Logo`}
+            data-ai-hint="logo"
+            width={83} 
+            height={20} 
+            className="h-5" // Adjust height as needed, width will scale
+          />
+          <span className="ml-2 text-xl font-semibold sr-only">{APP_NAME}</span>
         </Link>
         <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
           <Link

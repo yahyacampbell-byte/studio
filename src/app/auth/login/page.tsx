@@ -9,6 +9,7 @@ import { Brain, LogIn } from 'lucide-react';
 import { APP_NAME } from '@/lib/constants';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Separator } from '@/components/ui/separator';
 
 export default function LoginPage() {
@@ -43,13 +44,20 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-4">
       <Link href="/" className="flex items-center justify-center mb-8" prefetch={false}>
-        <Brain className="h-10 w-10 text-primary" />
-        <span className="ml-3 text-3xl font-semibold">{APP_NAME}</span>
+        <Image 
+            src="https://www.xillo.io/wp-content/uploads/2023/07/Xillo.svg" 
+            alt={`${APP_NAME} Logo`}
+            data-ai-hint="logo"
+            width={133} // Approx 4.16 aspect ratio for 32px height
+            height={32}
+            className="h-8" // Adjust height as needed
+        />
+        <span className="ml-3 text-3xl font-semibold sr-only">{APP_NAME}</span>
       </Link>
       <Card className="w-full max-w-md shadow-2xl">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">Welcome Back!</CardTitle>
-          <CardDescription>Sign in to continue your cognitive journey.</CardDescription>
+          <CardDescription>Sign in to continue your cognitive journey with {APP_NAME}.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* 

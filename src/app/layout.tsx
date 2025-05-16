@@ -5,13 +5,14 @@ import { GeistMono } from 'geist/font/mono';
 import './globals.css';
 import { ActivityProvider } from '@/context/ActivityContext';
 import { AuthProvider } from '@/context/AuthContext';
+import { APP_NAME } from '@/lib/constants';
 
 const geistSans = GeistSans;
 const geistMono = GeistMono;
 
 export const metadata: Metadata = {
-  title: 'BrainBloom by Firebase Studio',
-  description: 'Unlock your cognitive potential with BrainBloom.',
+  title: `${APP_NAME} by Firebase Studio`,
+  description: `Unlock your cognitive potential with ${APP_NAME}.`,
 };
 
 export default function RootLayout({

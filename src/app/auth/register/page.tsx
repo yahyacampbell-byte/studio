@@ -9,6 +9,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { format } from 'date-fns';
+import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -83,7 +84,7 @@ export default function RegisterPage() {
         });
         toast({
           title: "Registration Successful!",
-          description: "Welcome to BrainBloom! You are now logged in.",
+          description: `Welcome to ${APP_NAME}! You are now logged in.`,
         });
         router.push('/dashboard');
       } else {
@@ -114,8 +115,15 @@ export default function RegisterPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10 p-4">
       <Link href="/" className="flex items-center justify-center mb-8" prefetch={false}>
-        <Brain className="h-10 w-10 text-primary" />
-        <span className="ml-3 text-3xl font-semibold">{APP_NAME}</span>
+         <Image 
+            src="https://www.xillo.io/wp-content/uploads/2023/07/Xillo.svg" 
+            alt={`${APP_NAME} Logo`}
+            data-ai-hint="logo"
+            width={133}
+            height={32}
+            className="h-8"
+        />
+        <span className="ml-3 text-3xl font-semibold sr-only">{APP_NAME}</span>
       </Link>
       <Card className="w-full max-w-lg shadow-2xl">
         <CardHeader className="text-center">

@@ -4,10 +4,11 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import Image from 'next/image';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Menu, Brain, LogIn, LogOut } from 'lucide-react';
+import { Menu, LogIn, LogOut } from 'lucide-react';
 import { APP_NAME, NAV_LINKS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { Toaster } from "@/components/ui/toaster";
@@ -21,8 +22,15 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     <ScrollArea className="h-full py-4">
       <div className="px-3 py-2">
         <div className="mb-4 flex items-center pl-2">
-          <Brain className="h-8 w-8 mr-2 text-primary" />
-          <h2 className="text-2xl font-semibold tracking-tight text-primary">
+          <Image 
+            src="https://www.xillo.io/wp-content/uploads/2023/07/Xillo.svg" 
+            alt={`${APP_NAME} Logo`}
+            data-ai-hint="logo"
+            width={125} // Approx 4.16 aspect ratio for 30px height
+            height={30}
+            className="h-[30px] mr-2" // Adjust height as needed
+          />
+          <h2 className="text-2xl font-semibold tracking-tight text-primary sr-only">
             {APP_NAME}
           </h2>
         </div>
