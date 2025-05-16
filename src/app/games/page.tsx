@@ -1,7 +1,7 @@
 
 "use client";
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { COGNITIVE_GAMES, CognitiveGame, PROFILING_GAMES_COUNT, MULTIPLE_INTELLIGENCES } from '@/lib/constants';
 import type { IntelligenceId } from '@/lib/types';
@@ -39,35 +39,49 @@ export default function GamesPage() {
   const enhancementGameModels = useMemo(() => COGNITIVE_GAMES.slice(PROFILING_GAMES_COUNT), []);
 
   const isInitialProfilingComplete = useMemo(() => {
-    if (profilingGameModels.length === 0) return true; // Or handle as an edge case if 0 profiling games is invalid
+    if (profilingGameModels.length === 0) return true;
     return profilingGameModels.every(game => allTimePlayedGameIds.has(game.id));
   }, [profilingGameModels, allTimePlayedGameIds]);
 
   const recommendedGames = useMemo(() => {
-    if (!latestAIAnalysis || !Array.isArray(latestAIAnalysis.intelligenceScores) || latestAIAnalysis.intelligenceScores.length === 0) {
+    if (
+        !latestAIAnalysis || 
+        typeof latestAIAnalysis !== 'object' || // Extra check for object type
+        !latestAIAnalysis.intelligenceScores || // Check if intelligenceScores exists
+        !Array.isArray(latestAIAnalysis.intelligenceScores) || 
+        latestAIAnalysis.intelligenceScores.length === 0
+    ) {
       return [];
     }
-    const scores = [...latestAIAnalysis.intelligenceScores].sort((a, b) => a.score - b.score);
+
+    // Further ensure each score object is valid before sorting
+    const validScores = latestAIAnalysis.intelligenceScores.filter(
+        s => typeof s === 'object' && s !== null && typeof s.score === 'number' && typeof s.intelligence === 'string'
+    );
+
+    if (validScores.length === 0) {
+        return [];
+    }
+
+    const scores = [...validScores].sort((a, b) => a.score - b.score);
     const recommendations: CognitiveGame[] = [];
     const recommendedGameIds = new Set<string>();
 
-    // Target 2 weakest and 1 strongest intelligence
-    const weakestIntelligences = scores.slice(0, 2).map(s => s.intelligence);
-    const strongestIntelligences = scores.length > 2 ? scores.slice(scores.length - 1).map(s => s.intelligence) : [];
+    const weakestIntelligences = scores.slice(0, 2).map(s => s.intelligence as IntelligenceId);
+    const strongestIntelligences = scores.length > 2 ? scores.slice(scores.length - 1).map(s => s.intelligence as IntelligenceId) : [];
     
     const targetIntelligences = [
         ...weakestIntelligences,
         ...strongestIntelligences
-    ].filter(Boolean) as IntelligenceId[];
+    ].filter(Boolean);
 
     for (const targetInt of targetIntelligences) {
-      if (recommendations.length >= 3) break; // Limit to 3 recommendations for now
+      if (recommendations.length >= 3) break; 
       
       const gamesForIntelligence = COGNITIVE_GAMES.filter(game => 
-        game.assessesIntelligences.includes(targetInt) && !recommendedGameIds.has(game.id)
+        Array.isArray(game.assessesIntelligences) && game.assessesIntelligences.includes(targetInt) && !recommendedGameIds.has(game.id)
       );
-
-      // Prioritize games not played in the current cycle
+      
       const unplayedThisCycle = gamesForIntelligence.filter(game => !getDisplayAsPlayedStatus(game.id));
       const playedThisCycle = gamesForIntelligence.filter(game => getDisplayAsPlayedStatus(game.id));
       
@@ -83,20 +97,23 @@ export default function GamesPage() {
 
 
   const filterAndSortGames = useCallback((games: CognitiveGame[]) => {
+    if (!Array.isArray(games)) return []; // Guard against non-array input
+
     const filtered = games.filter(game =>
-      game.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      game.description.toLowerCase().includes(searchTerm.toLowerCase())
+      game && game.title && game.description && // Ensure game object and its properties exist
+      (game.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      game.description.toLowerCase().includes(searchTerm.toLowerCase()))
     );
-    // Sort: unplayed games first, then played games
-    const unplayedThisCycle = filtered.filter(game => !getDisplayAsPlayedStatus(game.id));
-    const playedThisCycle = filtered.filter(game => getDisplayAsPlayedStatus(game.id));
+    
+    const unplayedThisCycle = filtered.filter(game => game && !getDisplayAsPlayedStatus(game.id));
+    const playedThisCycle = filtered.filter(game => game && getDisplayAsPlayedStatus(game.id));
     return [...unplayedThisCycle, ...playedThisCycle];
   }, [searchTerm, getDisplayAsPlayedStatus]);
 
   const handlePlayGame = useCallback((game: CognitiveGame) => {
     setSelectedGame(game);
     setIsModalOpen(true);
-  }, []); // setSelectedGame and setIsModalOpen are stable
+  }, [setSelectedGame, setIsModalOpen]); 
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
@@ -104,37 +121,32 @@ export default function GamesPage() {
   };
 
   const renderGameCards = useCallback((games: CognitiveGame[]) => {
+    if (!Array.isArray(games)) { 
+        console.error("renderGameCards received non-array:", games);
+        return <p className="text-center text-destructive py-8 col-span-full">Error: Could not load games.</p>;
+    }
     if (games.length === 0 && searchTerm) {
       return <p className="text-center text-muted-foreground py-8 col-span-full">No games found matching your search in this section.</p>;
     }
     if (games.length === 0 && !searchTerm) {
         return <p className="text-center text-muted-foreground py-8 col-span-full">No games available in this section currently.</p>;
     }
-    return games.map((game) => (
-      <GameCard
-        key={game.id}
-        game={game}
-        onPlay={handlePlayGame}
-        hasBeenPlayed={getDisplayAsPlayedStatus(game.id)}
-      />
-    ));
+    return games.map((game) => {
+      if (!game || !game.id) return null; // Add null check for game object itself
+      return (
+        <GameCard
+            key={game.id}
+            game={game}
+            onPlay={handlePlayGame}
+            hasBeenPlayed={getDisplayAsPlayedStatus(game.id)}
+        />
+      );
+    });
   }, [searchTerm, handlePlayGame, getDisplayAsPlayedStatus]);
-
-  if (isLoadingAuth || !isAuthenticated) {
-    return (
-      <AppLayout>
-        <div className="flex flex-col items-center justify-center h-[calc(100vh-10rem)]">
-          <Brain className="h-16 w-16 animate-pulse text-primary mb-4" />
-          <p className="text-xl text-muted-foreground">Loading games...</p>
-        </div>
-      </AppLayout>
-    );
-  }
 
   const recommendedGamesSection = useMemo(() => {
     const sortedGames = filterAndSortGames(recommendedGames);
-    // Only show section if there are recommendations AND AI analysis has been done.
-    if (!latestAIAnalysis || recommendedGames.length === 0) return null; 
+    if (!latestAIAnalysis || !Array.isArray(recommendedGames) || recommendedGames.length === 0) return null; 
     
     return (
       <section className="space-y-4">
@@ -158,7 +170,7 @@ export default function GamesPage() {
 
 
   const gamesByIntelligenceSection = useMemo(() => {
-    if (!latestAIAnalysis) return null; // Only show this section if analysis has been performed
+    if (!latestAIAnalysis) return null; 
 
     return (
       <section className="space-y-6">
@@ -170,16 +182,14 @@ export default function GamesPage() {
             Explore games targeting specific cognitive intelligences. Games played since your last analysis appear at the bottom of each list.
         </p>
         {MULTIPLE_INTELLIGENCES.map(intelligence => {
+          if (!intelligence || !intelligence.id) return null; // Guard for intelligence object
           const gamesForThisIntelligence = COGNITIVE_GAMES.filter(game => 
-            game.assessesIntelligences.includes(intelligence.id)
+            game && Array.isArray(game.assessesIntelligences) && game.assessesIntelligences.includes(intelligence.id)
           );
           const sortedGames = filterAndSortGames(gamesForThisIntelligence);
           
-          // Skip rendering this intelligence if no games match the current search term (and search is active)
           if (sortedGames.length === 0 && searchTerm) return null;
-          // Skip rendering if no games for this intelligence at all (and no search term)
           if (gamesForThisIntelligence.length === 0 && !searchTerm) return null;
-
 
           const IconComponent = intelligence.icon;
 
@@ -194,8 +204,6 @@ export default function GamesPage() {
                   {renderGameCards(sortedGames)}
                 </div>
               ) : ( 
-                // This condition will now only be met if searchTerm is active and yields no results for *this specific intelligence category*
-                // Or if there were truly no games for this intelligence (which shouldn't happen with current data)
                 <p className="text-center text-muted-foreground py-4">
                   {searchTerm ? `No ${intelligence.name} games found matching your search.` : `No games currently available for ${intelligence.name}.`}
                 </p>
@@ -209,10 +217,10 @@ export default function GamesPage() {
 
 
   const profilingGamesSection = useMemo(() => {
-    if (latestAIAnalysis && isInitialProfilingComplete) return null; // Hide if analysis done and profiling complete
+    if (latestAIAnalysis && isInitialProfilingComplete) return null; 
     
     const sortedGames = filterAndSortGames(profilingGameModels);
-    if (sortedGames.length === 0 && searchTerm) { // If search yields no results in this section
+    if (sortedGames.length === 0 && searchTerm && profilingGameModels.length > 0) { 
         return (
              <section className="space-y-4">
                 <div className="flex items-center gap-2">
@@ -228,7 +236,7 @@ export default function GamesPage() {
             </section>
         );
     }
-    if (sortedGames.length === 0 && !searchTerm) return null; // Don't render empty section
+    if (sortedGames.length === 0 && !searchTerm) return null; 
 
     return (
       <section className="space-y-4">
@@ -252,7 +260,7 @@ export default function GamesPage() {
     const sortedGames = filterAndSortGames(enhancementGameModels);
     const title = latestAIAnalysis ? "Further Profile Enhancement" : "Profile Enhancement Games";
 
-    if (sortedGames.length === 0 && searchTerm) {
+    if (sortedGames.length === 0 && searchTerm && enhancementGameModels.length > 0) {
          return (
             <section className="space-y-4">
                 <div className="flex items-center gap-2">
@@ -268,7 +276,7 @@ export default function GamesPage() {
             </section>
         );
     }
-    if (sortedGames.length === 0 && !searchTerm) return null; // Don't render empty section
+    if (sortedGames.length === 0 && !searchTerm) return null; 
     
     return (
       <section className="space-y-4">
@@ -287,6 +295,17 @@ export default function GamesPage() {
       </section>
     );
   }, [enhancementGameModels, isInitialProfilingComplete, latestAIAnalysis, filterAndSortGames, searchTerm, renderGameCards]);
+  
+  if (isLoadingAuth || !isAuthenticated) {
+    return (
+      <AppLayout>
+        <div className="flex flex-col items-center justify-center h-[calc(100vh-10rem)]">
+          <Brain className="h-16 w-16 animate-pulse text-primary mb-4" />
+          <p className="text-xl text-muted-foreground">Loading games...</p>
+        </div>
+      </AppLayout>
+    );
+  }
   
   const pageTitle = latestAIAnalysis && isInitialProfilingComplete
     ? "Explore Games by Recommendation or Intelligence" 
@@ -316,7 +335,6 @@ export default function GamesPage() {
           />
         </div>
         
-        {/* Conditional Rendering Logic based on analysis and profiling completion */}
         {latestAIAnalysis && isInitialProfilingComplete ? (
           <>
             {recommendedGamesSection}
@@ -331,7 +349,7 @@ export default function GamesPage() {
         )}
 
       </div>
-      <SimulateGameModal game={selectedGame} isOpen={isModalOpen} onClose={handleCloseModal} />
+      {selectedGame && <SimulateGameModal game={selectedGame} isOpen={isModalOpen} onClose={handleCloseModal} />}
     </AppLayout>
   );
 }
