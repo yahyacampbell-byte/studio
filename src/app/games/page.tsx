@@ -9,11 +9,11 @@ import { SimulateGameModal } from '@/components/games/SimulateGameModal';
 import { Input } from '@/components/ui/input';
 import { Search, Brain, Sparkles, ListChecks } from 'lucide-react';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
-import { useActivity } from '@/context/ActivityContext'; // Added
+import { useActivity } from '@/context/ActivityContext';
 
 export default function GamesPage() {
   const { isAuthenticated, isLoadingAuth } = useRequireAuth();
-  const { activities } = useActivity(); // Added
+  const { activities } = useActivity();
   const [selectedGame, setSelectedGame] = useState<CognitiveGame | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -28,22 +28,35 @@ export default function GamesPage() {
     setSelectedGame(null);
   };
 
-  const allGames = COGNITIVE_GAMES;
-  const profilingGames = useMemo(() => allGames.slice(0, PROFILING_GAMES_COUNT), [allGames]);
-  const enhancementGames = useMemo(() => allGames.slice(PROFILING_GAMES_COUNT), [allGames]);
-
   const playedGameIds = useMemo(() => new Set(activities.map(act => act.gameId)), [activities]);
 
-  const filterGames = (games: CognitiveGame[]) => {
-    if (!searchTerm) return games;
-    return games.filter(game =>
+  const allProfilingGameModels = useMemo(() => COGNITIVE_GAMES.slice(0, PROFILING_GAMES_COUNT), []);
+  const allEnhancementGameModels = useMemo(() => COGNITIVE_GAMES.slice(PROFILING_GAMES_COUNT), []);
+
+  const isProfilingComplete = useMemo(() => {
+    if (allProfilingGameModels.length === 0) return true; // Or false, depending on desired behavior for empty profiling set
+    return allProfilingGameModels.every(game => playedGameIds.has(game.id));
+  }, [allProfilingGameModels, playedGameIds]);
+
+  const filterAndSortGames = (games: CognitiveGame[], isSectionCompleteForHeaderText?: boolean) => {
+    const filtered = games.filter(game =>
       game.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       game.description.toLowerCase().includes(searchTerm.toLowerCase())
     );
+    const unplayed = filtered.filter(game => !playedGameIds.has(game.id));
+    const played = filtered.filter(game => playedGameIds.has(game.id));
+    return [...unplayed, ...played];
   };
 
-  const filteredProfilingGames = filterGames(profilingGames);
-  const filteredEnhancementGames = filterGames(enhancementGames);
+  const sortedFilteredProfilingGames = useMemo(
+    () => filterAndSortGames(allProfilingGameModels),
+    [allProfilingGameModels, searchTerm, playedGameIds]
+  );
+
+  const sortedFilteredEnhancementGames = useMemo(
+    () => filterAndSortGames(allEnhancementGameModels),
+    [allEnhancementGameModels, searchTerm, playedGameIds]
+  );
 
   if (isLoadingAuth || !isAuthenticated) {
     return (
@@ -56,13 +69,75 @@ export default function GamesPage() {
     );
   }
 
+  const profilingGamesSection = (
+    <section className="space-y-4">
+      <div className="flex items-center gap-2">
+        <ListChecks className="h-6 w-6 text-primary" />
+        <h2 className="text-2xl font-semibold">Profiling Analysis Games</h2>
+      </div>
+      <p className="text-muted-foreground">
+        {isProfilingComplete
+          ? `You've completed all ${PROFILING_GAMES_COUNT} profiling games! You can replay them below or proceed to enhancement games.`
+          : `Complete these ${PROFILING_GAMES_COUNT} games to build your initial Multiple Intelligence profile. Played games will move to the bottom of this list.`}
+      </p>
+      {sortedFilteredProfilingGames.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {sortedFilteredProfilingGames.map((game) => (
+            <GameCard
+              key={game.id}
+              game={game}
+              onPlay={handlePlayGame}
+              hasBeenPlayed={playedGameIds.has(game.id)}
+            />
+          ))}
+        </div>
+      ) : (
+        <p className="text-center text-muted-foreground py-8">
+          {searchTerm ? "No profiling games found matching your search." : "No profiling games available."}
+        </p>
+      )}
+    </section>
+  );
+
+  const enhancementGamesSection = (
+    <section className="space-y-4">
+      <div className="flex items-center gap-2">
+        <Sparkles className="h-6 w-6 text-accent" />
+        <h2 className="text-2xl font-semibold">Profile Enhancement Games</h2>
+      </div>
+      <p className="text-muted-foreground">
+        {isProfilingComplete
+          ? "Now, enhance your profile with these games. Played games will move to the bottom of this list."
+          : `After completing all ${PROFILING_GAMES_COUNT} profiling games, try these to further refine and enhance your cognitive skills.`}
+      </p>
+      {sortedFilteredEnhancementGames.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {sortedFilteredEnhancementGames.map((game) => (
+            <GameCard
+              key={game.id}
+              game={game}
+              onPlay={handlePlayGame}
+              hasBeenPlayed={playedGameIds.has(game.id)}
+            />
+          ))}
+        </div>
+      ) : (
+        <p className="text-center text-muted-foreground py-8">
+          {searchTerm ? "No enhancement games found matching your search." : "No enhancement games available yet."}
+        </p>
+      )}
+    </section>
+  );
+
   return (
     <AppLayout>
       <div className="space-y-8">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Cognitive Games</h1>
           <p className="text-muted-foreground">
-            Challenge your mind. Start with Profiling Games, then move to Enhancement Games.
+            {isProfilingComplete
+              ? "Enhance your cognitive profile or replay profiling games."
+              : `Challenge your mind. Start with the ${PROFILING_GAMES_COUNT} Profiling Games to build your intelligence profile.`}
           </p>
         </div>
 
@@ -77,57 +152,17 @@ export default function GamesPage() {
           />
         </div>
 
-        <section className="space-y-4">
-          <div className="flex items-center gap-2">
-            <ListChecks className="h-6 w-6 text-primary" />
-            <h2 className="text-2xl font-semibold">Profiling Analysis Games</h2>
-          </div>
-          <p className="text-muted-foreground">
-            Complete these {PROFILING_GAMES_COUNT} games to build your initial Multiple Intelligence profile.
-          </p>
-          {filteredProfilingGames.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredProfilingGames.map((game) => (
-                <GameCard 
-                  key={game.id} 
-                  game={game} 
-                  onPlay={handlePlayGame} 
-                  hasBeenPlayed={playedGameIds.has(game.id)} 
-                />
-              ))}
-            </div>
-          ) : (
-            <p className="text-center text-muted-foreground py-8">
-              {searchTerm ? "No profiling games found matching your search." : "No profiling games available."}
-            </p>
-          )}
-        </section>
-
-        <section className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-6 w-6 text-accent" />
-            <h2 className="text-2xl font-semibold">Profile Enhancement Games</h2>
-          </div>
-           <p className="text-muted-foreground">
-            After completing the profiling games, try these to further refine and enhance your cognitive skills.
-          </p>
-          {filteredEnhancementGames.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredEnhancementGames.map((game) => (
-                <GameCard 
-                  key={game.id} 
-                  game={game} 
-                  onPlay={handlePlayGame} 
-                  hasBeenPlayed={playedGameIds.has(game.id)}
-                />
-              ))}
-            </div>
-          ) : (
-             <p className="text-center text-muted-foreground py-8">
-              {searchTerm ? "No enhancement games found matching your search." : "No enhancement games available yet."}
-            </p>
-          )}
-        </section>
+        {isProfilingComplete ? (
+          <>
+            {enhancementGamesSection}
+            {profilingGamesSection}
+          </>
+        ) : (
+          <>
+            {profilingGamesSection}
+            {enhancementGamesSection}
+          </>
+        )}
 
       </div>
       <SimulateGameModal game={selectedGame} isOpen={isModalOpen} onClose={handleCloseModal} />
