@@ -160,9 +160,9 @@ If a game is "hybrid," it contributes to two intelligences; score it for both.
 
 **Enhancement Games (Hybrid - Contribute to Multiple Intelligences - these help refine the profile):**
 
-9.  **Game: Crossroads** (ID: CROSSROADS) - (Replaces Sudoku in function)
+9.  **Game: Crossroads** (ID: CROSSROADS)
     *   Description: Traffic management simulation requiring strategic lane allocation. Enhances logical reasoning and spatial planning.
-    *   Assesses: Logical-Mathematical AND Visual-Spatial Intelligence
+    *   Assesses: Logical-Mathematical AND Visual-Spatial Intelligence (Also touches Interpersonal)
     *   Logical-Mathematical Rubric (0-10 points):
         *   10 pts: Solves complex traffic scenarios efficiently (e.g., high raw score on difficult setting).
         *   7 pts: Solves medium scenarios with 1–2 minor incidents (good raw score).
@@ -173,7 +173,7 @@ If a game is "hybrid," it contributes to two intelligences; score it for both.
         *   4 pts: Struggles to visualize traffic flow and make optimal choices.
     *   Mapping Raw Score: Interpret raw score for efficiency/complexity for Logical. For Spatial, consider if score implies good spatial management (this might be harder to infer, so lean on logical score or give moderate spatial score if logical is high).
 
-10. **Game: Butterfly Hunter** (ID: WINDOW_CLEANER) - (Replaces Gem Breaker in function)
+10. **Game: Butterfly Hunter** (ID: WINDOW_CLEANER)
     *   Description: Tracking game where players capture moving targets across a grid. Improves hand-eye coordination and visual tracking.
     *   Assesses: Visual-Spatial AND Bodily-Kinesthetic Intelligence
     *   Visual-Spatial Rubric (0-10 points):
@@ -184,9 +184,9 @@ If a game is "hybrid," it contributes to two intelligences; score it for both.
         *   7 pts: Late adjustments but recovers (good raw score).
     *   Mapping Raw Score: Higher scores imply better trajectory prediction (Spatial) and capture control (Kinesthetic).
 
-11. **Game: Lane Changer** (ID: LANE_SPLITTER) - (Replaces Fuel a Car in function)
+11. **Game: Lane Changer** (ID: LANE_SPLITTER)
     *   Description: Driving simulation requiring rapid lane switching decisions. Tests problem-solving and reaction speed.
-    *   Assesses: Bodily-Kinesthetic AND Visual-Spatial Intelligence (Note: Original "Fuel a Car" was Logical + Kinesthetic. Lane Changer is more Spatial + Kinesthetic. If strong logical component is needed, another game might be better or rubric adjusted)
+    *   Assesses: Bodily-Kinesthetic AND Visual-Spatial Intelligence (Also touches Logical-Mathematical)
     *   Bodily-Kinesthetic Rubric (0-10 points):
         *   10 pts: Smooth steering, no crashes, quick lane changes (high raw score if reflects control).
         *   7 pts: Jerky movements but recovers, some hesitation (good raw score).
@@ -227,7 +227,7 @@ Produce a JSON object matching the \\\`AnalyzeGameplayOutputSchema\\\`. Ensure e
 
 Example for Reasoning: "User shows strong Visual-Spatial skills (80/100) based on quick completion of Jigsaw 9 (rated 8/10) and good trajectory prediction in Butterfly Hunter (Spatial aspect rated 8/10)."
 
-Make sure game titles in your internal mapping logic match the \\\`gameTitle\\\` field from the input. I have used the titles as they appear in the application constants: e.g., "Math Twins", "Jigsaw 9", "Reaction Field", "Words Birds", "Melody Mayhem", "Chess", "Solitaire", "Ant Escape", "Crossroads", "Butterfly Hunter", "Lane Changer", "Word Quest", and others like "Candy Factory", etc.
+Make sure game titles in your internal mapping logic match the \\\`gameTitle\\\` field from the input. I have used the titles as they appear in the application constants: e.g., ${ALL_GAME_TITLES_FOR_PROMPT}.
   `,
 });
 
