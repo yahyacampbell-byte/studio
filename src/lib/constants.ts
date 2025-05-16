@@ -7,8 +7,8 @@ import {
   Crosshair, ShieldAlert, Sigma, Minus, LineChart, Car, Gauge, Network, Bomb, Target,
   Dot, Rotate3d, Milestone, Copy, Image as ImageIcon, ToyBrick, Palette,
   Ship, Trees, HandHelping, TrendingUp, Route, Scale, Sparkles, ListChecks,
-  Layers, Scissors, Citrus, Hand, Box, Cuboid, CircleDot, CakeSlice, Flower2, // Replaced Balloon with Flower2
-  Binary, CandyCane, Frog, Package, Dog, Rainbow, Rocket, Zap, Diamond // Added Diamond
+  Layers, Scissors, Citrus, Hand, Box, Cuboid, CircleDot, CakeSlice, Flower2,
+  Binary, CandyCane, Package, Dog, Rainbow, Rocket, Zap, Diamond, Rabbit // Added Rabbit, removed Frog
 } from 'lucide-react';
 import type { IntelligenceId } from './types';
 
@@ -119,6 +119,9 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
   // --- End of 8 Profiling Games ---
 
   // --- Start of 4 Enhancement Games (IDs must match those in AI prompt rubric for enhancement) ---
+  // Note: SUDOKU_PUZZLE was removed from enhancement as per specific request, others mapped.
+  // BREAKOUT ID is now BREAKOUT3D
+  // FUEL_A_CAR was not in provided games, replaced by LANE_SPLITTER (Lane Changer)
   {
     id: "WORD_QUEST",
     title: "Word Quest",
@@ -140,7 +143,7 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
     title: "Butterfly Hunter",
     description: "Tracking game where players capture moving targets across a grid. Improves hand-eye coordination and visual tracking.",
     assessesIntelligences: ["Visual-Spatial", "Bodily-Kinesthetic"],
-    iconName: "Crosshair", // Replaced Butterfly
+    iconName: "Crosshair",
     dataAiHint: "Measure target acquisition speed and trajectory prediction accuracy."
   },
   {
@@ -153,7 +156,7 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
   },
   // --- End of 4 Enhancement Games ---
 
-  // --- Additional Games ---
+  // --- Additional Games from provided lists ---
   {
     id: "CANDY_FACTORY",
     title: "Candy Factory",
@@ -195,7 +198,7 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
     dataAiHint: "Analyze tile selection speed and matching errors for visual processing speed."
   },
   {
-    id: "RIVAL_ORBS",
+    id: "RIVAL_ORBS", // Title changed from "Shore Dangers" as per later game list
     title: "Shore Dangers",
     description: "Competitive resource collection game with environmental hazards.",
     assessesIntelligences: ["Interpersonal", "Naturalistic"],
@@ -227,7 +230,7 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
     dataAiHint: "Analyze reaction time consistency during gear shift windows."
   },
   {
-    id: "TRAFFIC_MANAGER",
+    id: "TRAFFIC_MANAGER", // Title changed from "Traffic Manager"
     title: "Traffic Manager",
     description: "Multi-lane coordination game with dynamic obstacle generation.",
     assessesIntelligences: ["Logical-Mathematical", "Interpersonal"],
@@ -251,7 +254,7 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
     dataAiHint: "Analyze spatial targeting bias (left/right/center preferences)."
   },
   {
-    id: "TENNIS_BULLING",
+    id: "TENNIS_BULLING", // Title changed from "Tennis Bowling"
     title: "Tennis Bowling",
     description: "Hybrid sport game combining tennis mechanics with pin knockdown.",
     assessesIntelligences: ["Bodily-Kinesthetic"],
@@ -295,7 +298,7 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
     title: "Penguin Explorer",
     description: "3D navigation through complex ice mazes.",
     assessesIntelligences: ["Visual-Spatial"],
-    iconName: "Ship",
+    iconName: "Ship", // Placeholder as Penguin icon is not standard
     dataAiHint: "Track pathfinding efficiency and spatial orientation errors."
   },
   {
@@ -303,7 +306,7 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
     title: "Scrambled",
     description: "Players unscramble letters to form correct words.",
     assessesIntelligences: ["Linguistic-Verbal"],
-    iconName: "Palette",
+    iconName: "Palette", // Placeholder for a more direct 'letters' icon
     dataAiHint: "Analyze verbal reasoning speed and anagram skill proficiency."
   },
   {
@@ -431,7 +434,7 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
     title: "Happy Hopper",
     description: "Ecosystem navigation game avoiding predators and environmental hazards.",
     assessesIntelligences: ["Naturalistic"],
-    iconName: "Frog",
+    iconName: "Rabbit", // Replaced Frog
     dataAiHint: "Measure adaptive pathfinding when introducing novel predator patterns."
   },
   {
@@ -511,10 +514,11 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
     title: "Chess Puzzle", // Title updated from CHESS_PVP
     description: "Tactical chess scenarios requiring optimal move sequences.",
     assessesIntelligences: ["Logical-Mathematical"],
-    iconName: "Crown",
+    iconName: "Crown", // Replaced ChessKing
     dataAiHint: "Track move depth calculation and sacrifice evaluation accuracy."
   }
 ];
+
 
 const iconMap: Record<string, LucideIcon> = {
   Factory, Eye, FileText, Calculator, Bike, Music, Users, User, Leaf, Puzzle, Brain,
@@ -524,7 +528,7 @@ const iconMap: Record<string, LucideIcon> = {
   Dot, Rotate3d, Milestone, Copy, ImageIcon, ToyBrick, Palette,
   Ship, Trees, HandHelping, TrendingUp, Route, Scale, Sparkles, ListChecks,
   Layers, Scissors, Citrus, Hand, Box, Cuboid, CircleDot, CakeSlice, Flower2,
-  Binary, CandyCane, Frog, Package, Dog, Rainbow, Rocket, Zap, Diamond
+  Binary, CandyCane, Rabbit, Package, Dog, Rainbow, Rocket, Zap, Diamond // Added Rabbit, Diamond, Flower2; removed Frog, Neon, Balloon, Cube, Tiles, Snake, SearchText
 };
 
 // Merge and normalize game data
@@ -547,10 +551,10 @@ export const COGNITIVE_GAMES: CognitiveGame[] = Array.from(gameDataMap.values())
 // IDs of the 4 games designated as "Profile Enhancement Games"
 // These will be excluded from the "Games by Intelligence" accordions and shown in their own section.
 export const ENHANCEMENT_GAME_IDS: string[] = [
-    "WORD_QUEST",
-    "CROSSROADS",
-    "WINDOW_CLEANER", // Butterfly Hunter
-    "LANE_SPLITTER"   // Lane Changer
+    "WORD_QUEST",     // Linguistic, Logical
+    "CROSSROADS",     // Logical, Spatial, Interpersonal
+    "WINDOW_CLEANER", // Butterfly Hunter - Visual-Spatial, Bodily-Kinesthetic
+    "LANE_SPLITTER"   // Lane Changer - Bodily-Kinesthetic, Visual-Spatial, Logical-Mathematical
 ];
 
 export interface Intelligence {
