@@ -8,7 +8,7 @@ import {
   Dot, Rotate3d, Milestone, Copy, Image as ImageIcon, ToyBrick, Palette,
   Ship, Trees, HandHelping, TrendingUp, Route, Scale, Sparkles, ListChecks,
   Layers, Scissors, Citrus, Hand, Box, Cuboid, CircleDot, CakeSlice, Flower2,
-  Binary, CandyCane, Package, Dog, Rainbow, Rocket, Zap, Diamond, Rabbit // Added Rabbit, removed Frog
+  Binary, CandyCane, Package, Dog, Rainbow, Rocket, Zap, Diamond, Rabbit
 } from 'lucide-react';
 import type { IntelligenceId } from './types';
 
@@ -53,12 +53,12 @@ const normalizeIntelligenceIdInternal = (id: string): IntelligenceId => {
 const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'> & { assessesIntelligences: string[], iconName: string }[] = [
   // --- Start of 8 Profiling Games (IDs must match those in the AI prompt rubric) ---
   {
-    id: "MATH_TWINS", // Replaces "MATH_MADNESS" from original profiling list for consistency
+    id: "MATH_TWINS",
     title: "Math Twins",
     description: "Matching game pairing equivalent mathematical expressions. Uses adaptive difficulty to train both basic math skills and working memory under cognitive load.",
     assessesIntelligences: ["Logical-Mathematical"],
     iconName: "Sigma",
-    dataAiHint: "equivalence recognition speed notation formats"
+    dataAiHint: "Track equivalence recognition speed across different notation formats."
   },
   {
     id: "JIGSAW_9",
@@ -66,7 +66,7 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
     description: "Digital jigsaw puzzle with rotatable pieces and adjustable difficulty. Trains mental rotation skills by requiring players to manipulate puzzle pieces in both 2D and 3D space.",
     assessesIntelligences: ["Visual-Spatial"],
     iconName: "Puzzle",
-    dataAiHint: "piece rotation frequency completion time"
+    dataAiHint: "Track piece rotation frequency and completion time for mental rotation assessment."
   },
   {
     id: "WHACK_A_MOLE", // This is "Reaction Field"
@@ -93,7 +93,7 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
     dataAiHint: "Quantify pitch and tempo deviation to assess auditory processing."
   },
   {
-    id: "CHESS_PVP", // This is "Chess"
+    id: "CHESS_PVP",
     title: "Chess",
     description: "Strategic board game played against opponents or AI. Specifically trains perspective-taking and anticipatory social cognition through move prediction.",
     assessesIntelligences: ["Interpersonal", "Logical-Mathematical"],
@@ -119,9 +119,6 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
   // --- End of 8 Profiling Games ---
 
   // --- Start of 4 Enhancement Games (IDs must match those in AI prompt rubric for enhancement) ---
-  // Note: SUDOKU_PUZZLE was removed from enhancement as per specific request, others mapped.
-  // BREAKOUT ID is now BREAKOUT3D
-  // FUEL_A_CAR was not in provided games, replaced by LANE_SPLITTER (Lane Changer)
   {
     id: "WORD_QUEST",
     title: "Word Quest",
@@ -194,11 +191,11 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
     title: "Mahjong",
     description: "Tile-matching game pairing identical symbols under time pressure.",
     assessesIntelligences: ["Visual-Spatial"],
-    iconName: "LayoutGrid", // Replaced Tiles
+    iconName: "LayoutGrid",
     dataAiHint: "Analyze tile selection speed and matching errors for visual processing speed."
   },
   {
-    id: "RIVAL_ORBS", // Title changed from "Shore Dangers" as per later game list
+    id: "RIVAL_ORBS",
     title: "Shore Dangers",
     description: "Competitive resource collection game with environmental hazards.",
     assessesIntelligences: ["Interpersonal", "Naturalistic"],
@@ -230,7 +227,7 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
     dataAiHint: "Analyze reaction time consistency during gear shift windows."
   },
   {
-    id: "TRAFFIC_MANAGER", // Title changed from "Traffic Manager"
+    id: "TRAFFIC_MANAGER",
     title: "Traffic Manager",
     description: "Multi-lane coordination game with dynamic obstacle generation.",
     assessesIntelligences: ["Logical-Mathematical", "Interpersonal"],
@@ -254,11 +251,11 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
     dataAiHint: "Analyze spatial targeting bias (left/right/center preferences)."
   },
   {
-    id: "TENNIS_BULLING", // Title changed from "Tennis Bowling"
+    id: "TENNIS_BULLING",
     title: "Tennis Bowling",
     description: "Hybrid sport game combining tennis mechanics with pin knockdown.",
     assessesIntelligences: ["Bodily-Kinesthetic"],
-    iconName: "Dot", // Replaced Pin
+    iconName: "Dot",
     dataAiHint: "Track spin application effectiveness through pin scattering patterns."
   },
   {
@@ -274,7 +271,7 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
     title: "Neuron Madness",
     description: "Modernized snake game with branching path mechanics.",
     assessesIntelligences: ["Visual-Spatial"],
-    iconName: "Milestone", // Replaced Snake
+    iconName: "Milestone",
     dataAiHint: "Analyze path prediction strategies in constrained environments."
   },
   {
@@ -298,7 +295,7 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
     title: "Penguin Explorer",
     description: "3D navigation through complex ice mazes.",
     assessesIntelligences: ["Visual-Spatial"],
-    iconName: "Ship", // Placeholder as Penguin icon is not standard
+    iconName: "Ship",
     dataAiHint: "Track pathfinding efficiency and spatial orientation errors."
   },
   {
@@ -306,7 +303,7 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
     title: "Scrambled",
     description: "Players unscramble letters to form correct words.",
     assessesIntelligences: ["Linguistic-Verbal"],
-    iconName: "Palette", // Placeholder for a more direct 'letters' icon
+    iconName: "Palette",
     dataAiHint: "Analyze verbal reasoning speed and anagram skill proficiency."
   },
   {
@@ -362,12 +359,12 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
     title: "Bee Balloon",
     description: "Navigation game steering balloons through floral obstacle courses.",
     assessesIntelligences: ["Visual-Spatial", "Naturalistic"],
-    iconName: "Flower2", // Replaced Balloon
+    iconName: "Flower2",
     dataAiHint: "Track pollen collection route optimization in constrained spaces."
   },
   {
-    id: "BREAKOUT3D", // This ID already existed as "BREAKOUT" but was part of enhancement games.
-    title: "Gem Breaker 3D", // Title updated
+    id: "BREAKOUT3D",
+    title: "Gem Breaker 3D",
     description: "Three-dimensional brick breaker with depth perception challenges.",
     assessesIntelligences: ["Visual-Spatial", "Bodily-Kinesthetic"],
     iconName: "Box",
@@ -386,7 +383,7 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
     title: "Cube Foundry",
     description: "Spatial reasoning game extracting shapes from solid blocks.",
     assessesIntelligences: ["Visual-Spatial"],
-    iconName: "ToyBrick", // Replaced Cube
+    iconName: "ToyBrick",
     dataAiHint: "Analyze waste material minimization during extraction processes."
   },
   {
@@ -398,7 +395,7 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
     dataAiHint: "Track mirroring accuracy across quadrants and radial symmetry maintenance."
   },
   {
-    id: "CUT_THE_CAKE", // ID for "Color Bee"
+    id: "CUT_THE_CAKE",
     title: "Color Bee",
     description: "Fraction division game with dynamic visual partitioning.",
     assessesIntelligences: ["Logical-Mathematical"],
@@ -434,7 +431,7 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
     title: "Happy Hopper",
     description: "Ecosystem navigation game avoiding predators and environmental hazards.",
     assessesIntelligences: ["Naturalistic"],
-    iconName: "Rabbit", // Replaced Frog
+    iconName: "Rabbit",
     dataAiHint: "Measure adaptive pathfinding when introducing novel predator patterns."
   },
   {
@@ -446,7 +443,7 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
     dataAiHint: "Quantify mental rotation attempts before successful placement."
   },
   {
-    id: "ECHO_RACE", // ID for "Color Rush"
+    id: "ECHO_RACE",
     title: "Color Rush",
     description: "Audio-visual reaction game matching colors to sound frequencies.",
     assessesIntelligences: ["Musical"],
@@ -482,11 +479,11 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
     title: "Neon Lights",
     description: "Visual memory game recreating light sequence patterns.",
     assessesIntelligences: ["Visual-Spatial"],
-    iconName: "Zap", // Replaced Neon
+    iconName: "Zap",
     dataAiHint: "Track chunking strategies in sequence memorization (group size/patterns)."
   },
   {
-    id: "NEURON_GRAPH", // ID for "Synaptix"
+    id: "NEURON_GRAPH",
     title: "Synaptix",
     description: "Neural pathway visualization game connecting cognitive concepts.",
     assessesIntelligences: ["Intrapersonal"],
@@ -502,7 +499,7 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
     dataAiHint: "Quantify throughput efficiency vs error rate tradeoffs."
   },
   {
-    id: "ROBOT", // ID for "Crystal Miner"
+    id: "ROBOT", // This is Crystal Miner
     title: "Crystal Miner",
     description: "Resource collection game with terrain deformation mechanics.",
     assessesIntelligences: ["Visual-Spatial"],
@@ -510,11 +507,11 @@ const BASE_COGNITIVE_GAMES: Omit<CognitiveGame, 'assessesIntelligences' | 'icon'
     dataAiHint: "Analyze digging path optimization in 3D voxel environments."
   },
   {
-    id: "CHESS", // This is a new game, distinct from CHESS_PVP
-    title: "Chess Puzzle", // Title updated from CHESS_PVP
+    id: "CHESS", // This is Chess Puzzle
+    title: "Chess Puzzle",
     description: "Tactical chess scenarios requiring optimal move sequences.",
     assessesIntelligences: ["Logical-Mathematical"],
-    iconName: "Crown", // Replaced ChessKing
+    iconName: "Crown",
     dataAiHint: "Track move depth calculation and sacrifice evaluation accuracy."
   }
 ];
@@ -528,7 +525,7 @@ const iconMap: Record<string, LucideIcon> = {
   Dot, Rotate3d, Milestone, Copy, ImageIcon, ToyBrick, Palette,
   Ship, Trees, HandHelping, TrendingUp, Route, Scale, Sparkles, ListChecks,
   Layers, Scissors, Citrus, Hand, Box, Cuboid, CircleDot, CakeSlice, Flower2,
-  Binary, CandyCane, Rabbit, Package, Dog, Rainbow, Rocket, Zap, Diamond // Added Rabbit, Diamond, Flower2; removed Frog, Neon, Balloon, Cube, Tiles, Snake, SearchText
+  Binary, CandyCane, Rabbit, Package, Dog, Rainbow, Rocket, Zap, Diamond
 };
 
 // Merge and normalize game data
@@ -551,10 +548,10 @@ export const COGNITIVE_GAMES: CognitiveGame[] = Array.from(gameDataMap.values())
 // IDs of the 4 games designated as "Profile Enhancement Games"
 // These will be excluded from the "Games by Intelligence" accordions and shown in their own section.
 export const ENHANCEMENT_GAME_IDS: string[] = [
-    "WORD_QUEST",     // Linguistic, Logical
-    "CROSSROADS",     // Logical, Spatial, Interpersonal
-    "WINDOW_CLEANER", // Butterfly Hunter - Visual-Spatial, Bodily-Kinesthetic
-    "LANE_SPLITTER"   // Lane Changer - Bodily-Kinesthetic, Visual-Spatial, Logical-Mathematical
+    "WORD_QUEST",
+    "CROSSROADS",
+    "WINDOW_CLEANER",
+    "LANE_SPLITTER"
 ];
 
 export interface Intelligence {
