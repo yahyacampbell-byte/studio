@@ -192,24 +192,24 @@ If a game is "hybrid," it contributes to two intelligences; score it for both.
     *   Mapping Raw Score: Higher scores imply strong vocabulary/recognition (Linguistic) and pattern deduction (Logical).
 
 **Calculation Steps:**
-1.  For each game played in the input `gameplayData`:
-    a.  Identify the game from the list above based on `gameTitle`.
-    b.  Using the corresponding rubric(s), convert the `Raw Score` to a 0-10 point score for the assessed intelligence(s). If `activityDuration` is relevant to the rubric (e.g. speed), consider it.
+1.  For each game played in the input \\\`gameplayData\\\`:
+    a.  Identify the game from the list above based on \\\`gameTitle\\\`.
+    b.  Using the corresponding rubric(s), convert the \\\`Raw Score\\\` to a 0-10 point score for the assessed intelligence(s). If \\\`activityDuration\\\` is relevant to the rubric (e.g. speed), consider it.
     c.  Store these 0-10 point scores temporarily, associated with the intelligence(s) they measure.
 
 2.  For each of the 8 Multiple Intelligences:
     a.  Collect all 0-10 point scores assigned to this intelligence from all games played.
     b.  If multiple scores exist for an intelligence, calculate their average. This is the composite 0-10 score.
     c.  If no games contributing to an intelligence were played, assign a 0-10 score of 0.
-    d.  Convert this composite 0-10 score to a 0-100 scale (e.g., multiply by 10). This is the final `score` for the output.
-    e.  Provide a concise `reasoning` for this score, mentioning the contributing games and the user's general performance in them based on the rubrics. For example: "Achieved a strong score in Logical-Mathematical, driven by high performance in Math Madness (mapped to 9/10) and good problem-solving in Sudoku (Logical aspect mapped to 8/10)."
+    d.  Convert this composite 0-10 score to a 0-100 scale (e.g., multiply by 10). This is the final \\\`score\\\` for the output.
+    e.  Provide a concise \\\`reasoning\\\` for this score, mentioning the contributing games and the user's general performance in them based on the rubrics. For example: "Achieved a strong score in Logical-Mathematical, driven by high performance in Math Madness (mapped to 9/10) and good problem-solving in Sudoku (Logical aspect mapped to 8/10)."
 
 **Output Format:**
-Produce a JSON object matching the `AnalyzeGameplayOutputSchema`. Ensure each of the 8 intelligences is present in the `intelligenceMappings` array with a score from 0-100 and reasoning.
+Produce a JSON object matching the \\\`AnalyzeGameplayOutputSchema\\\`. Ensure each of the 8 intelligences is present in the \\\`intelligenceMappings\\\` array with a score from 0-100 and reasoning.
 
 Example for Reasoning: "User shows strong Visual-Spatial skills (80/100) based on quick completion of Jigsaw 9 (rated 8/10) and good trajectory prediction in Gem Breaker (Spatial aspect rated 8/10)."
 
-Make sure game titles in your internal mapping logic (e.g., "Reaction Field" for "WHACK_A_MOLE") match the `gameTitle` field from the input. I have used the titles as they appear in the `COGNITIVE_GAMES` constant in the application: "Math Madness", "Jigsaw 9", "Reaction Field", "Words Birds", "Melody Mayhem", "Chess PvP", "Solitaire", "Ant Escape", "Sudoku", "Gem Breaker", "Fuel a Car", "Word Quest".
+Make sure game titles in your internal mapping logic (e.g., "Reaction Field" for "WHACK_A_MOLE") match the \\\`gameTitle\\\` field from the input. I have used the titles as they appear in the \\\`COGNITIVE_GAMES\\\` constant in the application: "Math Madness", "Jigsaw 9", "Reaction Field", "Words Birds", "Melody Mayhem", "Chess PvP", "Solitaire", "Ant Escape", "Sudoku", "Gem Breaker", "Fuel a Car", "Word Quest".
   `,
 });
 
