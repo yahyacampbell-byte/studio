@@ -5,8 +5,8 @@ import {
   BarChart3, Lightbulb, Settings, Bot, Gamepad2, CheckCircle2, UserCog, Factory,
   Sprout, Rat, Hammer, Type, Search, Tiles, Crown, LayoutGrid, Bug, TrafficCone,
   Crosshair, ShieldAlert, Sigma, Minus, LineChart, Car, Gauge, Network, Bomb, Target,
-  Dot, Rotate3d, Copy, Image as ImageIcon, ToyBrick, Milestone, Palette,
-  Ship, Trees, HandHelping, TrendingUp, Route, Scale, Sparkles, ListChecks, LightbulbIcon
+  Dot, Rotate3d, Milestone, Copy, Image as ImageIcon, ToyBrick, Palette,
+  Ship, Trees, HandHelping, TrendingUp, Route, Scale, Sparkles, ListChecks
 } from 'lucide-react';
 import type { IntelligenceId } from './types';
 
@@ -71,7 +71,7 @@ export const COGNITIVE_GAMES: CognitiveGame[] = [
     title: "Chess",
     description: "Strategic board game played against opponents or AI. Specifically trains perspective-taking and anticipatory social cognition through move prediction.",
     assessesIntelligences: ["Interpersonal", "Logical-Mathematical"],
-    icon: Crown, // Using Crown for Chess
+    icon: Crown,
     dataAiHint: "move prediction accuracy theory mind"
   },
   {
@@ -79,7 +79,7 @@ export const COGNITIVE_GAMES: CognitiveGame[] = [
     title: "Solitaire",
     description: "Classic card organization game played individually. Trains executive function through continuous self-assessment and strategy adjustment.",
     assessesIntelligences: ["Intrapersonal", "Logical-Mathematical"],
-    icon: LayoutGrid, // Using LayoutGrid as 'Cards' icon is not available.
+    icon: LayoutGrid,
     dataAiHint: "win rate move efficiency metacognitive"
   },
   {
@@ -97,7 +97,7 @@ export const COGNITIVE_GAMES: CognitiveGame[] = [
     id: "CROSSROADS", // Replaces SUDOKU_PUZZLE ID for consistency with AI rubric for Crossroads
     title: "Crossroads",
     description: "Traffic management simulation requiring strategic lane allocation. Enhances logical reasoning and spatial planning.",
-    assessesIntelligences: ["Logical-Mathematical", "Visual-Spatial"],
+    assessesIntelligences: ["Logical-Mathematical", "Visual-Spatial", "Interpersonal"],
     icon: TrafficCone,
     dataAiHint: "congestion patterns decision latency complexity"
   },
@@ -106,7 +106,7 @@ export const COGNITIVE_GAMES: CognitiveGame[] = [
     title: "Butterfly Hunter",
     description: "Tracking game where players capture moving targets across a grid. Improves hand-eye coordination and visual tracking.",
     assessesIntelligences: ["Visual-Spatial", "Bodily-Kinesthetic"],
-    icon: Crosshair, // Replaced Butterfly
+    icon: Crosshair,
     dataAiHint: "target acquisition speed trajectory prediction"
   },
   {
@@ -122,7 +122,7 @@ export const COGNITIVE_GAMES: CognitiveGame[] = [
     title: "Word Quest",
     description: "Word search puzzle requiring players to find hidden terms in letter grids. Enhances vocabulary and logical deduction.",
     assessesIntelligences: ["Linguistic-Verbal", "Logical-Mathematical"],
-    icon: Search, // Replaced SearchText
+    icon: Search,
     dataAiHint: "scanning patterns search strategies"
   },
   // --- End of 4 Enhancement Games ---
@@ -134,15 +134,15 @@ export const COGNITIVE_GAMES: CognitiveGame[] = [
     description: "Resource management game where players optimize candy production lines under time constraints.",
     assessesIntelligences: ["Logical-Mathematical"],
     icon: Factory,
-    dataAiHint: "production efficiency strategic planning"
+    dataAiHint: "Track production efficiency vs time spent to quantify strategic planning skills."
   },
   {
     id: "PIECE_MAKING",
     title: "Piece Making",
     description: "Assembly puzzle requiring players to construct objects from scattered parts.",
     assessesIntelligences: ["Visual-Spatial", "Logical-Mathematical"],
-    icon: ToyBrick, // Puzzle icon is used by Jigsaw_9. ToyBrick is a good fit.
-    dataAiHint: "rotation attempts visual-spatial reasoning"
+    icon: ToyBrick,
+    dataAiHint: "Measure rotation attempts and completion time to assess visual-spatial reasoning."
   },
   {
     id: "WATER_LILIES",
@@ -150,7 +150,7 @@ export const COGNITIVE_GAMES: CognitiveGame[] = [
     description: "Ecosystem simulation where players balance pond life by managing lily pad growth.",
     assessesIntelligences: ["Naturalistic"],
     icon: Sprout,
-    dataAiHint: "response patterns environmental changes systems"
+    dataAiHint: "Analyze response patterns to environmental changes for systems thinking assessment."
   },
   {
     id: "MOUSE_CHALLENGE",
@@ -158,7 +158,7 @@ export const COGNITIVE_GAMES: CognitiveGame[] = [
     description: "Pathfinding game where players navigate a mouse through maze obstacles.",
     assessesIntelligences: ["Visual-Spatial"],
     icon: Rat,
-    dataAiHint: "wrong turns backtracking spatial memory"
+    dataAiHint: "Track wrong turns and backtracking frequency to measure spatial memory."
   },
   {
     id: "MAHJONG",
@@ -166,31 +166,31 @@ export const COGNITIVE_GAMES: CognitiveGame[] = [
     description: "Tile-matching game pairing identical symbols under time pressure.",
     assessesIntelligences: ["Visual-Spatial"],
     icon: Tiles,
-    dataAiHint: "tile selection speed matching errors"
+    dataAiHint: "Analyze tile selection speed and matching errors for visual processing speed."
   },
   {
-    id: "RIVAL_ORBS",
+    id: "RIVAL_ORBS", // This was Rival Orbs, user description has Shore Dangers
     title: "Shore Dangers",
     description: "Competitive resource collection game with environmental hazards.",
     assessesIntelligences: ["Interpersonal", "Naturalistic"],
     icon: ShieldAlert,
-    dataAiHint: "risk-taking behavior opponents strategies"
+    dataAiHint: "Compare risk-taking behavior against opponents' strategies."
   },
   {
-    id: "MATH_SUBTRACTION",
+    id: "MATH_SUBTRACTION", // This was Math Subtraction, user description has Minus Malus
     title: "Minus Malus",
     description: "Fast-paced arithmetic drills focusing on subtraction skills.",
     assessesIntelligences: ["Logical-Mathematical"],
     icon: Minus,
-    dataAiHint: "error patterns borrowing operations subtraction"
+    dataAiHint: "Analyze error patterns in borrowing operations versus simple subtraction."
   },
   {
-    id: "MATH_LINES",
+    id: "MATH_LINES", // This was Math Lines, user description has Numbers line
     title: "Numbers line",
     description: "Number sequence completion game with dynamic intervals.",
     assessesIntelligences: ["Logical-Mathematical"],
     icon: LineChart,
-    dataAiHint: "pattern recognition linear non-linear"
+    dataAiHint: "Measure pattern recognition speed for linear vs non-linear sequences."
   },
   {
     id: "DRAGSTER_RACING",
@@ -198,7 +198,7 @@ export const COGNITIVE_GAMES: CognitiveGame[] = [
     description: "Timed acceleration challenge with gear-shifting mechanics.",
     assessesIntelligences: ["Bodily-Kinesthetic"],
     icon: Gauge,
-    dataAiHint: "reaction time consistency gear shift"
+    dataAiHint: "Analyze reaction time consistency during gear shift windows."
   },
   {
     id: "TRAFFIC_MANAGER",
@@ -206,7 +206,7 @@ export const COGNITIVE_GAMES: CognitiveGame[] = [
     description: "Multi-lane coordination game with dynamic obstacle generation.",
     assessesIntelligences: ["Logical-Mathematical", "Interpersonal"],
     icon: Network,
-    dataAiHint: "flow optimization collaborative competitive"
+    dataAiHint: "Quantify flow optimization under collaborative vs competitive conditions."
   },
   {
     id: "TENNIS_BOMB",
@@ -214,7 +214,7 @@ export const COGNITIVE_GAMES: CognitiveGame[] = [
     description: "Ball-hitting game with explosive targets and trajectory arcs.",
     assessesIntelligences: ["Bodily-Kinesthetic"],
     icon: Bomb,
-    dataAiHint: "angular prediction accuracy parabolic trajectories"
+    dataAiHint: "Measure angular prediction accuracy for parabolic trajectories."
   },
   {
     id: "TENNIS_TARGET",
@@ -222,15 +222,15 @@ export const COGNITIVE_GAMES: CognitiveGame[] = [
     description: "Precision aiming game with moving target zones.",
     assessesIntelligences: ["Bodily-Kinesthetic", "Visual-Spatial"],
     icon: Target,
-    dataAiHint: "spatial targeting bias preferences"
+    dataAiHint: "Analyze spatial targeting bias (left/right/center preferences)."
   },
   {
-    id: "TENNIS_BULLING",
+    id: "TENNIS_BULLING", // This was Tennis Bowling, user description has Tennis Bulling
     title: "Tennis Bowling",
     description: "Hybrid sport game combining tennis mechanics with pin knockdown.",
     assessesIntelligences: ["Bodily-Kinesthetic"],
-    icon: Dot, // Using Dot as 'Pin' or 'BowlingBall' is not available
-    dataAiHint: "spin application effectiveness pin scattering"
+    icon: Dot, // Replaced Pin, as Pin is not a direct lucide icon
+    dataAiHint: "Track spin application effectiveness through pin scattering patterns."
   },
   {
     id: "TWIST_IT",
@@ -238,31 +238,96 @@ export const COGNITIVE_GAMES: CognitiveGame[] = [
     description: "Rotation puzzle requiring angular alignment of geometric shapes.",
     assessesIntelligences: ["Visual-Spatial"],
     icon: Rotate3d,
-    dataAiHint: "rotation efficiency correction attempts"
+    dataAiHint: "Quantify rotation efficiency (degrees/second) and correction attempts."
   },
   {
-    id: "SNAKE",
+    id: "SNAKE", // This was Snake, user description has Neuron Madness
     title: "Neuron Madness",
     description: "Modernized snake game with branching path mechanics.",
     assessesIntelligences: ["Visual-Spatial"],
     icon: Milestone, // Replaced Snake icon
-    dataAiHint: "path prediction strategies constrained environments"
+    dataAiHint: "Analyze path prediction strategies in constrained environments."
   },
   {
-    id: "SIMON_SAYS",
+    id: "SIMON_SAYS", // This was Simon Says, user description has Drive me crazy
     title: "Drive me crazy",
     description: "Memory sequence replication game with color-light patterns.",
     assessesIntelligences: ["Musical", "Logical-Mathematical"],
     icon: Copy,
-    dataAiHint: "sequence length retention error types"
+    dataAiHint: "Track sequence length retention and error types (omission vs commission)."
   },
   {
-    id: "NAME_ME",
+    id: "NAME_ME", // This was Name Me, user description has Visual Crossword
     title: "Visual Crossword",
     description: "Object naming game using fragmented visual clues.",
     assessesIntelligences: ["Linguistic-Verbal"],
-    icon: ImageIcon,
-    dataAiHint: "naming latency visual clue completeness"
+    icon: ImageIcon, // aliased from Image
+    dataAiHint: "Measure naming latency versus visual clue completeness percentage."
+  },
+  // -- Additional Games from User's extended list, matching the pattern --
+  {
+    id: "PENGUIN_MAZE",
+    title: "Penguin Explorer",
+    description: "3D navigation through complex ice mazes.",
+    assessesIntelligences: ["Visual-Spatial"],
+    icon: Ship, // Using Ship as a placeholder for explorer/navigation
+    dataAiHint: "Track pathfinding efficiency and spatial orientation errors."
+  },
+  {
+    id: "BLOCKBUILDER",
+    title: "Star Architect",
+    description: "3D block construction from 2D blueprints.",
+    assessesIntelligences: ["Visual-Spatial"],
+    icon: ToyBrick, // Reusing ToyBrick as it's fitting for construction
+    dataAiHint: "Measure volumetric visualization accuracy and assembly time."
+  },
+  {
+    id: "SCRAMBLED",
+    title: "Scrambled",
+    description: "Players unscramble letters to form correct words.",
+    assessesIntelligences: ["Linguistic-Verbal"],
+    icon: Palette, // Using Palette as a generic "creative/puzzle" icon
+    dataAiHint: "Analyze verbal reasoning speed and anagram skill proficiency."
+  },
+  {
+    id: "AUDIO_TENNIS",
+    title: "Melodic Tennis",
+    description: "Sound-based reaction game with pitch variations.",
+    assessesIntelligences: ["Musical"],
+    icon: Music, // Reusing Music
+    dataAiHint: "Measure tone discrimination accuracy and auditory reaction time."
+  },
+  {
+    id: "ECHO_RACE",
+    title: "Color Rush",
+    description: "Audio-visual synchronization challenge.",
+    assessesIntelligences: ["Musical"], // Often involves rhythmic/timing aspects
+    icon: TrendingUp, // Using TrendingUp to represent race/progression
+    dataAiHint: "Assess cross-modal integration speed and accuracy."
+  },
+  {
+    id: "NEURON_GRAPH",
+    title: "Synaptix",
+    description: "Personal cognitive mapping game.",
+    assessesIntelligences: ["Intrapersonal"],
+    icon: Network, // Reusing Network for mapping/connections
+    dataAiHint: "Track self-awareness development and mental model complexity."
+  },
+  {
+    id: "PIRATE_ISLAND",
+    title: "Treasure Island",
+    description: "Nature-based exploration game.",
+    assessesIntelligences: ["Naturalistic"],
+    icon: Trees, // Using Trees for nature/exploration
+    dataAiHint: "Measure topographical memory and risk/reward choices in exploration."
+  },
+  {
+    id: "SAVE_THE_FROG",
+    title: "Happy Hopper",
+    description: "Amphibian habitat navigation.",
+    assessesIntelligences: ["Naturalistic"],
+    icon: HandHelping, // Using HandHelping to represent "saving"
+    dataAiHint: "Assess ecological reasoning and habitat navigation skills."
   }
 ];
 
@@ -295,7 +360,7 @@ export const MULTIPLE_INTELLIGENCES: Intelligence[] = [
 export const NAV_LINKS = [
   { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
   { href: "/games", label: "Games", icon: Puzzle },
-  { href: "/insights", label: "My Insights", icon: LightbulbIcon },
+  { href: "/insights", label: "My Insights", icon: Lightbulb },
   { href: "/profile", label: "Profile", icon: UserCog },
 ];
 
@@ -331,24 +396,6 @@ export const normalizeIntelligenceId = (id: string): IntelligenceId => {
 COGNITIVE_GAMES.forEach(game => {
   game.assessesIntelligences = game.assessesIntelligences.map(normalizeIntelligenceId);
 });
-
-// Additional type for icon names, if strict typing for icon strings is desired (optional)
-export type LucideIconName = keyof typeof import('lucide-react');
-
-// Verify assigned icons are valid LucideIconName (optional, for stricter type checking during development)
-// This is a conceptual check; actual implementation would require more complex type manipulation
-// or a script to validate icon names against lucide-react exports.
-/*
-function validateIconAssignments(games: CognitiveGame[]): void {
-  games.forEach(game => {
-    if (typeof game.icon === 'string') {
-      // This is a simplified check. Real validation would need to check against actual Lucide exports.
-      // console.log(`Game "${game.title}" uses string icon "${game.icon}". Ensure this is a valid LucideIconName or handle appropriately.`);
-    }
-  });
-}
-validateIconAssignments(COGNITIVE_GAMES);
-*/
 
 // Ensure game IDs are unique (important for keys and data mapping)
 const gameIds = COGNITIVE_GAMES.map(game => game.id);
