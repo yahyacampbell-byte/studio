@@ -29,7 +29,7 @@ const registrationFormSchema = z.object({
   password: z.string().min(6, "Password must be at least 6 characters"),
   confirmPassword: z.string(),
   birthDate: z.date({ required_error: "Birth date is required" }),
-  sex: z.enum(['1', '2'], { required_error: "Sex is required" }),
+  sex: z.enum(['1', '2'], { required_error: "Gender is required" }), // Zod field name remains 'sex' for data consistency
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -38,14 +38,14 @@ const registrationFormSchema = z.object({
 type RegistrationFormValues = z.infer<typeof registrationFormSchema>;
 
 export default function RegisterPage() {
-  const { login, isAuthenticated, isLoadingAuth, user } = useAuth(); // Added user from useAuth
+  const { login, isAuthenticated, isLoadingAuth, user } = useAuth(); 
   const router = useRouter();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const currentYear = new Date().getFullYear();
   const fromYear = currentYear - 100; 
-  const toYear = currentYear - 5; // Users must be at least 5 years old
+  const toYear = currentYear - 5; 
 
   const form = useForm<RegistrationFormValues>({
     resolver: zodResolver(registrationFormSchema),
@@ -56,7 +56,7 @@ export default function RegisterPage() {
       password: '',
       confirmPassword: '',
       sex: undefined,
-      birthDate: undefined, // Default to undefined
+      birthDate: undefined, 
     },
   });
 
@@ -77,7 +77,7 @@ export default function RegisterPage() {
         firstName: data.firstName,
         lastName: data.lastName,
         birthDate: format(data.birthDate, "yyyy-MM-dd"),
-        sex: data.sex as '1' | '2',
+        sex: data.sex as '1' | '2', // 'sex' key matches User interface and potentially CogniFit
         cognifitUserToken: null, 
       };
       
@@ -102,7 +102,7 @@ export default function RegisterPage() {
     }
   };
   
-  if (isLoadingAuth || (!isLoadingAuth && isAuthenticated && user)) { // Added user check
+  if (isLoadingAuth || (!isLoadingAuth && isAuthenticated && user)) { 
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10">
         <Image 
@@ -235,7 +235,7 @@ export default function RegisterPage() {
                           fromYear={fromYear}
                           toYear={toYear}
                           captionLayout="dropdown-buttons"
-                          showMonthDropdown={false} // Hide the month dropdown
+                          showMonthDropdown={false} 
                         />
                     </FormControl>
                     <FormMessage />
@@ -244,22 +244,23 @@ export default function RegisterPage() {
               />
               <FormField
                 control={form.control}
-                name="sex"
+                name="sex" // Zod schema field name remains 'sex'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Sex</FormLabel>
+                    <FormLabel>Gender</FormLabel> 
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <div className="relative">
                            <UsersRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                           <SelectTrigger className="pl-10">
-                            <SelectValue placeholder="Select your sex" />
+                            <SelectValue placeholder="Select your gender" /> 
                           </SelectTrigger>
                         </div>
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="1">Male</SelectItem>
                         <SelectItem value="2">Female</SelectItem>
+                        {/* Add other options if CogniFit supports more or if you want to map them */}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -291,3 +292,4 @@ export default function RegisterPage() {
     </div>
   );
 }
+
