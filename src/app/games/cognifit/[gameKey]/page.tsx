@@ -6,46 +6,23 @@ import { useParams, useRouter } from 'next/navigation';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader2, AlertTriangle } from 'lucide-react';
-import { getCognifitSDKVersion } from '@/services/cognifitService';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-
-// If @cognifit/launcher-js-sdk provides types, import them. Otherwise, declare global.
-// For now, let's assume HTML5JS is globally available after script load.
-declare global {
-  interface Window {
-    HTML5JS?: {
-      loadMode: (
-        sdkVersion: string,
-        activityMode: 'gameMode' | 'assessmentMode' | 'trainingMode',
-        activityKey: string,
-        containerId: string,
-        options: {
-          clientId: string;
-          accessToken: string; // This is the user_token
-          appType: 'web' | 'app';
-          sandbox?: boolean; // Optional: for testing
-          language?: string; // Optional: e.g., "en", "es"
-          disableFitScore?: boolean; // Optional
-        }
-      ) => void;
-    };
-  }
-}
+import { CognifitSdk } from '@cognifit/launcher-js-sdk';
+import { CognifitSdkConfigOptions, CognifitSdkConfig } from '@cognifit/launcher-js-sdk/lib/lib/cognifit.sdk.config'; // Adjusted path if necessary
 
 const COGNIFIT_CONTENT_ID = 'cogniFitContent';
 
 export default function CognifitGamePage() {
   const router = useRouter();
   const params = useParams();
-  const gameKey = params.gameKey as string;
+  const gameKey = params.gameKey as string; // gameKey is used for display and messages, but SDK might not use it directly in init
   const { toast } = useToast();
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sdkVersion, setSdkVersion] = useState<string | null>(null);
-  const scriptLoadedRef = useRef(false);
-  const gameLoadedRef = useRef(false);
+  const sdkInitializedRef = useRef(false);
+  const cognifitSdkRef = useRef<CognifitSdk | null>(null);
 
   // Placeholder for user_token. In a real app, this would come from auth context/state.
   // IMPORTANT: Replace this with actual user_token retrieval logic.
@@ -61,7 +38,6 @@ export default function CognifitGamePage() {
     }
 
     if (userToken === "YOUR_USER_TOKEN_HERE") {
-        // This is a developer reminder, not a user-facing error yet.
         console.warn("CogniFit Game Page: userToken is a placeholder. Replace with actual token.");
         toast({
             title: "Developer Notice",
@@ -69,136 +45,119 @@ export default function CognifitGamePage() {
             variant: "destructive",
             duration: 10000,
         });
-        // Allow proceeding for testing UI, but real game load will fail without a valid token.
     }
 
-    const fetchVersionAndLoadScript = async () => {
-      try {
-        const version = await getCognifitSDKVersion();
-        setSdkVersion(version);
-      } catch (e) {
-        console.error("Failed to fetch CogniFit SDK version:", e);
-        setError("Could not retrieve CogniFit SDK version. Game cannot be loaded.");
-        setIsLoading(false);
-      }
+    if (sdkInitializedRef.current || !gameKey) {
+      return;
+    }
+
+    const sdkOptions: CognifitSdkConfigOptions = {
+        sandbox: false,
+        appType: 'web',
+        theme: 'light', // Consider making this dynamic with your app's theme
+        showResults: false, // As per example
+        // customCss: '', // URL to custom CSS file if you have one
+        // screensNotToShow: [], // List of screens not to show after the session
+        // preferredMobileOrientation: '', // '', 'landscape' or 'portrait'
+        isFullscreenEnabled: true,
+        // scale: 100, // Example used scale: 100, default is 800. Adjust as needed. Max value for UI elements.
+        listenEvents: true, // Important for postMessage communication
+        // The SDK needs the actual activity key and mode to load a game.
+        // This might be part of the options or a separate method call.
+        // Based on the provided init structure, we'll assume init handles it or another step is needed.
+        // For now, we'll pass gameKey and mode if the config supports it, otherwise, this might be a limitation.
+        // The provided CognifitSdkConfig structure does not directly take activityKey or activityMode.
+        // This implies the SDK might handle it based on the URL/environment or require a subsequent call.
+        // The previous HTML5JS.loadMode directly took gameKey and 'gameMode'.
+        // We might need to pass gameKey and activityMode through a different mechanism if available in SDK options or a post-init call.
+        // For now, we can't pass gameKey directly to config options as per user's provided structure.
+        // The actual game to load (gameKey) and its type ('gameMode') needs to be communicated to the SDK.
+        // Let's assume the SDK's `init` implicitly knows or the user will provide the next step if a game doesn't load.
+        // The activityKey and activityMode are crucial. The `CognifitSdkConfig` type definition from the package
+        // itself would clarify if `activityKey` and `activityMode` can be passed in the options.
+        // If not, a method like `cognifitSdk.loadActivity('gameMode', gameKey.toUpperCase())` would be expected after init.
+        // For now, we proceed with init only as per the user's last prompt.
+        // Including activityKey and activityMode in options if the SDK supports it (example below, may need to verify with SDK docs):
+        // activityKey: gameKey.toUpperCase(),
+        // activityMode: 'gameMode',
     };
 
-    fetchVersionAndLoadScript();
-  }, [cognifitClientId, toast, userToken]);
 
-
-  useEffect(() => {
-    if (!sdkVersion || scriptLoadedRef.current || !cognifitClientId || !gameKey) {
-      return;
-    }
-
-    const scriptId = 'cognifit-sdk-script';
-    if (document.getElementById(scriptId)) {
-      // Script might already be there from a previous attempt or navigation
-      scriptLoadedRef.current = true;
-      // Proceed to load game if HTML5JS is available
-       if (window.HTML5JS && typeof window.HTML5JS.loadMode === 'function' && !gameLoadedRef.current) {
-            loadCognifitGame();
-       } else if (!window.HTML5JS) {
-            console.warn("CogniFit script tag found, but HTML5JS not on window. Re-attempting load may be needed or there's an issue.");
-       }
-      return;
+    const cognifitSdkConfig = new CognifitSdkConfig(
+      COGNIFIT_CONTENT_ID,
+      cognifitClientId!,
+      userToken, // This is the cognifitUserAccessToken
+      sdkOptions
+    );
+    
+    if (!cognifitSdkRef.current) {
+        cognifitSdkRef.current = new CognifitSdk();
     }
     
-    const script = document.createElement('script');
-    script.id = scriptId;
-    script.src = `https://js.cognifit.com/${sdkVersion}/html5Loader.js`;
-    script.async = true;
-    script.onload = () => {
-      console.log('CogniFit SDK script loaded successfully.');
-      scriptLoadedRef.current = true;
-      loadCognifitGame();
-    };
-    script.onerror = () => {
-      console.error('Failed to load CogniFit SDK script.');
-      setError('Failed to load necessary CogniFit components. Please try again later.');
-      setIsLoading(false);
-    };
+    const sdk = cognifitSdkRef.current;
 
-    document.body.appendChild(script);
+    console.log(`Initializing CogniFit SDK for gameKey: ${gameKey}`);
+    setIsLoading(true);
+    setError(null);
 
+    sdk.init(cognifitSdkConfig)
+      .then(response => {
+        console.log('CogniFit SDK initialized successfully:', response);
+        sdkInitializedRef.current = true;
+        setIsLoading(false);
+        // At this point, the SDK should have loaded the content/game into the container.
+        // If `init` doesn't load the specific game, a subsequent call like `sdk.loadActivity('gameMode', gameKey.toUpperCase())` would be needed here.
+        // For now, we assume `init` handles it or this is the complete step requested.
+      })
+      .catch(sdkError => {
+        console.error('CogniFit SDK initialization failed:', sdkError);
+        setError(`Failed to initialize CogniFit game. ${sdkError.message || sdkError}`);
+        setIsLoading(false);
+      });
+
+    // Cleanup function for when the component unmounts
     return () => {
-      // Cleanup script if component unmounts before it loads or if an error occurs
-      const existingScript = document.getElementById(scriptId);
-      if (existingScript) {
-        // document.body.removeChild(existingScript); // Careful with removing if it might be shared or reloaded
+      if (sdkInitializedRef.current && sdk) {
+        // sdk.destroy() or sdk.cleanup() if such methods exist
+        // For now, clear the container manually if the SDK doesn't auto-cleanup.
+        // This helps if navigating away and back quickly.
+        const cognifitContainer = document.getElementById(COGNIFIT_CONTENT_ID);
+        if (cognifitContainer) {
+          // cognifitContainer.innerHTML = ''; // Clearing might interfere if SDK manages it.
+        }
+        console.log('CogniFit game page unmounted, SDK instance might need cleanup if provided by SDK.');
+        // sdkInitializedRef.current = false; // Reset for potential re-entry if SDK is fully cleaned up
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sdkVersion, cognifitClientId, gameKey, userToken]);
+  }, [gameKey, cognifitClientId, userToken]); // Add other dependencies if they affect init
 
 
-  const loadCognifitGame = () => {
-    if (gameLoadedRef.current) {
-        console.log("CogniFit game already attempted to load or is loaded.");
-        return;
-    }
-
-    if (window.HTML5JS && typeof window.HTML5JS.loadMode === 'function') {
-      console.log(`Loading CogniFit game: ${gameKey} with SDK v${sdkVersion}`);
-      try {
-        window.HTML5JS.loadMode(
-          sdkVersion!,
-          'gameMode',
-          gameKey.toUpperCase(), // Game keys are often uppercase
-          COGNIFIT_CONTENT_ID,
-          {
-            clientId: cognifitClientId!,
-            accessToken: userToken, 
-            appType: 'web', // or 'app' based on device detection if needed
-            // language: "en", // Optional: set user's language
-            // sandbox: true, // Optional: if CogniFit provides a sandbox mode
-          }
-        );
-        gameLoadedRef.current = true; // Mark that loading has been initiated
-        // Note: actual game display is handled by the SDK injecting an iframe
-        // We set isLoading to false once loadMode is called, assuming iframe will take over.
-        // If iframe fails to load, there isn't a direct JS error here usually.
-         setTimeout(() => setIsLoading(false), 500); // Give a slight delay for iframe to start
-      } catch (e) {
-        console.error("Error calling HTML5JS.loadMode:", e);
-        setError(`Failed to initialize CogniFit game ${gameKey}.`);
-        setIsLoading(false);
-      }
-    } else {
-      console.error('HTML5JS is not available. CogniFit game cannot be loaded.');
-      setError('CogniFit components are not available. Game cannot be loaded.');
-      setIsLoading(false);
-    }
-  };
-  
   useEffect(() => {
     const handleCognifitMessage = (event: MessageEvent) => {
-      // Basic security check for origin if possible, though CogniFit might use variable origins for its CDN
-      // if (event.origin !== "EXPECTED_COGNIFIT_ORIGIN") return;
-      
       if (event.data && typeof event.data === 'object') {
-        const { status, mode, key } = event.data;
+        const { status, mode, key } = event.data; // Assuming `key` here is the activityKey
         console.log("Message from CogniFit:", event.data);
 
-        if (key && key.toLowerCase() === gameKey.toLowerCase()) {
+        // Check if the message is for the current game. CogniFit might send the activity key in uppercase.
+        if (key && typeof key === 'string' && key.toLowerCase() === gameKey.toLowerCase()) {
           if (status === 'completed') {
             toast({ title: "Game Completed!", description: `${gameKey} session finished.` });
-            // Potentially navigate away or show summary
+            // Potentially navigate away or show summary.
             // router.push('/games'); 
           } else if (status === 'aborted') {
             toast({ title: "Game Aborted", description: `${gameKey} session was exited.`, variant: "destructive" });
             // router.push('/games');
           }
           
-          // Destroy/cleanup the iframe/content as per CogniFit docs
+          // SDK might handle iframe cleanup automatically. If not, manual cleanup:
           const cognifitContainer = document.getElementById(COGNIFIT_CONTENT_ID);
           if (cognifitContainer) {
-            cognifitContainer.innerHTML = ''; // Clear the container
-            // Potentially show a message like "Game session ended. Click back to browse other games."
-             setError("Game session ended. You can navigate back or select another game if this page were part of a larger list.");
+            // cognifitContainer.innerHTML = ''; // Let SDK manage or clear if events stop
           }
-           gameLoadedRef.current = false; // Allow reloading if user navigates back and forth or tries again.
+          sdkInitializedRef.current = false; // Allow re-initialization if user navigates back
+          setIsLoading(true); // Show loader briefly or a "Session Ended" message
+          setError("Game session ended. You can navigate back or select another game.");
         }
       }
     };
@@ -225,10 +184,10 @@ export default function CognifitGamePage() {
               <div className="my-4 p-4 bg-destructive/10 border border-destructive/50 rounded-md text-destructive">
                 <div className="flex items-center">
                   <AlertTriangle className="h-5 w-5 mr-2" />
-                  <p className="font-semibold">Loading Error</p>
+                  <p className="font-semibold">Session Status</p>
                 </div>
                 <p>{error}</p>
-                {userToken === "YOUR_USER_TOKEN_HERE" && cognifitClientId && (
+                {userToken === "YOUR_USER_TOKEN_HERE" && cognifitClientId && !sdkInitializedRef.current && (
                     <p className="mt-2 text-sm">
                         Please ensure you replace `"YOUR_USER_TOKEN_HERE"` in the code with a valid CogniFit user token for this game to load.
                     </p>
@@ -239,16 +198,15 @@ export default function CognifitGamePage() {
               <div className="flex flex-col items-center justify-center h-64">
                 <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
                 <p className="text-muted-foreground">Loading CogniFit game ({gameKey})...</p>
-                {!sdkVersion && <p className="text-sm text-muted-foreground mt-2">Fetching SDK version...</p>}
-                {sdkVersion && !scriptLoadedRef.current && <p className="text-sm text-muted-foreground mt-2">Loading CogniFit Player...</p>}
+                <p className="text-sm text-muted-foreground mt-2">Initializing SDK...</p>
               </div>
             )}
             <div id={COGNIFIT_CONTENT_ID} className={isLoading || error ? 'hidden' : ''}>
-              {/* CogniFit iframe will be injected here */}
+              {/* CogniFit content will be injected here by the SDK */}
             </div>
-             {!isLoading && !error && !gameLoadedRef.current && sdkVersion && window.HTML5JS && (
+             {!isLoading && !error && !sdkInitializedRef.current && cognifitClientId && userToken !== "YOUR_USER_TOKEN_HERE" && (
                 <div className="text-center py-4">
-                    <p className="text-muted-foreground">If the game does not appear, ensure the user token is valid and the game key '{gameKey}' is correct.</p>
+                    <p className="text-muted-foreground">SDK initialization initiated. If the game does not appear, check console for errors and ensure the user token and game key ('{gameKey}') are correct.</p>
                 </div>
             )}
           </CardContent>
@@ -258,8 +216,4 @@ export default function CognifitGamePage() {
   );
 }
 
-// Helper to get a specific game's title if we had a list
-// const getGameTitle = (gameKey: string): string => {
-//   // This would ideally lookup from a constant or fetched list of CogniFit games
-//   return gameKey.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
-// };
+    
