@@ -8,9 +8,12 @@ import type { IntelligenceId } from '@/lib/types';
 import { GameCard } from '@/components/games/GameCard';
 import { SimulateGameModal } from '@/components/games/SimulateGameModal';
 import { Input } from '@/components/ui/input';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Search, Brain, Sparkles, ListChecks, Lightbulb } from 'lucide-react';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { useActivity } from '@/context/ActivityContext';
+
+const ENHANCEMENT_GAME_IDS: string[] = ["SUDOKU_PUZZLE", "BREAKOUT", "FUEL_A_CAR", "WORD_QUEST"];
 
 export default function GamesPage() {
   const { isAuthenticated, isLoadingAuth } = useRequireAuth();
@@ -27,34 +30,42 @@ export default function GamesPage() {
     const gameActivities = activities.filter(act => act.gameId === gameId);
     if (gameActivities.length === 0) return false;
 
-    if (latestAnalyzedTimestamp === 0) { // No analysis done yet, any play counts
+    if (latestAnalyzedTimestamp === 0) {
       return true;
     }
-    // If analysis has been done, only count plays *since* the last analysis
     return gameActivities.some(act => new Date(act.timestamp).getTime() > latestAnalyzedTimestamp);
   }, [activities, latestAnalyzedTimestamp]);
 
   const allTimePlayedGameIds = useMemo(() => new Set(activities.map(act => act.gameId)), [activities]);
   const profilingGameModels = useMemo(() => COGNITIVE_GAMES.slice(0, PROFILING_GAMES_COUNT), []);
-  const enhancementGameModels = useMemo(() => COGNITIVE_GAMES.slice(PROFILING_GAMES_COUNT), []);
+  
+  // Filter out the 4 enhancement games from the main list for the intelligence accordions
+  const gamesForIntelligenceAccordions = useMemo(() => 
+    COGNITIVE_GAMES.filter(game => !ENHANCEMENT_GAME_IDS.includes(game.id))
+  , []);
+
+  // Keep the 4 enhancement games separate
+  const enhancementGameModels = useMemo(() => 
+    COGNITIVE_GAMES.filter(game => ENHANCEMENT_GAME_IDS.includes(game.id))
+  , []);
+
 
   const isInitialProfilingComplete = useMemo(() => {
-    if (profilingGameModels.length === 0) return true;
+    if (profilingGameModels.length === 0) return true; // Or handle as error if profilingGameModels should never be empty
     return profilingGameModels.every(game => allTimePlayedGameIds.has(game.id));
   }, [profilingGameModels, allTimePlayedGameIds]);
 
   const recommendedGames = useMemo(() => {
     if (
         !latestAIAnalysis || 
-        typeof latestAIAnalysis !== 'object' || // Extra check for object type
-        !latestAIAnalysis.intelligenceScores || // Check if intelligenceScores exists
+        typeof latestAIAnalysis !== 'object' ||
+        !latestAIAnalysis.intelligenceScores || 
         !Array.isArray(latestAIAnalysis.intelligenceScores) || 
         latestAIAnalysis.intelligenceScores.length === 0
     ) {
       return [];
     }
 
-    // Further ensure each score object is valid before sorting
     const validScores = latestAIAnalysis.intelligenceScores.filter(
         s => typeof s === 'object' && s !== null && typeof s.score === 'number' && typeof s.intelligence === 'string'
     );
@@ -73,8 +84,9 @@ export default function GamesPage() {
     const targetIntelligences = [
         ...weakestIntelligences,
         ...strongestIntelligences
-    ].filter(Boolean);
+    ].filter(Boolean); // Filter out any undefined values if scores array was too short
 
+    // Use all games for recommendations, including enhancement games
     for (const targetInt of targetIntelligences) {
       if (recommendations.length >= 3) break; 
       
@@ -97,10 +109,10 @@ export default function GamesPage() {
 
 
   const filterAndSortGames = useCallback((games: CognitiveGame[]) => {
-    if (!Array.isArray(games)) return []; // Guard against non-array input
+    if (!Array.isArray(games)) return [];
 
     const filtered = games.filter(game =>
-      game && game.title && game.description && // Ensure game object and its properties exist
+      game && game.title && game.description &&
       (game.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       game.description.toLowerCase().includes(searchTerm.toLowerCase()))
     );
@@ -113,7 +125,7 @@ export default function GamesPage() {
   const handlePlayGame = useCallback((game: CognitiveGame) => {
     setSelectedGame(game);
     setIsModalOpen(true);
-  }, [setSelectedGame, setIsModalOpen]); 
+  }, []); 
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
@@ -129,10 +141,13 @@ export default function GamesPage() {
       return <p className="text-center text-muted-foreground py-8 col-span-full">No games found matching your search in this section.</p>;
     }
     if (games.length === 0 && !searchTerm) {
-        return <p className="text-center text-muted-foreground py-8 col-span-full">No games available in this section currently.</p>;
+        // This condition might be too broad now with accordions; content might be empty pre-search
+        // Let's make it more specific for sections that are expected to have games.
+        // For accordions, an empty state might be fine if no games match an intelligence + search.
+        return <p className="text-center text-muted-foreground py-8 col-span-full">No games available in this section.</p>;
     }
     return games.map((game) => {
-      if (!game || !game.id) return null; // Add null check for game object itself
+      if (!game || !game.id) return null;
       return (
         <GameCard
             key={game.id}
@@ -151,7 +166,7 @@ export default function GamesPage() {
     return (
       <section className="space-y-4">
         <div className="flex items-center gap-2">
-          <Lightbulb className="h-6 w-6 text-destructive" />
+          <Lightbulb className="h-6 w-6 text-destructive" /> {/* Changed icon to destructive for visibility */}
           <h2 className="text-2xl font-semibold">Recommended For You</h2>
         </div>
         <p className="text-muted-foreground">
@@ -180,49 +195,64 @@ export default function GamesPage() {
         </div>
         <p className="text-muted-foreground">
             Explore games targeting specific cognitive intelligences. Games played since your last analysis appear at the bottom of each list.
+            The 4 Profile Enhancement games are listed separately below.
         </p>
-        {MULTIPLE_INTELLIGENCES.map(intelligence => {
-          if (!intelligence || !intelligence.id) return null; // Guard for intelligence object
-          const gamesForThisIntelligence = COGNITIVE_GAMES.filter(game => 
-            game && Array.isArray(game.assessesIntelligences) && game.assessesIntelligences.includes(intelligence.id)
-          );
-          const sortedGames = filterAndSortGames(gamesForThisIntelligence);
-          
-          if (sortedGames.length === 0 && searchTerm) return null;
-          if (gamesForThisIntelligence.length === 0 && !searchTerm) return null;
+        <Accordion type="multiple" className="w-full space-y-2">
+          {MULTIPLE_INTELLIGENCES.map(intelligence => {
+            if (!intelligence || !intelligence.id) return null;
+            
+            // Use gamesForIntelligenceAccordions which already excludes enhancement games
+            const gamesForThisIntelligence = gamesForIntelligenceAccordions.filter(game => 
+              game && Array.isArray(game.assessesIntelligences) && game.assessesIntelligences.includes(intelligence.id)
+            );
+            const sortedGames = filterAndSortGames(gamesForThisIntelligence);
+            
+            // Don't render accordion item if search yields no results for this intelligence
+            if (sortedGames.length === 0 && searchTerm) return null;
+            // Don't render if no games for this intelligence even without search (unless you want empty accordions)
+            // if (gamesForThisIntelligence.length === 0 && !searchTerm) return null;
 
-          const IconComponent = intelligence.icon;
 
-          return (
-            <div key={intelligence.id} className="space-y-3 pt-2">
-              <div className="flex items-center gap-2 border-b pb-2">
-                {IconComponent && <IconComponent className="h-5 w-5" style={{ color: intelligence.color || 'hsl(var(--foreground))' }} />}
-                <h3 className="text-xl font-medium">{intelligence.name} Games</h3>
-              </div>
-              {sortedGames.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {renderGameCards(sortedGames)}
-                </div>
-              ) : ( 
-                <p className="text-center text-muted-foreground py-4">
-                  {searchTerm ? `No ${intelligence.name} games found matching your search.` : `No games currently available for ${intelligence.name}.`}
-                </p>
-              )}
-            </div>
-          );
-        })}
+            const IconComponent = intelligence.icon;
+
+            return (
+              <AccordionItem value={intelligence.id} key={intelligence.id} className="border rounded-lg shadow-sm hover:shadow-md transition-shadow bg-card">
+                <AccordionTrigger className="px-6 py-4 text-left hover:no-underline">
+                  <div className="flex items-center text-lg font-semibold">
+                    {IconComponent && <IconComponent className="mr-3 h-5 w-5" style={{ color: intelligence.color || 'hsl(var(--foreground))' }} />}
+                    {intelligence.name} Games
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-6 pb-4 pt-0">
+                  {sortedGames.length > 0 ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pt-4">
+                      {renderGameCards(sortedGames)}
+                    </div>
+                  ) : ( 
+                    <p className="text-center text-muted-foreground py-4">
+                      {searchTerm ? `No ${intelligence.name} games found matching your search.` : `No games currently listed for ${intelligence.name} (excluding enhancement games).`}
+                    </p>
+                  )}
+                </AccordionContent>
+              </AccordionItem>
+            );
+          })}
+        </Accordion>
       </section>
     );
-  }, [latestAIAnalysis, filterAndSortGames, searchTerm, renderGameCards]);
+  }, [latestAIAnalysis, filterAndSortGames, searchTerm, renderGameCards, gamesForIntelligenceAccordions]);
 
 
   const profilingGamesSection = useMemo(() => {
     if (latestAIAnalysis && isInitialProfilingComplete) return null; 
     
     const sortedGames = filterAndSortGames(profilingGameModels);
-    if (sortedGames.length === 0 && searchTerm && profilingGameModels.length > 0) { 
+    
+    // This guard ensures the section is not rendered if search filters out all profiling games
+    // but the section itself should still exist conceptually.
+    if (sortedGames.length === 0 && searchTerm && profilingGameModels.length > 0) {
         return (
-             <section className="space-y-4">
+            <section className="space-y-4">
                 <div className="flex items-center gap-2">
                 <ListChecks className="h-6 w-6 text-primary" />
                 <h2 className="text-2xl font-semibold">Profiling Analysis Games</h2>
@@ -232,11 +262,11 @@ export default function GamesPage() {
                     ? `You've played all ${PROFILING_GAMES_COUNT} initial profiling games! Replay them or proceed to Enhancement Games. Games played recently are at the bottom.`
                     : `Complete these ${PROFILING_GAMES_COUNT} games to build your initial Multiple Intelligence profile. Games played recently are at the bottom.`}
                 </p>
-                {renderGameCards(sortedGames)}
+                <p className="text-center text-muted-foreground py-8 col-span-full">No games found matching your search in this section.</p>
             </section>
         );
     }
-    if (sortedGames.length === 0 && !searchTerm) return null; 
+    if (profilingGameModels.length === 0 && !searchTerm) return null; // Should not happen if constants are correct
 
     return (
       <section className="space-y-4">
@@ -246,21 +276,29 @@ export default function GamesPage() {
         </div>
         <p className="text-muted-foreground">
           {isInitialProfilingComplete
-            ? `You've played all ${PROFILING_GAMES_COUNT} initial profiling games! Replay them or proceed to Enhancement Games. Games played recently are at the bottom.`
+            ? `You've played all ${PROFILING_GAMES_COUNT} initial profiling games! You can replay them. Games played recently are at the bottom.`
             : `Complete these ${PROFILING_GAMES_COUNT} games to build your initial Multiple Intelligence profile. Games played recently are at the bottom.`}
         </p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {renderGameCards(sortedGames)}
-        </div>
+        {sortedGames.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {renderGameCards(sortedGames)}
+            </div>
+        ) : (
+            // This case should ideally be handled by the search term check above or if profilingGameModels is empty
+            <p className="text-center text-muted-foreground py-8 col-span-full">No profiling games available.</p>
+        )}
       </section>
     );
   }, [profilingGameModels, latestAIAnalysis, isInitialProfilingComplete, filterAndSortGames, searchTerm, renderGameCards]);
 
   const enhancementGamesSection = useMemo(() => {
+    // This section should always show the 4 enhancement games, regardless of AI analysis state for its existence
     const sortedGames = filterAndSortGames(enhancementGameModels);
-    const title = latestAIAnalysis ? "Further Profile Enhancement" : "Profile Enhancement Games";
+    const title = "Profile Enhancement Games";
 
-    if (sortedGames.length === 0 && searchTerm && enhancementGameModels.length > 0) {
+    if (enhancementGameModels.length === 0) return null; // Should not happen if constants are correct
+
+    if (sortedGames.length === 0 && searchTerm) {
          return (
             <section className="space-y-4">
                 <div className="flex items-center gap-2">
@@ -268,15 +306,12 @@ export default function GamesPage() {
                 <h2 className="text-2xl font-semibold">{title}</h2>
                 </div>
                 <p className="text-muted-foreground">
-                {isInitialProfilingComplete
-                    ? "Challenge yourself with these games to further refine and enhance your cognitive skills. Games played since your last analysis are at the bottom."
-                    : `After completing all ${PROFILING_GAMES_COUNT} profiling games, try these. Games played recently are at the bottom.`}
+                These games help further refine and enhance your cognitive skills. Games played since your last analysis (if any) are at the bottom.
                 </p>
-                {renderGameCards(sortedGames)}
+                <p className="text-center text-muted-foreground py-8 col-span-full">No enhancement games found matching your search.</p>
             </section>
         );
     }
-    if (sortedGames.length === 0 && !searchTerm) return null; 
     
     return (
       <section className="space-y-4">
@@ -285,16 +320,18 @@ export default function GamesPage() {
           <h2 className="text-2xl font-semibold">{title}</h2>
         </div>
         <p className="text-muted-foreground">
-          {isInitialProfilingComplete
-            ? "Challenge yourself with these games to further refine and enhance your cognitive skills. Games played since your last analysis are at the bottom."
-            : `After completing all ${PROFILING_GAMES_COUNT} profiling games, try these. Games played recently are at the bottom.`}
+          These games help further refine and enhance your cognitive skills. Games played since your last analysis (if any) are at the bottom.
         </p>
-         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {renderGameCards(sortedGames)}
-        </div>
+        {sortedGames.length > 0 ? (
+             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {renderGameCards(sortedGames)}
+            </div>
+        ) : (
+            <p className="text-center text-muted-foreground py-8 col-span-full">No enhancement games available.</p>
+        )}
       </section>
     );
-  }, [enhancementGameModels, isInitialProfilingComplete, latestAIAnalysis, filterAndSortGames, searchTerm, renderGameCards]);
+  }, [enhancementGameModels, filterAndSortGames, searchTerm, renderGameCards]);
   
   if (isLoadingAuth || !isAuthenticated) {
     return (
@@ -312,7 +349,7 @@ export default function GamesPage() {
     : `Play ${PROFILING_GAMES_COUNT} Profiling Games to Start`;
   
   const pageDescription = latestAIAnalysis && isInitialProfilingComplete
-    ? "Dive into recommended games or explore specific intelligences. Replay games to see how your profile evolves!"
+    ? "Dive into recommended games or explore specific intelligences via the accordions. Replay games to see how your profile evolves!"
     : `Challenge your mind. Start by playing all ${PROFILING_GAMES_COUNT} Profiling Games to build your intelligence profile, then move to enhancement games.`;
 
 
@@ -335,13 +372,13 @@ export default function GamesPage() {
           />
         </div>
         
-        {latestAIAnalysis && isInitialProfilingComplete ? (
+        {latestAIAnalysis ? ( // Post-analysis view
           <>
             {recommendedGamesSection}
             {gamesByIntelligenceSection}
             {enhancementGamesSection} 
           </>
-        ) : (
+        ) : ( // Pre-analysis view
           <>
             {profilingGamesSection}
             {enhancementGamesSection}
@@ -354,3 +391,4 @@ export default function GamesPage() {
   );
 }
 
+    
