@@ -8,15 +8,23 @@ import Image from 'next/image';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Menu, LogIn, LogOut } from 'lucide-react';
+import { Menu, LogIn, LogOut, User } from 'lucide-react'; // Added User icon
 import { APP_NAME, NAV_LINKS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { Toaster } from "@/components/ui/toaster";
 import { useAuth } from '@/context/AuthContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { isAuthenticated, logout, isLoadingAuth } = useAuth();
+  const { user, isAuthenticated, logout, isLoadingAuth } = useAuth();
 
   const sidebarContent = (
     <ScrollArea className="h-full py-4">
@@ -26,9 +34,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             src="https://www.xillo.io/wp-content/uploads/2023/07/Xillo.svg" 
             alt={`${APP_NAME} Logo`}
             data-ai-hint="logo"
-            width={125} // Approx 4.16 aspect ratio for 30px height
+            width={125} 
             height={30}
-            className="h-[30px] mr-2" // Adjust height as needed
+            className="h-[30px] mr-2"
           />
           <h2 className="text-2xl font-semibold tracking-tight text-primary sr-only">
             {APP_NAME}
@@ -53,12 +61,16 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           ))}
         </div>
         <div className="mt-auto pt-4 px-2">
-          {isAuthenticated ? (
+          {isLoadingAuth ? (
+             <Button variant="outline" className="w-full justify-start" disabled>
+                <LogIn className="mr-2 h-4 w-4" />
+                Loading...
+              </Button>
+          ) : isAuthenticated ? (
             <Button 
               variant="outline" 
               className="w-full justify-start" 
               onClick={logout} 
-              disabled={isLoadingAuth}
             >
               <LogOut className="mr-2 h-4 w-4" />
               Logout
@@ -68,7 +80,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               variant="default" 
               className="w-full justify-start" 
               asChild 
-              disabled={isLoadingAuth}
             >
               <Link href="/auth/login">
                 <LogIn className="mr-2 h-4 w-4" />
@@ -103,14 +114,37 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               {sidebarContent}
             </SheetContent>
           </Sheet>
+          
           <div className="hidden lg:flex items-center gap-2">
-            {isAuthenticated ? (
-              <Button variant="ghost" onClick={logout} size="sm" disabled={isLoadingAuth}>
-                <LogOut className="mr-2 h-4 w-4" />
-                Logout
+            {isLoadingAuth ? (
+              <Button variant="ghost" size="sm" disabled>
+                Loading...
               </Button>
+            ) : isAuthenticated && user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                    <User className="h-5 w-5" />
+                    <span>{user.firstName}</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/profile" className="flex items-center w-full">
+                      <User className="mr-2 h-4 w-4" />
+                      Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={logout} className="flex items-center w-full cursor-pointer">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
-              <Button asChild size="sm" disabled={isLoadingAuth}>
+              <Button asChild size="sm">
                 <Link href="/auth/login">
                   <LogIn className="mr-2 h-4 w-4" /> Login
                 </Link>
