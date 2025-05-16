@@ -1,8 +1,9 @@
+
 "use client";
 
 import type { AIAnalysisResults } from '@/lib/types';
 import { MULTIPLE_INTELLIGENCES } from '@/lib/constants';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
+import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Legend, Tooltip } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 interface IntelligenceChartProps {
@@ -17,7 +18,7 @@ export function IntelligenceChart({ aiResults }: IntelligenceChartProps) {
           <CardTitle>Intelligence Profile</CardTitle>
           <CardDescription>Your cognitive strengths will appear here after analysis.</CardDescription>
         </CardHeader>
-        <CardContent className="h-[300px] flex items-center justify-center">
+        <CardContent className="h-[350px] flex items-center justify-center">
           <p className="text-muted-foreground">No intelligence data available. Play some games and analyze your activity on the Insights page.</p>
         </CardContent>
       </Card>
@@ -27,10 +28,9 @@ export function IntelligenceChart({ aiResults }: IntelligenceChartProps) {
   const chartData = MULTIPLE_INTELLIGENCES.map(mi => {
     const foundScore = aiResults.intelligenceScores.find(s => s.intelligence === mi.id || s.intelligence === mi.name);
     return {
-      name: mi.name,
+      subject: mi.name, // For RadarChart, the axis label is often called 'subject'
       score: foundScore ? foundScore.score : 0,
-      icon: mi.icon, // For custom tooltip or legend if needed
-      color: mi.color || 'hsl(var(--primary))', // Fallback to primary color
+      fullMark: 100, // Maximum score for each axis
     };
   });
   
@@ -49,18 +49,25 @@ export function IntelligenceChart({ aiResults }: IntelligenceChartProps) {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <ResponsiveContainer width="100%" height={400}>
-          <BarChart data={chartData} margin={{ top: 5, right: 0, left: 0, bottom: 50 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis 
-              dataKey="name" 
-              angle={-45} 
-              textAnchor="end" 
-              height={80} 
-              interval={0} 
+        <ResponsiveContainer width="100%" height={350}>
+          <RadarChart cx="50%" cy="50%" outerRadius="80%" data={chartData}>
+            <PolarGrid stroke="hsl(var(--border))" />
+            <PolarAngleAxis 
+              dataKey="subject" 
               tick={{ fontSize: 12, fill: 'hsl(var(--foreground))' }} 
             />
-            <YAxis tick={{ fontSize: 12, fill: 'hsl(var(--foreground))' }} domain={[0, 100]} />
+            <PolarRadiusAxis 
+              angle={30} 
+              domain={[0, 100]} 
+              tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} 
+            />
+            <Radar 
+              name="Strength Score" 
+              dataKey="score" 
+              stroke="hsl(var(--primary))" 
+              fill="hsl(var(--primary))" 
+              fillOpacity={0.6} 
+            />
             <Tooltip
               contentStyle={{ 
                 backgroundColor: 'hsl(var(--popover))', 
@@ -68,17 +75,13 @@ export function IntelligenceChart({ aiResults }: IntelligenceChartProps) {
                 borderRadius: 'var(--radius)',
                 color: 'hsl(var(--popover-foreground))'
               }}
-              cursor={{ fill: 'hsl(var(--accent))', opacity: 0.1 }}
+              cursor={{ stroke: 'hsl(var(--accent))', strokeOpacity: 0.5, strokeWidth: 1 }}
             />
             <Legend wrapperStyle={{ fontSize: '12px', paddingTop: '20px' }}/>
-            <Bar dataKey="score" name="Strength Score" radius={[4, 4, 0, 0]}>
-              {chartData.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
-              ))}
-            </Bar>
-          </BarChart>
+          </RadarChart>
         </ResponsiveContainer>
       </CardContent>
     </Card>
   );
 }
+
