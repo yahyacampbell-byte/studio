@@ -2,9 +2,6 @@
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
-  experimental: {
-    // allowedDevOrigins: ['http://9003-firebase-studio-1747331156407.cluster-ve345ymguzcd6qqzuko2qbxtfe.cloudworkstations.dev'], // Removed to address "Unrecognized key" warning
-  },
   typescript: {
     ignoreBuildErrors: false, 
   },
@@ -27,7 +24,16 @@ const nextConfig: NextConfig = {
       }
     ],
   },
-  // Removed the env block as apphosting.yaml will define variables with standard Next.js names
+  env: {
+    NEXT_PUBLIC_FIREBASE_API_KEY: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+    NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+    NEXT_PUBLIC_FIREBASE_PROJECT_ID: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+    NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+    NEXT_PUBLIC_FIREBASE_APP_ID: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+    NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
+    NEXT_PUBLIC_COGNITFIT_CLIENT_ID: process.env.NEXT_PUBLIC_COGNITFIT_CLIENT_ID,
+  }
 };
 
 export default nextConfig;
