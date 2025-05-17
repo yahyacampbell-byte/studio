@@ -1,6 +1,10 @@
 
 import type {NextConfig} from 'next';
 
+// Note: .env files are automatically loaded by Next.js in local development.
+// For deployed environments (like Firebase App Hosting),
+// environment variables should be defined in apphosting.yaml.
+
 const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: false, 
