@@ -5,7 +5,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Loader2, AlertTriangle, Brain, UserPlus } from 'lucide-react';
+import { ArrowLeft, Loader2, AlertTriangle, Brain, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CognifitSdk, CognifitSdkConfigOptions, CognifitSdkConfig } from '@cognifit/launcher-js-sdk';
@@ -23,9 +23,8 @@ export default function CognifitGamePage() {
   const gameKey = params.gameKey as string;
   const { toast } = useToast();
 
-  const [isLoadingSdk, setIsLoadingSdk] = useState(true);
-  const [isRegisteringCognifit, setIsRegisteringCognifit] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [currentStatus, setCurrentStatus] = useState< 'idle' | 'registering' | 'loading_sdk' | 'sdk_error' | 'registration_error' | 'game_ended' | 'game_loaded' >('idle');
+  const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const sdkInitializedRef = useRef(false);
   const cognifitSdkRef = useRef<CognifitSdk | null>(null);
 
@@ -33,16 +32,14 @@ export default function CognifitGamePage() {
 
   const initializeAndLoadGame = useCallback(async (currentToken: string | null) => {
     if (!currentToken) {
-      setError("CogniFit User Token not available after registration attempt.");
-      setIsLoadingSdk(false);
-      setIsRegisteringCognifit(false);
+      setStatusMessage("CogniFit User Token not available after registration attempt.");
+      setCurrentStatus('registration_error');
       return;
     }
     
     if (!cognifitClientId) {
-      setError("CogniFit Client ID is not configured.");
-      setIsLoadingSdk(false);
-      setIsRegisteringCognifit(false);
+      setStatusMessage("CogniFit Client ID is not configured. Please check environment variables.");
+      setCurrentStatus('sdk_error');
       return;
     }
 
@@ -68,100 +65,95 @@ export default function CognifitGamePage() {
     const sdk = cognifitSdkRef.current;
 
     console.log(`Initializing CogniFit SDK for gameKey: ${gameKey} with token: ${currentToken}`);
-    setIsLoadingSdk(true);
-    setError(null);
+    setCurrentStatus('loading_sdk');
+    setStatusMessage(`Loading CogniFit game (${gameKey})...`);
 
     try {
       await sdk.init(cognifitSdkConfig);
       console.log('CogniFit SDK initialized successfully for game:', gameKey);
-      // NOTE: The SDK's init might load the game if the activityKey is part of the URL or environment context.
-      // If not, an explicit sdk.loadActivity('gameMode', gameKey.toUpperCase()) might be needed here.
-      // For now, assume init handles it or the SDK is designed for an environment where gameKey is implicit.
       sdkInitializedRef.current = true;
+      setCurrentStatus('game_loaded');
+      setStatusMessage(`Game ${gameKey} initialized. Content should appear below.`);
+      // Note: If the game doesn't load, the SDK's init() might not use 'gameKey' directly.
+      // Further SDK methods like 'sdk.loadActivity(gameKey)' might be needed if the specific game doesn't appear.
     } catch (sdkError: any) {
       console.error('CogniFit SDK initialization failed:', sdkError);
-      setError(`Failed to initialize CogniFit game. ${sdkError.message || String(sdkError)}`);
-    } finally {
-      setIsLoadingSdk(false);
-      setIsRegisteringCognifit(false);
+      setStatusMessage(`Failed to initialize CogniFit game. ${sdkError.message || String(sdkError)}`);
+      setCurrentStatus('sdk_error');
     }
   }, [gameKey, cognifitClientId]);
 
 
   useEffect(() => {
     if (isLoadingAuthContext || !isAuthenticated || !gameKey || sdkInitializedRef.current) {
-      if (!isLoadingAuthContext && !isAuthenticated) setIsLoadingSdk(false);
+      if (!isLoadingAuthContext && !isAuthenticated) {
+         setCurrentStatus('sdk_error'); // Or some other appropriate status
+         setStatusMessage("User not authenticated. Please log in.");
+      }
       return;
     }
 
     const attemptCognifitRegistrationAndLoad = async () => {
       if (!user) {
-        setError("User data not available for CogniFit registration.");
-        setIsLoadingSdk(false);
+        setStatusMessage("User data not available for CogniFit registration.");
+        setCurrentStatus('registration_error');
         return;
       }
 
       if (user.cognifitUserToken) {
         initializeAndLoadGame(user.cognifitUserToken);
       } else {
-        // CogniFit token doesn't exist, attempt to register
         if (!user.id || !user.firstName || !user.lastName || !user.birthDate || !user.sex) {
-          setError("Incomplete user profile for CogniFit registration. Please update your profile.");
-          setIsLoadingSdk(false);
+          setStatusMessage("Your profile is missing details required for CogniFit. Please complete your Xillo TruePotential profile information.");
+          setCurrentStatus('registration_error');
           toast({
             title: "Profile Incomplete",
-            description: "Your profile is missing details required for CogniFit. Please complete your registration information.",
+            description: "Your profile is missing details required for CogniFit. Please complete your registration information via the Profile page.",
             variant: "destructive",
             duration: 7000,
           });
-          // Potentially redirect to a profile completion page or show a more prominent UI message.
-          // For now, just setting error.
           return;
         }
         
-        setIsRegisteringCognifit(true);
-        setError(null); // Clear previous errors
+        setCurrentStatus('registering');
+        setStatusMessage("One moment while we set up your CogniFit account...");
+        toast({ title: "Connecting to CogniFit", description: "Setting up your CogniFit account..."});
         try {
-          toast({ title: "Connecting to CogniFit", description: "One moment while we set up your CogniFit account..."});
           const newCognifitToken = await registerCognifitUser({
             appUserId: user.id,
             firstName: user.firstName,
             lastName: user.lastName,
-            birthDate: user.birthDate, // Assumes YYYY-MM-DD format
+            birthDate: user.birthDate, 
             sex: user.sex === '1' ? 1 : 2,
             locale: 'en', 
           });
           
-          updateCognifitUserToken(newCognifitToken); // Update AuthContext
+          updateCognifitUserToken(newCognifitToken); 
           toast({ title: "CogniFit Account Ready!", description: "Loading your game..."});
           initializeAndLoadGame(newCognifitToken);
 
         } catch (regError: any) {
           console.error("On-demand CogniFit registration failed:", regError);
-          setError(`Failed to register with CogniFit: ${regError.message || String(regError)} Please try again or contact support.`);
+          setStatusMessage(`Failed to register with CogniFit: ${regError.message || String(regError)} Please try again or contact support.`);
+          setCurrentStatus('registration_error');
           toast({
             title: "CogniFit Registration Failed",
-            description: regError.message || "Could not connect to CogniFit services.",
+            description: regError.message || "Could not connect to CogniFit services. Please ensure your API credentials are correct and the service is reachable.",
             variant: "destructive",
+            duration: 10000,
           });
-          setIsLoadingSdk(false);
-          setIsRegisteringCognifit(false);
         }
       }
     };
 
-    if (isAuthenticated && user) {
+    if (isAuthenticated && user && !sdkInitializedRef.current && currentStatus === 'idle') {
       attemptCognifitRegistrationAndLoad();
-    } else if (!isLoadingAuthContext && !isAuthenticated) {
-        // Should be handled by useRequireAuth, but as a safeguard:
-        setError("User not authenticated.");
-        setIsLoadingSdk(false);
-    }
-    
+    }    
 
     return () => {
-      if (sdkInitializedRef.current && cognifitSdkRef.current) {
-        // cognifitSdkRef.current.destroy(); // Or similar cleanup method if available
+      // Potential SDK cleanup if needed, e.g., cognifitSdkRef.current?.destroy();
+      // For now, just logging. Actual cleanup depends on SDK's capabilities.
+      if (sdkInitializedRef.current) {
         console.log('CogniFit game page unmounted, SDK instance might need cleanup.');
         // sdkInitializedRef.current = false; // Reset if SDK is fully cleaned up
       }
@@ -169,13 +161,13 @@ export default function CognifitGamePage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
       gameKey, 
-      cognifitClientId, 
-      user, // User object from AuthContext
+      user, 
       isAuthenticated, 
       isLoadingAuthContext, 
       updateCognifitUserToken, 
       initializeAndLoadGame,
-      toast
+      toast,
+      currentStatus // Added currentStatus to re-evaluate if idle and ready
     ]);
 
 
@@ -188,10 +180,13 @@ export default function CognifitGamePage() {
         if (key && typeof key === 'string' && key.toLowerCase() === gameKey.toLowerCase()) {
           if (status === 'completed') {
             toast({ title: "Game Completed!", description: `${gameKey} session finished.` });
+            setStatusMessage(`Game session for ${gameKey} completed successfully!`);
+            setCurrentStatus('game_ended');
           } else if (status === 'aborted') {
             toast({ title: "Game Aborted", description: `${gameKey} session was exited.`, variant: "destructive" });
+            setStatusMessage(`Game session for ${gameKey} was aborted.`);
+            setCurrentStatus('game_ended');
           }
-          setError("Game session ended. You can navigate back or select another game.");
         }
       }
     };
@@ -200,7 +195,7 @@ export default function CognifitGamePage() {
     return () => {
       window.removeEventListener('message', handleCognifitMessage);
     };
-  }, [gameKey, router, toast]);
+  }, [gameKey, toast]);
 
 
   if (isLoadingAuthContext) {
@@ -214,6 +209,11 @@ export default function CognifitGamePage() {
     );
   }
   
+  const showLoadingIndicator = currentStatus === 'registering' || currentStatus === 'loading_sdk';
+  const showErrorState = currentStatus === 'sdk_error' || currentStatus === 'registration_error';
+  const showGameEndedMessage = currentStatus === 'game_ended';
+  const showGameArea = currentStatus === 'game_loaded' || currentStatus === 'idle' && sdkInitializedRef.current; // Show if loaded or was previously loaded and idle
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -226,31 +226,39 @@ export default function CognifitGamePage() {
             <CardTitle>CogniFit Game: {gameKey}</CardTitle>
           </CardHeader>
           <CardContent>
-            {error && (
-              <div className="my-4 p-4 bg-destructive/10 border border-destructive/50 rounded-md text-destructive">
+            {statusMessage && (
+              <div className={`my-4 p-4 border rounded-md ${
+                showErrorState ? 'bg-destructive/10 border-destructive/50 text-destructive' 
+                : showGameEndedMessage ? 'bg-green-500/10 border-green-500/50 text-green-700 dark:text-green-300'
+                : 'bg-accent/10 border-accent/50 text-accent-foreground' 
+              }`}>
                 <div className="flex items-center">
-                  <AlertTriangle className="h-5 w-5 mr-2" />
+                  {showErrorState && <AlertTriangle className="h-5 w-5 mr-2" />}
+                  {showGameEndedMessage && <CheckCircle2 className="h-5 w-5 mr-2" />}
                   <p className="font-semibold">Session Status</p>
                 </div>
-                <p>{error}</p>
+                <p>{statusMessage}</p>
               </div>
             )}
-            {(isLoadingSdk || isRegisteringCognifit) && !error && isAuthenticated && (
+
+            {showLoadingIndicator && (
               <div className="flex flex-col items-center justify-center h-64">
                 <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-                {isRegisteringCognifit && <p className="text-muted-foreground mb-2">Registering with CogniFit...</p>}
-                {isLoadingSdk && !isRegisteringCognifit && <p className="text-muted-foreground mb-2">Loading CogniFit game ({gameKey})...</p>}
-                <p className="text-sm text-muted-foreground mt-1">Initializing SDK...</p>
+                <p className="text-muted-foreground mb-2">{statusMessage || "Processing..."}</p>
               </div>
             )}
-            <div id={COGNIFIT_CONTENT_ID} className={isLoadingSdk || isRegisteringCognifit || error || !isAuthenticated ? 'hidden' : ''}>
+            
+            <div id={COGNIFIT_CONTENT_ID} className={!showGameArea || showLoadingIndicator || showErrorState || showGameEndedMessage ? 'hidden' : ''}>
               {/* CogniFit content will be injected here by the SDK */}
             </div>
-             {!isLoadingSdk && !isRegisteringCognifit && !error && !sdkInitializedRef.current && cognifitClientId && isAuthenticated && (
-                <div className="text-center py-4">
-                    <p className="text-muted-foreground">SDK process initiated. If the game does not appear, check console for errors from CogniFit SDK. Ensure game key '{gameKey}' is correct and your CogniFit account is configured for this game.</p>
+            
+            {currentStatus === 'game_loaded' && !document.getElementById(COGNIFIT_CONTENT_ID)?.hasChildNodes() && (
+                 <div className="text-center py-4 text-muted-foreground">
+                    <p>SDK initialized. If the game does not appear, it might indicate that the SDK's `init()` method alone isn't sufficient to load this specific game by its key (`{gameKey}`).</p>
+                    <p>Additional SDK calls (e.g., `sdk.loadActivity()`) might be required after initialization, or the game key might need to be configured differently within your CogniFit partner setup.</p>
                 </div>
             )}
+
             {!isAuthenticated && !isLoadingAuthContext && (
                  <div className="text-center py-4">
                     <p className="text-muted-foreground">Please log in to play CogniFit games.</p>
@@ -262,3 +270,4 @@ export default function CognifitGamePage() {
     </AppLayout>
   );
 }
+
