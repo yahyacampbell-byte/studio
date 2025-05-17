@@ -62,6 +62,7 @@ const PersonalizedInsightsPromptInputSchemaInternal = z.object({
 
 const personalizedInsightsPrompt = ai.definePrompt({
   name: 'personalizedInsightsPrompt',
+  model: 'googleai/gemini-2.0-flash', // Added model specification
   input: {schema: PersonalizedInsightsPromptInputSchemaInternal}, 
   output: {schema: PersonalizedInsightsOutputSchema},
   prompt: `You are an AI expert in cognitive psychology and multiple intelligences, focused on providing general wellness insights.

@@ -8,13 +8,13 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader2, AlertTriangle, Brain, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CognifitSdk, CognifitSdkConfigOptions, CognifitSdkConfig } from '@cognifit/launcher-js-sdk';
+import { cognifitSdk, CognifitSdkConfigOptions, CognifitSdkConfig } from '@cognifit/launcher-js-sdk'; // Corrected case
 import { useAuth } from '@/context/AuthContext';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
 import { registerCognifitUser } from '@/services/cognifitService';
 import { COGNITIVE_GAMES, CognitiveGame } from '@/lib/constants';
 
-const COGNITFIT_CONTENT_ID = 'cognitiveGymContent'; // Changed from cogniFitContent
+const COGNITFIT_CONTENT_ID = 'cognitiveGymContent';
 
 export default function CognifitGamePage() {
   useRequireAuth(); 
@@ -28,7 +28,7 @@ export default function CognifitGamePage() {
   const [currentStatus, setCurrentStatus] = useState< 'idle' | 'registering' | 'loading_sdk' | 'sdk_error' | 'registration_error' | 'game_ended' | 'game_loaded' >('idle');
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const sdkInitializedRef = useRef(false);
-  const cognifitSdkRef = useRef<CognifitSdk | null>(null);
+  const cognifitSdkInstanceRef = useRef<cognifitSdk | null>(null); // Use the corrected type
 
   const cognifitClientId = process.env.NEXT_PUBLIC_COGNIFIT_CLIENT_ID;
 
@@ -68,24 +68,21 @@ export default function CognifitGamePage() {
       sdkOptions
     );
     
-    if (!cognifitSdkRef.current) {
-      cognifitSdkRef.current = new CognifitSdk();
+    if (!cognifitSdkInstanceRef.current) {
+      cognifitSdkInstanceRef.current = new cognifitSdk(); // Use the corrected case for instantiation
     }
-    const sdk = cognifitSdkRef.current;
+    const sdk = cognifitSdkInstanceRef.current;
 
     console.log(`Initializing Cognitive Gym SDK for gameKey: ${gameKey} with token: ${currentToken}`);
     setCurrentStatus('loading_sdk');
     setStatusMessage(`Loading Cognitive Gym game (${gameTitle || gameKey})...`);
 
     try {
-      // For SDK, we still pass gameKey as CogniFit expects it, gameTitle is for display
       await sdk.init(cognifitSdkConfig); 
       console.log('Cognitive Gym SDK initialized successfully for game:', gameKey);
       sdkInitializedRef.current = true;
       setCurrentStatus('game_loaded');
       setStatusMessage(`Game ${gameTitle || gameKey} initialized. Content should appear below.`);
-      // Note: If the game doesn't load, the SDK's init() might not use 'gameKey' directly.
-      // Further SDK methods like 'sdk.loadActivity(gameKey)' might be needed if the specific game doesn't appear.
     } catch (sdkError: any) {
       console.error('Cognitive Gym SDK initialization failed:', sdkError);
       setStatusMessage(`Failed to initialize Cognitive Gym game. ${sdkError.message || String(sdkError)}`);
@@ -163,6 +160,7 @@ export default function CognifitGamePage() {
     return () => {
       if (sdkInitializedRef.current) {
         console.log('Cognitive Gym game page unmounted, SDK instance might need cleanup.');
+        // cognifitSdkInstanceRef.current?.destroy(); // If a destroy method exists
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -277,3 +275,5 @@ export default function CognifitGamePage() {
     </AppLayout>
   );
 }
+
+    
