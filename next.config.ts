@@ -1,7 +1,4 @@
 
-import { config } from 'dotenv';
-config(); // Load .env variables into process.env at the earliest point
-
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
