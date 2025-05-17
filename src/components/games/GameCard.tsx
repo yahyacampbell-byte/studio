@@ -24,7 +24,7 @@ export function GameCard({ game, hasBeenPlayed }: GameCardProps) {
             {hasBeenPlayed && <CheckCircle2 className="ml-2 h-5 w-5 text-green-500" />}
           </CardTitle>
         </div>
-        <CardDescription className="h-12 text-sm line-clamp-2">{game.description}</CardDescription>
+        <CardDescription className="h-16 text-sm line-clamp-3">{game.description}</CardDescription>
       </CardHeader>
       <CardFooter className="p-4 mt-auto"> {/* Added mt-auto to push footer down */}
         <div className="flex flex-col sm:flex-row justify-between items-center w-full gap-2">
