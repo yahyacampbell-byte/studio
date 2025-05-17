@@ -1,5 +1,6 @@
 
 // This service handles interactions with the Cognitive Gym API.
+// No 'use server'; directive here. These are regular server-side functions.
 
 const XILLO_EMAIL_SUFFIX = "@xillo.us";
 // Password requires minimum 8 characters with a numerical, uppercase and special character.
@@ -9,7 +10,7 @@ export interface RegisterCognifitUserInput {
   appUserId: string;
   firstName: string;
   lastName:string;
-  birthDate: string;
+  birthDate: string; // YYYY-MM-DD
   sex: 1 | 2;
   locale: string;
 }
@@ -22,7 +23,7 @@ interface CognifitUserRegistrationResponse {
 
 /**
  * Registers a new user with Cognitive Gym and returns their user_token.
- * This function generates an internal email address for Cognitive Gym based on appUserId.
+ * This function is intended to be called from a server-side context (e.g., an API route).
  */
 export async function registerCognifitUser(
   input: RegisterCognifitUserInput
@@ -97,15 +98,16 @@ export async function registerCognifitUser(
         if (error.message.startsWith("Cognitive Gym API error") || error.message.startsWith("Cognitive Gym registration successful but no user_token received") || error.message.startsWith("Cognitive Gym API client ID or secret is not configured")) {
             throw error;
         }
-        throw new Error(`Failed to register user with Cognitive Gym: ${error.message}`);
+        // This generic error message will be caught by the API route
+        throw new Error(`Failed to process Cognitive Gym registration: ${error.message}`);
     }
-    throw new Error("An unknown error occurred during Cognitive Gym user registration.");
+    throw new Error("An unknown error occurred during Cognitive Gym user registration processing.");
   }
 }
 
 /**
  * Fetches the current version of the Cognitive Gym HTML5 SDK.
- * @returns The SDK version string.
+ * This function is intended to be called from a server-side context (e.g., an API route or server component).
  */
 export async function getCognifitSDKVersion(): Promise<string> {
     const COGNITFIT_API_BASE_URL = process.env.COGNITFIT_API_BASE_URL || "https://api.cognifit.com";
@@ -117,22 +119,19 @@ export async function getCognifitSDKVersion(): Promise<string> {
             console.error(`Cognitive Gym SDK Version API Error: ${response.status} ${response.statusText}. Response body: ${responseText}`);
             throw new Error(`Failed to fetch SDK version (${response.status}): ${responseText || response.statusText}`);
         }
-
-        // Try to parse as JSON, but fall back to plain text if it's not JSON
+        
         try {
             const jsonData = JSON.parse(responseText);
             if (jsonData && typeof jsonData.version === 'string') {
                 return jsonData.version;
             }
-            // If jsonData is a string (some APIs might return plain text directly)
             if (typeof jsonData === 'string' && /^\d+\.\d+\.\d+.*$/.test(jsonData.trim())) {
                 return jsonData.trim();
             }
         } catch (e) {
-            // Not JSON, or JSON parsing failed. Proceed to check if responseText itself is a valid version string.
+            // Not JSON, or JSON parsing failed.
         }
         
-        // Check if the raw responseText is a valid version string
         if (typeof responseText === 'string' && /^\d+\.\d+\.\d+.*$/.test(responseText.trim())) {
              return responseText.trim();
         }
@@ -143,9 +142,8 @@ export async function getCognifitSDKVersion(): Promise<string> {
     } catch (error) {
         console.error("Error fetching Cognitive Gym SDK version:", error);
         if (error instanceof Error && (error.message.startsWith("Failed to fetch SDK version") || error.message.startsWith("Could not parse SDK version"))) {
-            throw error; // Re-throw specific known errors
+            throw error;
         }
-        // Wrap other errors
         throw new Error(`An unknown error occurred while fetching Cognitive Gym SDK version: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
