@@ -34,7 +34,7 @@ const registrationFormSchema = z.object({
     .regex(/[^a-zA-Z0-9]/, "Password must contain at least one special character"),
   confirmPassword: z.string(),
   birthDate: z.date({ required_error: "Birth date is required" }),
-  sex: z.enum(['1', '2'], { required_error: "Gender is required" }),
+  sex: z.enum(['0', '1'], { required_error: "Gender is required" }), // '0' for Female, '1' for Male
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -43,7 +43,7 @@ const registrationFormSchema = z.object({
 type RegistrationFormValues = z.infer<typeof registrationFormSchema>;
 
 export default function RegisterPage() {
-  const { login, isAuthenticated, isLoadingAuth, user } = useAuth(); 
+  const { login, isAuthenticated, isLoadingAuth, user: authUser } = useAuth(); 
   const router = useRouter();
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -83,11 +83,11 @@ export default function RegisterPage() {
         firstName: data.firstName,
         lastName: data.lastName,
         birthDate: format(data.birthDate, "yyyy-MM-dd"),
-        sex: data.sex as '1' | '2', 
+        sex: data.sex as '0' | '1', 
         cognifitUserToken: null, // Will be set on-demand when playing a Cognitive Gym game
       };
       
-      // Log the user into our app. CogniFit registration happens later.
+      // Log the user into our app. Cognitive Gym registration happens later.
       login(appUser);
 
       toast({
@@ -109,7 +109,7 @@ export default function RegisterPage() {
     }
   };
   
-  if (isLoadingAuth || (!isLoadingAuth && isAuthenticated && user)) { 
+  if (isLoadingAuth || (!isLoadingAuth && isAuthenticated && authUser)) { 
     return (
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10">
         <Image 
@@ -141,7 +141,7 @@ export default function RegisterPage() {
       <Card className="w-full max-w-lg shadow-2xl">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">Create Your Account</CardTitle>
-          <CardDescription>Join {APP_NAME} and start your cognitive journey.</CardDescription>
+          <CardDescription>Join ${APP_NAME} and start your cognitive journey.</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -266,7 +266,7 @@ export default function RegisterPage() {
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="1">Male</SelectItem>
-                        <SelectItem value="2">Female</SelectItem>
+                        <SelectItem value="0">Female</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

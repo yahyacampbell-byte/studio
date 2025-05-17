@@ -1,17 +1,17 @@
 
 // This service handles interactions with the Cognitive Gym API.
-// No 'use server'; directive here. These are regular server-side functions.
+// These are regular server-side functions.
 
 const XILLO_EMAIL_SUFFIX = "@xillo.us";
 // Password requires minimum 8 characters with a numerical, uppercase and special character.
-const FIXED_USER_PASSWORD = "XilloGymP@ssw0rd123!";
+const FIXED_USER_PASSWORD = "XilloGymP@ssw0rd123!"; // Updated password
 
 export interface RegisterCognifitUserInput {
   appUserId: string;
   firstName: string;
-  lastName:string;
+  lastName: string;
   birthDate: string; // YYYY-MM-DD
-  sex: 1 | 2;
+  sex: 0 | 1; // 0 for Female, 1 for Male (number)
   locale: string;
 }
 
@@ -34,6 +34,7 @@ export async function registerCognifitUser(
 
   if (!COGNITFIT_CLIENT_ID || !COGNITFIT_CLIENT_SECRET) {
     console.error("Cognitive Gym API client ID or secret is not configured. Ensure COGNITFIT_CLIENT_ID and COGNITFIT_CLIENT_SECRET are set in the environment.");
+    // This specific error message will be caught by the API route to provide a user-friendly message.
     throw new Error(
       "Cognitive Gym API client ID or secret is not configured in environment variables."
     );
@@ -49,12 +50,13 @@ export async function registerCognifitUser(
     user_email: internalUserEmail,
     user_password: FIXED_USER_PASSWORD,
     user_birthday: input.birthDate,
-    user_sex: input.sex,
+    user_sex: input.sex, // Now expects 0 or 1 (number)
     user_locale: input.locale,
   };
 
   try {
-    const response = await fetch(`${COGNITFIT_API_BASE_URL}/v1/users`, {
+    // Using the /registration endpoint as per new documentation
+    const response = await fetch(`${COGNITFIT_API_BASE_URL}/registration`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -66,7 +68,7 @@ export async function registerCognifitUser(
 
     if (!response.ok) {
       const requestBodyForLog = { ...requestBody, client_secret: 'REDACTED', user_password: 'REDACTED' };
-      console.error(`Cognitive Gym API Error: ${response.status} ${response.statusText}. URL: ${COGNITFIT_API_BASE_URL}/v1/users. Request Body: ${JSON.stringify(requestBodyForLog)}. Response body: ${responseText}`);
+      console.error(`Cognitive Gym API Error: ${response.status} ${response.statusText}. URL: ${COGNITFIT_API_BASE_URL}/registration. Request Body: ${JSON.stringify(requestBodyForLog)}. Response body: ${responseText}`);
       try {
         const errorData: CognifitUserRegistrationResponse = JSON.parse(responseText);
         throw new Error(
@@ -125,6 +127,7 @@ export async function getCognifitSDKVersion(): Promise<string> {
             if (jsonData && typeof jsonData.version === 'string') {
                 return jsonData.version;
             }
+            // If response is a plain string (like "2.36.0")
             if (typeof jsonData === 'string' && /^\d+\.\d+\.\d+.*$/.test(jsonData.trim())) {
                 return jsonData.trim();
             }
@@ -132,6 +135,7 @@ export async function getCognifitSDKVersion(): Promise<string> {
             // Not JSON, or JSON parsing failed.
         }
         
+        // Handle if responseText itself is the version string
         if (typeof responseText === 'string' && /^\d+\.\d+\.\d+.*$/.test(responseText.trim())) {
              return responseText.trim();
         }

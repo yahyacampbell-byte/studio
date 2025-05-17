@@ -11,7 +11,7 @@ export interface User {
   firstName: string;
   lastName: string;
   birthDate: string; // Stored as YYYY-MM-DD
-  sex: '1' | '2'; // '1' for Male, '2' for Female as per CogniFit
+  sex: '0' | '1'; // '0' for Female, '1' for Male as per new CogniFit docs
   cognifitUserToken: string | null; // Token from Cognitive Gym
 }
 
@@ -44,10 +44,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         const parsedAuth: AuthState = JSON.parse(storedAuth);
         if (parsedAuth.isAuthenticated && parsedAuth.user) {
           // Basic validation to ensure user object has essential fields
-          if (parsedAuth.user.id && parsedAuth.user.email && parsedAuth.user.firstName && parsedAuth.user.lastName && parsedAuth.user.birthDate && parsedAuth.user.sex) {
+          if (parsedAuth.user.id && parsedAuth.user.email && parsedAuth.user.firstName && parsedAuth.user.lastName && parsedAuth.user.birthDate && (parsedAuth.user.sex === '0' || parsedAuth.user.sex === '1')) {
             setAuthState(parsedAuth);
           } else {
-            console.warn("Stored auth user data is incomplete. Clearing auth state.");
+            console.warn("Stored auth user data is incomplete or has invalid sex value. Clearing auth state.");
             localStorage.removeItem(LOCAL_STORAGE_AUTH_KEY);
           }
         }
@@ -115,3 +115,4 @@ export const useAuth = (): AuthContextType => {
   }
   return context;
 };
+

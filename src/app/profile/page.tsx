@@ -45,7 +45,7 @@ export default function ProfilePage() {
     },
     { 
       label: "Gender", 
-      value: user.sex ? (user.sex === '1' ? "Male" : "Female") : "Not set", 
+      value: user.sex ? (user.sex === '1' ? "Male" : "Female") : "Not set", // '1' is Male, '0' is Female
       icon: UsersRound 
     },
   ];

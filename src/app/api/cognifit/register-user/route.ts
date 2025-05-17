@@ -8,8 +8,14 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { appUserId, firstName, lastName, birthDate, sex, locale } = body;
 
-    if (!appUserId || !firstName || !lastName || !birthDate || !sex || !locale) {
-      return NextResponse.json({ error: 'Missing required user details for Cognitive Gym registration.' }, { status: 400 });
+    // Validate required fields, especially sex which is now '0' or '1' string from client
+    if (!appUserId || !firstName || !lastName || !birthDate || (sex !== '0' && sex !== '1') || !locale) {
+      return NextResponse.json({ error: 'Missing or invalid required user details for Cognitive Gym registration.' }, { status: 400 });
+    }
+
+    const parsedSex = parseInt(sex, 10);
+    if (parsedSex !== 0 && parsedSex !== 1) { // Double check after parsing
+        return NextResponse.json({ error: 'Invalid gender value for Cognitive Gym registration.' }, { status: 400 });
     }
 
     const input: RegisterCognifitUserInput = {
@@ -17,7 +23,7 @@ export async function POST(request: Request) {
       firstName,
       lastName,
       birthDate,
-      sex,
+      sex: parsedSex as 0 | 1, // Cast to number type 0 or 1
       locale,
     };
 

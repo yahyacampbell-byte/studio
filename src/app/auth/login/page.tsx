@@ -13,7 +13,7 @@ import Image from 'next/image';
 import { Separator } from '@/components/ui/separator';
 
 export default function LoginPage() {
-  const { login, isAuthenticated, isLoadingAuth, user } = useAuth();
+  const { login, isAuthenticated, isLoadingAuth, user: authUser } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -29,8 +29,8 @@ export default function LoginPage() {
       firstName: 'Demo',
       lastName: 'User',
       birthDate: '1990-01-01', // Mock birth date
-      sex: '1', // Mock sex (Male)
-      cognifitUserToken: null, // Set to null to test on-demand CogniFit registration
+      sex: '1', // Mock sex (Male - '1')
+      cognifitUserToken: null, // Set to null to test on-demand Cognitive Gym registration
     };
     login(demoUser);
     router.push('/dashboard');
@@ -69,7 +69,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md shadow-2xl">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">Welcome Back!</CardTitle>
-          <CardDescription>Sign in to continue your cognitive journey with {APP_NAME}.</CardDescription>
+          <CardDescription>Sign in to continue your cognitive journey with ${APP_NAME}.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* 
