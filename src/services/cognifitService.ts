@@ -3,7 +3,7 @@
 // These are regular server-side functions.
 
 const XILLO_EMAIL_SUFFIX = "@xillo.us";
-const FIXED_USER_PASSWORD = "XilloGymP@ssw0rd123!"; // Ensure this meets complexity: min 8, num, UC, special
+const FIXED_USER_PASSWORD = "XilloGymP@ssw0rd123!";
 
 export interface RegisterCognifitUserInput {
   appUserId: string;
@@ -34,12 +34,13 @@ interface CognifitAccessTokenResponse {
 export async function registerCognifitUser(
   input: RegisterCognifitUserInput
 ): Promise<string> {
-  const COGNITFIT_CLIENT_ID = process.env.cognifit_id_server;
-  const COGNITFIT_CLIENT_SECRET = process.env.cognifit_secret_server;
-  const COGNITFIT_API_BASE_URL = process.env.cognifit_api_base_url || "https://api.cognifit.com";
+  // Access environment variables inside the function
+  const COGNITFIT_CLIENT_ID = process.env.COGNITFIT_CLIENT_ID;
+  const COGNITFIT_CLIENT_SECRET = process.env.COGNITFIT_CLIENT_SECRET;
+  const COGNITFIT_API_BASE_URL = process.env.COGNITFIT_API_BASE_URL || "https://api.cognifit.com";
 
   if (!COGNITFIT_CLIENT_ID || !COGNITFIT_CLIENT_SECRET) {
-    console.error("Cognitive Gym API client ID or secret is not configured. Ensure cognifit_id_server and cognifit_secret_server are set in the environment.");
+    console.error("Cognitive Gym API client ID or secret is not configured. Ensure COGNITFIT_CLIENT_ID and COGNITFIT_CLIENT_SECRET are set in the environment.");
     throw new Error(
       "Cognitive Gym API client ID or secret is not configured in environment variables."
     );
@@ -55,12 +56,12 @@ export async function registerCognifitUser(
     user_email: internalUserEmail,
     user_password: FIXED_USER_PASSWORD,
     user_birthday: input.birthDate,
-    user_sex: input.sex, // Ensure this is number 0 or 1
+    user_sex: input.sex,
     user_locale: input.locale,
   };
 
   try {
-    const response = await fetch(`${COGNITFIT_API_BASE_URL}/registration`, {
+    const response = await fetch(`${COGNITFIT_API_BASE_URL}/registration`, { // Updated endpoint
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -113,9 +114,10 @@ export async function registerCognifitUser(
  * Issues an access_token from Cognitive Gym using a user_token.
  */
 export async function issueCognifitAccessToken(userToken: string): Promise<string> {
-  const COGNITFIT_CLIENT_ID = process.env.cognifit_id_server;
-  const COGNITFIT_CLIENT_SECRET = process.env.cognifit_secret_server;
-  const COGNITFIT_API_BASE_URL = process.env.cognifit_api_base_url || "https://api.cognifit.com";
+  // Access environment variables inside the function
+  const COGNITFIT_CLIENT_ID = process.env.COGNITFIT_CLIENT_ID;
+  const COGNITFIT_CLIENT_SECRET = process.env.COGNITFIT_CLIENT_SECRET;
+  const COGNITFIT_API_BASE_URL = process.env.COGNITFIT_API_BASE_URL || "https://api.cognifit.com";
 
   if (!COGNITFIT_CLIENT_ID || !COGNITFIT_CLIENT_SECRET) {
     console.error("Cognitive Gym API client ID or secret is not configured for issuing access token.");
@@ -187,7 +189,7 @@ export async function issueCognifitAccessToken(userToken: string): Promise<strin
  * Fetches the current version of the Cognitive Gym HTML5 SDK.
  */
 export async function getCognifitSDKVersion(): Promise<string> {
-    const COGNITFIT_API_BASE_URL = process.env.cognifit_api_base_url || "https://api.cognifit.com";
+    const COGNITFIT_API_BASE_URL = process.env.COGNITFIT_API_BASE_URL || "https://api.cognifit.com";
     try {
         const response = await fetch(`${COGNITFIT_API_BASE_URL}/description/versions/sdkjs?v=2.0`);
         const responseText = await response.text();

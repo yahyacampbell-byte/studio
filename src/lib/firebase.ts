@@ -3,8 +3,9 @@ import { initializeApp, getApps, getApp, FirebaseOptions } from 'firebase/app';
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
-// Note: NEXT_PUBLIC_ prefixed variables are mapped in next.config.ts
-// from their shorter, lowercase counterparts set in Firebase Console / local .env
+// Note: These NEXT_PUBLIC_ prefixed variables are now expected to be defined
+// directly with these names in your apphosting.yaml for deployed environments,
+// or in your local .env file for local development.
 const firebaseConfig: FirebaseOptions = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
