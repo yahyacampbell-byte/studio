@@ -23,14 +23,7 @@ export default function ProfilePage() {
     );
   }
 
-  // At this point, isLoadingAuth is false.
-  // useRequireAuth hook will handle redirection if !isAuthenticated.
-  // This block catches the case where authentication is confirmed (isAuthenticated=true)
-  // but the user object might still be null (e.g. an issue in AuthContext logic or localStorage state).
   if (!isAuthenticated || !user) {
-    // If !isAuthenticated, useRequireAuth should redirect.
-    // If isAuthenticated but !user, this indicates an issue needing investigation,
-    // but we show a loading/error state for robustness.
     return (
       <AppLayout>
         <div className="flex flex-col items-center justify-center h-[calc(100vh-10rem)]">
@@ -41,7 +34,6 @@ export default function ProfilePage() {
     );
   }
 
-  // If we reach here, isLoadingAuth is false, isAuthenticated is true, and user is populated.
   const displayItems = [
     { label: "First Name", value: user.firstName, icon: UserIcon },
     { label: "Last Name", value: user.lastName, icon: UserIcon },
@@ -77,7 +69,7 @@ export default function ProfilePage() {
           </CardHeader>
           <CardContent className="space-y-6">
             {displayItems.map((item) => (
-              item.value || item.label === "Birth Date" || item.label === "Gender" ? ( // Ensure "Not set" items are rendered
+              item.value || item.label === "Birth Date" || item.label === "Gender" ? ( 
                 <div key={item.label} className="flex items-start space-x-3">
                   <item.icon className="h-5 w-5 text-primary mt-1 flex-shrink-0" />
                   <div>
@@ -87,23 +79,21 @@ export default function ProfilePage() {
                 </div>
               ) : null
             ))}
-            {/* Placeholder for future edit button */}
-            {/* <Button variant="outline" className="mt-4">Edit Profile</Button> */}
           </CardContent>
         </Card>
         
         <Card className="shadow-lg">
           <CardHeader>
-            <CardTitle className="text-2xl">CogniFit Connection</CardTitle>
+            <CardTitle className="text-2xl">Cognitive Gym Connection</CardTitle>
           </CardHeader>
           <CardContent>
             {user.cognifitUserToken ? (
               <p className="text-green-600 dark:text-green-400">
-                Your Xillo TruePotential account is successfully connected to CogniFit.
+                Your Xillo TruePotential account is successfully connected to Cognitive Gym.
               </p>
             ) : (
               <p className="text-amber-600 dark:text-amber-400">
-                Your account is not yet connected to CogniFit. This will happen automatically when you play your first CogniFit game.
+                Your account is not yet connected to Cognitive Gym. This will happen automatically when you play your first Cognitive Gym game.
               </p>
             )}
           </CardContent>
