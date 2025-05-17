@@ -1,0 +1,70 @@
+# apphosting.yaml
+# ... other configurations like runConfig, buildConfig etc. ...
+
+env:
+  - variable: COGNITFIT_CLIENT_ID
+    value: "322ede20ac6b8c88968da72d0efd3c51" # Your actual value
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: COGNITFIT_CLIENT_SECRET
+    value: "c9b55f958b4bc1bf5258cf7d8ec1ef4b" # Your actual value - treat as secret if platform supports
+    availability:
+      - BUILD # Needed if used during build by services/genkit
+      - RUNTIME
+  - variable: NEXT_PUBLIC_COGNITFIT_CLIENT_ID
+    value: "322ede20ac6b8c88968da72d0efd3c51" # Your actual value
+    availability:
+      - BUILD # Next.js needs this during build for client-side bundling
+      - RUNTIME
+  - variable: GOOGLE_API_KEY
+    value: "AIzaSyAc-_x5QUIT0q6bk7GfAQlsCwkeaRn6zC0" # Your actual value - treat as secret
+    availability:
+      - BUILD # Needed if Genkit initializes plugins during build
+      - RUNTIME
+  - variable: COGNITFIT_API_BASE_URL
+    value: "https://api.cognifit.com"
+    availability:
+      - BUILD
+      - RUNTIME
+
+  # Firebase Public Config - these are also made available by Next.js via the NEXT_PUBLIC_ prefix
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: "AIzaSyD4zAVc_JokKcstkZGzTUtxxNv62L6pgkE"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: "app.xillo.io"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: "brainbloom-g62l3"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: "brainbloom-g62l3.firebasestorage.app"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: "437951574734"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: "1:437951574734:web:2d1a91a8cf1ea47e68969f"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+    value: "G-N6XPLD3WRT"
+    availability:
+      - BUILD
+      - RUNTIME
+
+# Note: Firebase also automatically injects FIREBASE_CONFIG (runtime) and FIREBASE_WEBAPP_CONFIG (build time).
+# The NEXT_PUBLIC_FIREBASE_ variables above are for explicit access in your code
+# and ensure Next.js bundles them correctly for client-side use.
