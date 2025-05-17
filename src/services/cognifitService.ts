@@ -57,7 +57,7 @@ export async function registerCognifitUser(
   };
 
   try {
-    const response = await fetch(`${COGNIFIT_API_BASE_URL}/users`, {
+    const response = await fetch(`${COGNIFIT_API_BASE_URL}/v1/users`, { // Updated path to include /v1/
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -68,7 +68,7 @@ export async function registerCognifitUser(
     const responseText = await response.text(); // Get response as text first
 
     if (!response.ok) {
-      console.error(`CogniFit API Error: ${response.status} ${response.statusText}. Response body: ${responseText}`);
+      console.error(`CogniFit API Error: ${response.status} ${response.statusText}. URL: ${COGNIFIT_API_BASE_URL}/v1/users. Response body: ${responseText}`);
       // Try to parse as JSON to extract a structured error message if available
       try {
         const errorData: CognifitUserRegistrationResponse = JSON.parse(responseText);
@@ -154,4 +154,3 @@ export async function getCognifitSDKVersion(): Promise<string> {
         throw new Error(`An unknown error occurred while fetching CogniFit SDK version: ${error instanceof Error ? error.message : String(error)}`);
     }
 }
-
