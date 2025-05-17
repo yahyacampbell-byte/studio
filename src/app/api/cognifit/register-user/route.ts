@@ -31,17 +31,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ userToken }, { status: 200 });
 
   } catch (error) {
-    console.error('API Route - Cognitive Gym Registration Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred during Cognitive Gym registration.';
-    // Ensure the error message sent to client doesn't expose too much detail
-    let clientErrorMessage = 'Failed to register with Cognitive Gym.';
-    if (errorMessage.includes("Cognitive Gym API client ID or secret is not configured")) {
-        clientErrorMessage = "Cognitive Gym service configuration error.";
-    } else if (errorMessage.includes("Cognitive Gym API error")) {
-        // Avoid sending detailed API errors to the client unless they are generic
-        clientErrorMessage = "Could not connect to Cognitive Gym services. Please try again later.";
-    }
+    console.error('API Route - Cognitive Gym Registration Error:', error); // Server-side log
+    const originalErrorMessage = error instanceof Error ? error.message : 'An unknown error occurred during Cognitive Gym registration.';
     
+    let clientErrorMessage = 'Failed to register with Cognitive Gym.'; // Default fallback
+
+    if (originalErrorMessage.includes("Cognitive Gym API client ID or secret is not configured")) {
+        clientErrorMessage = "Cognitive Gym service configuration error.";
+    } else if (originalErrorMessage.includes("no user_token received")) { 
+        clientErrorMessage = "Registration with Cognitive Gym was incomplete. No user token was provided by the service.";
+    } else if (originalErrorMessage.includes("Cognitive Gym API error")) { 
+        clientErrorMessage = "Could not connect to Cognitive Gym services. Please try again later.";
+    } else if (originalErrorMessage.includes("Failed to process Cognitive Gym user registration")) { 
+        clientErrorMessage = "An internal error occurred while trying to register with Cognitive Gym.";
+    }
+    // If it's truly unknown and doesn't match any, it uses the default "Failed to register with Cognitive Gym."
+
     return NextResponse.json({ error: clientErrorMessage }, { status: 500 });
   }
 }
