@@ -1,6 +1,4 @@
 
-'use server';
-
 // This service handles interactions with the Cognitive Gym API.
 
 const XILLO_EMAIL_SUFFIX = "@xillo.us";
