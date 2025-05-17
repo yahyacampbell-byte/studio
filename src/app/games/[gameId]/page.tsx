@@ -7,8 +7,8 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { COGNITIVE_GAMES, CognitiveGame } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { ArrowLeft, PlayCircle, Brain as BrainIcon } from 'lucide-react'; // Renamed Brain to BrainIcon
-import Image from 'next/image';
+import { ArrowLeft, PlayCircle, Brain as BrainIcon } from 'lucide-react';
+// Image component is no longer needed here
 import { SimulateGameModal } from '@/components/games/SimulateGameModal';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
@@ -59,8 +59,7 @@ export default function GameDetailsPage() {
           </Button>
           <Skeleton className="h-12 w-1/2" />
           <Skeleton className="h-8 w-3/4" />
-          <Skeleton className="h-64 w-full" />
-          <Skeleton className="h-10 w-32" />
+          <Skeleton className="h-10 w-32 mt-4" /> {/* Adjusted skeleton */}
         </div>
       </AppLayout>
     );
@@ -99,21 +98,22 @@ export default function GameDetailsPage() {
             </div>
           </CardHeader>
           <CardContent className="p-6 space-y-6">
-            <Image
-              src={`https://placehold.co/800x400.png`}
-              alt={game.title}
-              data-ai-hint={game.dataAiHint || 'gameplay concept'}
-              width={800}
-              height={400}
-              className="w-full h-auto rounded-lg object-cover aspect-video"
-            />
+            {/* Placeholder image removed */}
             
             <div className="prose prose-lg max-w-none dark:prose-invert">
               <h3 className="font-semibold">About this game:</h3>
               <p>
-                This game is designed to stimulate specific cognitive functions related to {game.description.toLowerCase().replace('boost your ', '').replace('enhance ', '').replace('improve ', '').replace('test ', '').replace('sharpen ', '').replace('expand your ', '').replace('challenge your ', '').replace('train ', '').replace('develop ', '').replace('.', '')}. 
+                This game is designed to stimulate specific cognitive functions. 
                 Engaging with {game.title} regularly can help in strengthening these mental faculties.
               </p>
+              <p className="text-sm text-muted-foreground">
+                Intelligence Focus: {game.assessesIntelligences.join(', ')}
+              </p>
+              {game.dataAiHint && (
+                <p className="text-xs text-muted-foreground italic">
+                  AI Hint: {game.dataAiHint}
+                </p>
+              )}
               {/* Add more detailed game description or rules here if available */}
             </div>
 
