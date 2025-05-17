@@ -6,7 +6,7 @@ import { AppLayout } from '@/components/layout/AppLayout';
 import { COGNITIVE_GAMES, CognitiveGame, PROFILING_GAMES_COUNT, MULTIPLE_INTELLIGENCES, ENHANCEMENT_GAME_IDS } from '@/lib/constants';
 import type { IntelligenceId } from '@/lib/types';
 import { GameCard } from '@/components/games/GameCard';
-import { SimulateGameModal } from '@/components/games/SimulateGameModal';
+// SimulateGameModal is no longer needed here, it's on the game details page
 import { Input } from '@/components/ui/input';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Search, Brain, Sparkles, ListChecks, Lightbulb } from 'lucide-react';
@@ -17,8 +17,6 @@ import { useActivity } from '@/context/ActivityContext';
 export default function GamesPage() {
   const { isAuthenticated, isLoadingAuth } = useRequireAuth();
   const { activities, latestAIAnalysis } = useActivity();
-  const [selectedGame, setSelectedGame] = useState<CognitiveGame | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
   const latestAnalyzedTimestamp = useMemo(() => {
@@ -29,9 +27,10 @@ export default function GamesPage() {
     const gameActivities = activities.filter(act => act.gameId === gameId);
     if (gameActivities.length === 0) return false;
 
-    if (latestAnalyzedTimestamp === 0) {
+    if (latestAnalyzedTimestamp === 0) { // No analysis done yet, any play counts
       return true;
     }
+    // If analysis has been done, only count plays *after* the last analysis
     return gameActivities.some(act => new Date(act.timestamp).getTime() > latestAnalyzedTimestamp);
   }, [activities, latestAnalyzedTimestamp]);
 
@@ -117,16 +116,6 @@ export default function GamesPage() {
     return [...unplayedThisCycle, ...playedThisCycle];
   }, [searchTerm, getDisplayAsPlayedStatus]);
 
-  const handlePlayGame = useCallback((game: CognitiveGame) => {
-    setSelectedGame(game);
-    setIsModalOpen(true);
-  }, []); 
-
-  const handleCloseModal = useCallback(() => {
-    setIsModalOpen(false);
-    setSelectedGame(null);
-  }, []);
-
   const renderGameCards = useCallback((games: CognitiveGame[]) => {
     if (!Array.isArray(games)) { 
         console.error("renderGameCards received non-array:", games);
@@ -144,11 +133,10 @@ export default function GamesPage() {
         <GameCard
             key={game.id}
             game={game}
-            onPlay={handlePlayGame}
             hasBeenPlayed={getDisplayAsPlayedStatus(game.id)}
         />
     ));
-  }, [searchTerm, handlePlayGame, getDisplayAsPlayedStatus]);
+  }, [searchTerm, getDisplayAsPlayedStatus]);
 
   const recommendedGamesSection = useMemo(() => {
     const sortedGames = filterAndSortGames(recommendedGames);
@@ -198,8 +186,9 @@ export default function GamesPage() {
             const sortedGames = filterAndSortGames(gamesForThisIntelligence);
             
             if (sortedGames.length === 0 && searchTerm && gamesForThisIntelligence.length > 0) { 
-            } else if (gamesForThisIntelligence.length === 0) { 
-                return null;
+              // If search term yields no results but games exist for this intelligence, allow accordion to show "no results" message
+            } else if (gamesForThisIntelligence.length === 0 && !searchTerm) { 
+                return null; // Don't render accordion if no games and no search term
             }
 
             const IconComponent = intelligence.icon;
@@ -233,7 +222,6 @@ export default function GamesPage() {
 
 
   const profilingGamesSection = useMemo(() => {
-    // This section is only shown if no AI analysis has been performed yet.
     if (latestAIAnalysis) return null; 
     
     const sortedGames = filterAndSortGames(profilingGameModels);
@@ -373,7 +361,7 @@ export default function GamesPage() {
         )}
 
       </div>
-      {selectedGame && <SimulateGameModal game={selectedGame} isOpen={isModalOpen} onClose={handleCloseModal} />}
+      {/* SimulateGameModal is no longer needed here, moved to game details page */}
     </AppLayout>
   );
 }

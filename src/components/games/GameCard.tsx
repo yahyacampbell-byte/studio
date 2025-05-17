@@ -9,11 +9,10 @@ import { CheckCircle2 } from 'lucide-react';
 
 interface GameCardProps {
   game: CognitiveGame;
-  onPlay: (game: CognitiveGame) => void;
   hasBeenPlayed?: boolean;
 }
 
-export function GameCard({ game, onPlay, hasBeenPlayed }: GameCardProps) {
+export function GameCard({ game, hasBeenPlayed }: GameCardProps) {
   const GameIcon = game.icon;
   return (
     <Card className="flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
@@ -27,11 +26,12 @@ export function GameCard({ game, onPlay, hasBeenPlayed }: GameCardProps) {
         </div>
         <CardDescription className="h-12 text-sm line-clamp-2">{game.description}</CardDescription>
       </CardHeader>
-      {/* CardContent formerly here, removed as it only contained the image */}
       <CardFooter className="p-4 mt-auto"> {/* Added mt-auto to push footer down */}
         <div className="flex flex-col sm:flex-row justify-between items-center w-full gap-2">
-            <Button onClick={() => onPlay(game)} className="w-full sm:w-auto flex-grow sm:flex-grow-0">
-              {hasBeenPlayed ? "Play Again" : "Play Now"}
+            <Button asChild className="w-full sm:w-auto flex-grow sm:flex-grow-0">
+              <Link href={`/games/cognifit/${game.id}`}>
+                {hasBeenPlayed ? "Play Again" : "Play Now"}
+              </Link>
             </Button>
             <Button variant="outline" asChild className="w-full sm:w-auto flex-grow sm:flex-grow-0">
                 <Link href={`/games/${game.id}`}>Details</Link>
@@ -41,3 +41,4 @@ export function GameCard({ game, onPlay, hasBeenPlayed }: GameCardProps) {
     </Card>
   );
 }
+
