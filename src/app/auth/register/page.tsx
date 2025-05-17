@@ -26,10 +26,15 @@ const registrationFormSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z.string()
+    .min(8, "Password must be at least 8 characters")
+    .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+    .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+    .regex(/[0-9]/, "Password must contain at least one number")
+    .regex(/[^a-zA-Z0-9]/, "Password must contain at least one special character"),
   confirmPassword: z.string(),
   birthDate: z.date({ required_error: "Birth date is required" }),
-  sex: z.enum(['1', '2'], { required_error: "Gender is required" }), // Zod field name remains 'sex' for data consistency
+  sex: z.enum(['1', '2'], { required_error: "Gender is required" }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -71,16 +76,18 @@ export default function RegisterPage() {
     try {
       const appUserId = uuidv4();
       
+      // User object for our app's AuthContext
       const appUser: User = {
         id: appUserId,
         email: data.email,
         firstName: data.firstName,
         lastName: data.lastName,
         birthDate: format(data.birthDate, "yyyy-MM-dd"),
-        sex: data.sex as '1' | '2', // 'sex' key matches User interface and potentially CogniFit
-        cognifitUserToken: null, 
+        sex: data.sex as '1' | '2', 
+        cognifitUserToken: null, // Will be set on-demand when playing a Cognitive Gym game
       };
       
+      // Log the user into our app. CogniFit registration happens later.
       login(appUser);
 
       toast({
@@ -244,7 +251,7 @@ export default function RegisterPage() {
               />
               <FormField
                 control={form.control}
-                name="sex" // Zod schema field name remains 'sex'
+                name="sex" 
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Gender</FormLabel> 
@@ -260,7 +267,6 @@ export default function RegisterPage() {
                       <SelectContent>
                         <SelectItem value="1">Male</SelectItem>
                         <SelectItem value="2">Female</SelectItem>
-                        {/* Add other options if CogniFit supports more or if you want to map them */}
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -292,4 +298,3 @@ export default function RegisterPage() {
     </div>
   );
 }
-

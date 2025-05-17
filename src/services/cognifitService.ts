@@ -10,7 +10,8 @@ const COGNITFIT_CLIENT_SECRET = process.env.COGNITFIT_CLIENT_SECRET;
 // As per documentation, use a specific suffix for internal user emails.
 const XILLO_EMAIL_SUFFIX = "@xillo.us";
 // For prototyping, using a fixed strong password. In production, consider generation or other strategies.
-const FIXED_USER_PASSWORD = "BrainBloomUserP@ssw0rd!2024"; 
+// Password requires minimum 8 characters with a numerical, uppercase and special character.
+const FIXED_USER_PASSWORD = "XilloGymP@ssw0rd123!"; 
 
 export interface RegisterCognifitUserInput {
   appUserId: string; 
@@ -48,7 +49,7 @@ export async function registerCognifitUser(
     user_name: input.firstName,
     user_lastname: input.lastName,
     user_email: internalUserEmail,
-    user_password: FIXED_USER_PASSWORD,
+    user_password: FIXED_USER_PASSWORD, // This is the password for the CogniFit user, not the app user
     user_birthday: input.birthDate,
     user_sex: input.sex,
     user_locale: input.locale,
@@ -66,13 +67,14 @@ export async function registerCognifitUser(
     const responseText = await response.text(); 
 
     if (!response.ok) {
-      console.error(`Cognitive Gym API Error: ${response.status} ${response.statusText}. URL: ${COGNITFIT_API_BASE_URL}/v1/users. Response body: ${responseText}`);
+      console.error(`Cognitive Gym API Error: ${response.status} ${response.statusText}. URL: ${COGNITFIT_API_BASE_URL}/v1/users. Request Body: ${JSON.stringify({...requestBody, client_secret: 'REDACTED', user_password: 'REDACTED' })}. Response body: ${responseText}`);
       try {
         const errorData: CognifitUserRegistrationResponse = JSON.parse(responseText);
         throw new Error(
           `Cognitive Gym API error (${response.status}): ${errorData.errorMessage || errorData.error || responseText}`
         );
       } catch (parseError) {
+        // If parsing fails, use the raw text
         throw new Error(
           `Cognitive Gym API error (${response.status}): ${responseText || response.statusText}`
         );
@@ -96,6 +98,7 @@ export async function registerCognifitUser(
         if (error.message.startsWith("Cognitive Gym API error") || error.message.startsWith("Cognitive Gym registration successful but no user_token received")) {
             throw error;
         }
+        // Rethrow a more generic message if it's not one of our specific API errors
         throw new Error(`Failed to register user with Cognitive Gym: ${error.message}`);
     }
     throw new Error("An unknown error occurred during Cognitive Gym user registration.");
@@ -117,21 +120,26 @@ export async function getCognifitSDKVersion(): Promise<string> {
         }
         
         try {
+            // Attempt to parse as JSON first, as some API versions might return JSON
             const jsonData = JSON.parse(responseText);
             if (jsonData && typeof jsonData.version === 'string') {
                 return jsonData.version;
             }
-            if (jsonData && typeof jsonData === 'string' && /^\d+\.\d+\.\d+.*$/.test(jsonData.trim())) { 
+            // If JSON doesn't have 'version', or if parsing fails, try to use responseText as is
+            // This handles cases where the response is plain text (e.g., just "1.2.3")
+            if (typeof jsonData === 'string' && /^\d+\.\d+\.\d+.*$/.test(jsonData.trim())) { 
                 return jsonData.trim();
             }
         } catch (e) {
-            // Not JSON, or JSON but not the expected structure.
+            // Not JSON, or JSON but not the expected structure. Fall through to plain text check.
         }
 
+        // Check if the raw responseText is a valid version string
         if (typeof responseText === 'string' && /^\d+\.\d+\.\d+.*$/.test(responseText.trim())) { 
              return responseText.trim();
         }
 
+        // If neither JSON parsing nor direct text matching works, it's an unexpected format.
         console.error("Unexpected SDK version response format. Response text:", responseText);
         throw new Error("Could not parse SDK version from Cognitive Gym API response.");
 
