@@ -17,35 +17,38 @@ import { COGNITIVE_GAMES, CognitiveGame } from '@/lib/constants';
 const COGNITFIT_CONTENT_ID = 'cognitiveGymContent';
 
 export default function CognifitGamePage() {
-  useRequireAuth();
+  useRequireAuth(); // Ensures user is authenticated before proceeding
   const { user, isAuthenticated, isLoadingAuth: isLoadingAuthContext, updateCognifitUserToken } = useAuth();
   const router = useRouter();
   const params = useParams();
-  const gameKey = params.gameKey as string;
-  const { toast } = useToast();
+  const gameKeyParam = params.gameKey as string; // gameKey from URL
 
   const [game, setGame] = useState<CognitiveGame | null>(null);
   const [currentStatus, setCurrentStatus] = useState< 'idle' | 'registering' | 'fetching_access_token' | 'loading_sdk' | 'sdk_error' | 'registration_error' | 'access_token_error' | 'game_ended' | 'game_loaded' >('idle');
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const sdkInitializedRef = useRef(false);
-  // cognifitSdkInstanceRef is removed as cognifitSdk is not a class/constructor.
 
   const cognifitClientId = process.env.NEXT_PUBLIC_COGNIFIT_CLIENT_ID;
 
   useEffect(() => {
-    if (gameKey) {
-      const foundGame = COGNITIVE_GAMES.find(g => g.id.toUpperCase() === gameKey.toUpperCase());
+    if (gameKeyParam) {
+      const foundGame = COGNITIVE_GAMES.find(g => g.id.toUpperCase() === gameKeyParam.toUpperCase());
       setGame(foundGame || null);
-      if (!foundGame && currentStatus === 'idle') {
-        setStatusMessage(`Game with key "${gameKey}" not found in our library.`);
+      if (!foundGame && currentStatus === 'idle') { // Only set error if idle and game not found by param
+        setStatusMessage(`Game with key "${gameKeyParam}" not found in our library.`);
         setCurrentStatus('sdk_error');
       }
     }
-  }, [gameKey, currentStatus]);
+  }, [gameKeyParam, currentStatus]);
+
 
   const initializeAndLoadGame = useCallback(async (accessToken: string | null) => {
-    if (sdkInitializedRef.current) {
-        console.log("SDK init process already started or completed.");
+    if (sdkInitializedRef.current || !game) {
+        console.log("SDK init process already started, completed, or game details not loaded yet.");
+        if (!game) {
+            setStatusMessage("Game details could not be loaded. Cannot initialize Cognitive Gym session.");
+            setCurrentStatus('sdk_error');
+        }
         return;
     }
 
@@ -61,13 +64,6 @@ export default function CognifitGamePage() {
       return;
     }
 
-    if (!game) {
-        setStatusMessage("Game details could not be loaded. Cannot initialize Cognitive Gym session.");
-        setCurrentStatus('sdk_error');
-        return;
-    }
-
-    // Type for sdkOptions using ConstructorParameters for CognifitSdkConfig
     const sdkOptions: ConstructorParameters<typeof CognifitSdkConfig>[3] = {
       sandbox: false,
       appType: 'web',
@@ -78,23 +74,30 @@ export default function CognifitGamePage() {
     };
 
     const cognifitConfig = new CognifitSdkConfig(
-      COGNITFIT_CONTENT_ID,
+      COGNITFIT_CONTENT_ID, // The ID of the div where the game will be rendered
       cognifitClientId,
-      accessToken,
+      accessToken, // This is the short-lived access_token
       sdkOptions
     );
 
-    console.log(`Initializing Cognitive Gym SDK for gameKey: ${game.id.toUpperCase()} with access token.`);
+    // Ensure game.id (which is the activityKey) is uppercase.
+    const activityKey = game.id.toUpperCase();
+    console.log(`Initializing Cognitive Gym SDK for gameKey: ${activityKey} with access token.`);
     setCurrentStatus('loading_sdk');
-    setStatusMessage(`Loading Cognitive Gym game (${game.title || game.id})...`);
+    setStatusMessage(`Loading Cognitive Gym game (${game.title || activityKey})...`);
 
     try {
-      // Directly use the imported cognifitSdk object
       await cognifitSdk.init(cognifitConfig);
-      console.log('Cognitive Gym SDK initialized successfully for game:', game.title || game.id);
-      sdkInitializedRef.current = true;
+      console.log('Cognitive Gym SDK initialized successfully for game:', game.title || activityKey);
+      // AT THIS POINT, init() is done.
+      // IF A SEPARATE STEP IS NEEDED TO LOAD THE GAME, IT WOULD GO HERE.
+      // For example (SPECULATIVE - REQUIRES CONFIRMATION FROM SDK DOCS):
+      // await cognifitSdk.loadActivity(activityKey, 'gameMode'); 
+      // console.log(`Attempted to load activity: ${activityKey}`);
+
       setCurrentStatus('game_loaded');
-      setStatusMessage(`Game ${game.title || game.id} initialized. Content should appear below.`);
+      setStatusMessage(`Game ${game.title || activityKey} initialized. Content should appear below.`);
+      sdkInitializedRef.current = true;
     } catch (sdkError: any) {
       console.error('Cognitive Gym SDK initialization failed:', sdkError);
       setStatusMessage(`Failed to initialize Cognitive Gym game. ${sdkError.message || String(sdkError)}`);
@@ -105,25 +108,18 @@ export default function CognifitGamePage() {
 
 
   useEffect(() => {
-    if (isLoadingAuthContext || !isAuthenticated || !gameKey || sdkInitializedRef.current || !user) {
+    if (isLoadingAuthContext || !isAuthenticated || !gameKeyParam || sdkInitializedRef.current || !user || !game) {
       if (!isLoadingAuthContext && !isAuthenticated) {
          setCurrentStatus('sdk_error');
          setStatusMessage("User not authenticated. Please log in.");
       } else if (!isLoadingAuthContext && isAuthenticated && !user) {
         setCurrentStatus('sdk_error');
         setStatusMessage("User data not available.");
-      } else if (!isLoadingAuthContext && isAuthenticated && user && !game && gameKey && currentStatus !== 'sdk_error') {
+      } else if (gameKeyParam && !game && currentStatus !== 'sdk_error' && currentStatus !== 'idle') {
+        // If gameKeyParam exists but game is null, and we are past idle/error states
         setStatusMessage("Loading game details...");
       }
       return;
-    }
-
-    if (!game) {
-        if (currentStatus !== 'sdk_error') { // Avoid overwriting more specific errors
-            setStatusMessage(`Game with key "${gameKey}" could not be found or loaded.`);
-            setCurrentStatus('sdk_error');
-        }
-        return;
     }
 
     const attemptCognifitRegistrationAndLoad = async () => {
@@ -241,18 +237,21 @@ export default function CognifitGamePage() {
       }
     };
 
-    if (game && !sdkInitializedRef.current && ['idle', 'sdk_error', 'registration_error', 'access_token_error'].includes(currentStatus)) {
+    // Check if game details are loaded before attempting registration/load
+    if (game && !sdkInitializedRef.current && (currentStatus === 'idle' || currentStatus === 'sdk_error' || currentStatus === 'registration_error' || currentStatus === 'access_token_error')) {
       attemptCognifitRegistrationAndLoad();
+    } else if (!game && gameKeyParam && currentStatus === 'idle') {
+      // Game still loading, wait for game state to update.
+      setStatusMessage("Loading game details...");
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
-      gameKey, 
+      gameKeyParam, 
       user, 
       isAuthenticated,
       isLoadingAuthContext,
       game, 
       currentStatus, 
-      initializeAndLoadGame, // Added initializeAndLoadGame here
+      initializeAndLoadGame,
       updateCognifitUserToken, 
       toast
     ]);
@@ -286,8 +285,11 @@ export default function CognifitGamePage() {
     window.addEventListener('message', handleCognifitMessage);
     return () => {
       window.removeEventListener('message', handleCognifitMessage);
+      // Consider adding SDK cleanup here if the SDK provides a method
+      // e.g., if (cognifitSdk && typeof cognifitSdk.destroy === 'function') { cognifitSdk.destroy(); }
+      // sdkInitializedRef.current = false; // Reset on unmount
     };
-  }, [gameKey, toast, game]);
+  }, [toast, game]); // Removed gameKeyParam as `game` object dependency covers it
 
 
   if (isLoadingAuthContext) {
@@ -306,7 +308,6 @@ export default function CognifitGamePage() {
   const showGameEndedMessage = currentStatus === 'game_ended';
   const showGameArea = currentStatus === 'game_loaded' && game !== null && sdkInitializedRef.current;
 
-
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -316,7 +317,7 @@ export default function CognifitGamePage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Cognitive Gym Game: {game?.title || gameKey}</CardTitle>
+            <CardTitle>Cognitive Gym Game: {game?.title || gameKeyParam}</CardTitle>
           </CardHeader>
           <CardContent>
             {statusMessage && (
@@ -347,22 +348,22 @@ export default function CognifitGamePage() {
             </div>
 
             {currentStatus === 'game_loaded' && sdkInitializedRef.current && game &&
-             typeof document !== 'undefined' &&
+             typeof document !== 'undefined' && // Check if document is available (client-side)
              document.getElementById(COGNITFIT_CONTENT_ID) &&
-             !document.getElementById(COGNITFIT_CONTENT_ID)!.hasChildNodes() && (
+             !document.getElementById(COGNITFIT_CONTENT_ID)!.hasChildNodes() && ( // Check if div is empty
                  <div className="text-center py-4 text-muted-foreground">
-                    <p>Cognitive Gym SDK initialized for {game.title}. If the game does not appear, it might indicate an issue with this specific game key (`{game.id.toUpperCase()}`) or the Cognitive Gym platform might not have loaded the content into the provided area. Please check the browser console for any SDK-specific errors.</p>
+                    <p>Cognitive Gym SDK initialized for {game.title}. If the game does not appear, it might indicate an issue with this specific game key (`{game.id.toUpperCase()}`) or the Cognitive Gym platform might not have loaded the content into the provided area. This could also be due to environmental network issues (check browser console for 404s/503s) or a missing SDK step to explicitly load this game after initialization.</p>
                 </div>
             )}
 
-            {!isAuthenticated && !isLoadingAuthContext && (
+            {!isAuthenticated && !isLoadingAuthContext && ( // User not logged in
                  <div className="text-center py-4">
                     <p className="text-muted-foreground">Please log in to play Cognitive Gym games.</p>
                 </div>
             )}
-             {isAuthenticated && !game && gameKey && currentStatus === 'sdk_error' && ( 
+             {isAuthenticated && !game && gameKeyParam && currentStatus === 'sdk_error' && ( // Game key is invalid or game not found
                 <div className="text-center py-4 text-muted-foreground">
-                    <p>Game with key "{gameKey}" could not be found or loaded.</p>
+                    <p>Game with key "{gameKeyParam}" could not be found or loaded.</p>
                 </div>
             )}
           </CardContent>
