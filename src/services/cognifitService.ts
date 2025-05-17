@@ -1,25 +1,21 @@
 
 'use server';
 
-// This service handles interactions with the Cognitive Gym API (formerly CogniFit).
+// This service handles interactions with the Cognitive Gym API.
 
+// COGNITFIT_API_BASE_URL can remain at module scope as it has a default.
 const COGNITFIT_API_BASE_URL = process.env.COGNITFIT_API_BASE_URL || "https://api.cognifit.com";
-const COGNITFIT_CLIENT_ID = process.env.COGNITFIT_CLIENT_ID;
-const COGNITFIT_CLIENT_SECRET = process.env.COGNITFIT_CLIENT_SECRET;
-
-// As per documentation, use a specific suffix for internal user emails.
 const XILLO_EMAIL_SUFFIX = "@xillo.us";
-// For prototyping, using a fixed strong password. In production, consider generation or other strategies.
 // Password requires minimum 8 characters with a numerical, uppercase and special character.
-const FIXED_USER_PASSWORD = "XilloGymP@ssw0rd123!"; 
+const FIXED_USER_PASSWORD = "XilloGymP@ssw0rd123!";
 
 export interface RegisterCognifitUserInput {
-  appUserId: string; 
+  appUserId: string;
   firstName: string;
-  lastName: string;
-  birthDate: string; 
-  sex: 1 | 2; 
-  locale: string; 
+  lastName:string;
+  birthDate: string;
+  sex: 1 | 2;
+  locale: string;
 }
 
 interface CognifitUserRegistrationResponse {
@@ -35,7 +31,12 @@ interface CognifitUserRegistrationResponse {
 export async function registerCognifitUser(
   input: RegisterCognifitUserInput
 ): Promise<string> {
+  // Access environment variables inside the function
+  const COGNITFIT_CLIENT_ID = process.env.COGNITFIT_CLIENT_ID;
+  const COGNITFIT_CLIENT_SECRET = process.env.COGNITFIT_CLIENT_SECRET;
+
   if (!COGNITFIT_CLIENT_ID || !COGNITFIT_CLIENT_SECRET) {
+    console.error("Cognitive Gym API client ID or secret is not configured. Ensure COGNITFIT_CLIENT_ID and COGNITFIT_CLIENT_SECRET are set in the environment.");
     throw new Error(
       "Cognitive Gym API client ID or secret is not configured in environment variables."
     );
@@ -49,14 +50,14 @@ export async function registerCognifitUser(
     user_name: input.firstName,
     user_lastname: input.lastName,
     user_email: internalUserEmail,
-    user_password: FIXED_USER_PASSWORD, // This is the password for the CogniFit user, not the app user
+    user_password: FIXED_USER_PASSWORD,
     user_birthday: input.birthDate,
     user_sex: input.sex,
     user_locale: input.locale,
   };
 
   try {
-    const response = await fetch(`${COGNITFIT_API_BASE_URL}/v1/users`, { 
+    const response = await fetch(`${COGNITFIT_API_BASE_URL}/v1/users`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -64,17 +65,17 @@ export async function registerCognifitUser(
       body: JSON.stringify(requestBody),
     });
 
-    const responseText = await response.text(); 
+    const responseText = await response.text();
 
     if (!response.ok) {
-      console.error(`Cognitive Gym API Error: ${response.status} ${response.statusText}. URL: ${COGNITFIT_API_BASE_URL}/v1/users. Request Body: ${JSON.stringify({...requestBody, client_secret: 'REDACTED', user_password: 'REDACTED' })}. Response body: ${responseText}`);
+      const requestBodyForLog = { ...requestBody, client_secret: 'REDACTED', user_password: 'REDACTED' };
+      console.error(`Cognitive Gym API Error: ${response.status} ${response.statusText}. URL: ${COGNITFIT_API_BASE_URL}/v1/users. Request Body: ${JSON.stringify(requestBodyForLog)}. Response body: ${responseText}`);
       try {
         const errorData: CognifitUserRegistrationResponse = JSON.parse(responseText);
         throw new Error(
           `Cognitive Gym API error (${response.status}): ${errorData.errorMessage || errorData.error || responseText}`
         );
       } catch (parseError) {
-        // If parsing fails, use the raw text
         throw new Error(
           `Cognitive Gym API error (${response.status}): ${responseText || response.statusText}`
         );
@@ -95,10 +96,9 @@ export async function registerCognifitUser(
   } catch (error) {
     console.error("Error during Cognitive Gym user registration:", error);
     if (error instanceof Error) {
-        if (error.message.startsWith("Cognitive Gym API error") || error.message.startsWith("Cognitive Gym registration successful but no user_token received")) {
+        if (error.message.startsWith("Cognitive Gym API error") || error.message.startsWith("Cognitive Gym registration successful but no user_token received") || error.message.startsWith("Cognitive Gym API client ID or secret is not configured")) {
             throw error;
         }
-        // Rethrow a more generic message if it's not one of our specific API errors
         throw new Error(`Failed to register user with Cognitive Gym: ${error.message}`);
     }
     throw new Error("An unknown error occurred during Cognitive Gym user registration.");
@@ -112,34 +112,29 @@ export async function registerCognifitUser(
 export async function getCognifitSDKVersion(): Promise<string> {
     try {
         const response = await fetch(`${COGNITFIT_API_BASE_URL}/description/versions/sdkjs?v=2.0`);
-        const responseText = await response.text(); 
+        const responseText = await response.text();
 
         if (!response.ok) {
             console.error(`Cognitive Gym SDK Version API Error: ${response.status} ${response.statusText}. Response body: ${responseText}`);
             throw new Error(`Failed to fetch SDK version (${response.status}): ${responseText || response.statusText}`);
         }
-        
+
         try {
-            // Attempt to parse as JSON first, as some API versions might return JSON
             const jsonData = JSON.parse(responseText);
             if (jsonData && typeof jsonData.version === 'string') {
                 return jsonData.version;
             }
-            // If JSON doesn't have 'version', or if parsing fails, try to use responseText as is
-            // This handles cases where the response is plain text (e.g., just "1.2.3")
-            if (typeof jsonData === 'string' && /^\d+\.\d+\.\d+.*$/.test(jsonData.trim())) { 
+            if (typeof jsonData === 'string' && /^\d+\.\d+\.\d+.*$/.test(jsonData.trim())) {
                 return jsonData.trim();
             }
         } catch (e) {
-            // Not JSON, or JSON but not the expected structure. Fall through to plain text check.
+            // Not JSON
         }
 
-        // Check if the raw responseText is a valid version string
-        if (typeof responseText === 'string' && /^\d+\.\d+\.\d+.*$/.test(responseText.trim())) { 
+        if (typeof responseText === 'string' && /^\d+\.\d+\.\d+.*$/.test(responseText.trim())) {
              return responseText.trim();
         }
 
-        // If neither JSON parsing nor direct text matching works, it's an unexpected format.
         console.error("Unexpected SDK version response format. Response text:", responseText);
         throw new Error("Could not parse SDK version from Cognitive Gym API response.");
 
