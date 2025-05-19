@@ -39,7 +39,7 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "437951574734",
     NEXT_PUBLIC_FIREBASE_APP_ID: "1:437951574734:web:2d1a91a8cf1ea47e68969f",
     NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: "G-N6XPLD3WRT",
-    // Ensure NEXT_PUBLIC_COGNIFIT_CLIENT_ID is also defined here if it's used directly by client-side code
+    // Ensure NEXT_PUBLIC_COGNITFIT_CLIENT_ID is also defined here if it's used directly by client-side code
     // and not just by the SDK (which might read it from a different configuration point or needs it passed).
     // Based on current usage, it IS used directly in CognifitGamePage for the config object.
     NEXT_PUBLIC_COGNITFIT_CLIENT_ID: "322ede20ac6b8c88968da72d0efd3c51",
