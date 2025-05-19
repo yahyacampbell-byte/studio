@@ -28,12 +28,15 @@ const nextConfig: NextConfig = {
       }
     ],
   },
-  // The env block is removed as the Firebase App Hosting adapter
-  // likely overrides next.config.ts or has its own mechanism
-  // for making NEXT_PUBLIC_ variables from apphosting.yaml or .env
-  // available to the client-side build.
-  // If client-side env vars are still missing, the issue is likely
-  // with how the adapter processes apphosting.yaml or .env.
+  env: {
+    // Expose FIREBASE_WEBAPP_CONFIG (available in App Hosting build environment)
+    // to the client-side bundle as NEXT_PUBLIC_FIREBASE_WEBAPP_CONFIG.
+    // This variable is a JSON string.
+    NEXT_PUBLIC_FIREBASE_WEBAPP_CONFIG: process.env.FIREBASE_WEBAPP_CONFIG,
+    // Also ensure NEXT_PUBLIC_COGNITFIT_CLIENT_ID is passed through if defined
+    // in the build environment (e.g. from apphosting.yaml)
+    NEXT_PUBLIC_COGNITFIT_CLIENT_ID: process.env.NEXT_PUBLIC_COGNITFIT_CLIENT_ID,
+  },
 };
 
 export default nextConfig;
