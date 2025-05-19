@@ -28,15 +28,9 @@ const nextConfig: NextConfig = {
       }
     ],
   },
-  env: {
-    // Expose FIREBASE_WEBAPP_CONFIG (available in App Hosting build environment)
-    // to the client-side bundle as NEXT_PUBLIC_FIREBASE_WEBAPP_CONFIG.
-    // This variable is a JSON string.
-    NEXT_PUBLIC_FIREBASE_WEBAPP_CONFIG: process.env.FIREBASE_WEBAPP_CONFIG,
-    // Also ensure NEXT_PUBLIC_COGNITFIT_CLIENT_ID is passed through if defined
-    // in the build environment (e.g. from apphosting.yaml)
-    NEXT_PUBLIC_COGNITFIT_CLIENT_ID: process.env.NEXT_PUBLIC_COGNITFIT_CLIENT_ID,
-  },
+  // The 'env' block is removed to rely on standard NEXT_PUBLIC_ variable handling.
+  // NEXT_PUBLIC_ variables defined in .env (for local dev) or apphosting.yaml (for deployment)
+  // should be automatically inlined by Next.js if available at build time.
 };
 
 export default nextConfig;
