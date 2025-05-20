@@ -62,7 +62,7 @@ const PersonalizedInsightsPromptInputSchemaInternal = z.object({
 
 const personalizedInsightsPrompt = ai.definePrompt({
   name: 'personalizedInsightsPrompt',
-  model: 'googleai/gemini-2.0-flash', // Added model specification
+  model: 'googleai/gemini-2.5-pro', 
   input: {schema: PersonalizedInsightsPromptInputSchemaInternal}, 
   output: {schema: PersonalizedInsightsOutputSchema},
   prompt: `You are an AI expert in cognitive psychology and multiple intelligences, focused on providing general wellness insights.
@@ -112,7 +112,7 @@ Based on ALL available information (game summary AND MI profile if provided):
     Consider suggesting learning styles or approaches based on the user's apparent stronger intelligences from the MI profile (if available) or inferred from game performance. For example:
     *   If Linguistic-Verbal intelligence seems prominent (e.g., from good performance in 'Words Birds', 'Scrambled', 'Word Quest'), you might suggest learning methods that involve reading, writing, storytelling, or verbal discussions.
     *   If Logical-Mathematical intelligence appears strong (e.g., from 'Math Twins', 'Sudoku', 'Fuel a Car'), suggest activities that involve problem-solving, puzzles, or logical sequencing.
-    *   If Spatial intelligence is a highlight (e.g., from 'Jigsaw 9', '3D Art Puzzle', 'Star Architect'), recommend using diagrams, mind maps, or visual aids for learning.
+    *   If Visual-Spatial intelligence is a highlight (e.g., from 'Jigsaw 9', '3D Art Puzzle', 'Star Architect'), recommend using diagrams, mind maps, or visual aids for learning.
     *   If Bodily-Kinesthetic abilities stand out (e.g., from 'Reaction Field', 'Tennis Bomb', 'Twist It'), suggest hands-on activities, learning by doing, or physical movement.
     *   If Musical intelligence is strong (e.g., from 'Melody Mayhem', 'Melodic Tennis'), recommend using rhythm, music, or mnemonics involving tunes.
     *   If Interpersonal strengths are shown (e.g., in 'Chess', 'Traffic Manager'), suggest group study, discussions, or teaching others.

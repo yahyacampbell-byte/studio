@@ -11,7 +11,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import { COGNITIVE_GAMES } from '@/lib/constants'; // To get all game titles
+import { COGNITIVE_GAMES, MULTIPLE_INTELLIGENCES } from '@/lib/constants'; // To get all game titles
 
 const AnalyzeGameplayInputSchema = z.object({
   gameplayData: z.array(
@@ -41,22 +41,13 @@ export async function analyzeGameplayAndMapToIntelligences(input: AnalyzeGamepla
   return analyzeGameplayAndMapToIntelligencesFlow(input);
 }
 
-const EIGHT_MULTIPLE_INTELLIGENCES = [
-  'Logical-Mathematical',
-  'Visual-Spatial',
-  'Bodily-Kinesthetic',
-  'Linguistic-Verbal',
-  'Musical',
-  'Interpersonal',
-  'Intrapersonal',
-  'Naturalistic',
-];
+const EIGHT_MULTIPLE_INTELLIGENCES_ORDERED = MULTIPLE_INTELLIGENCES.map(mi => mi.name);
 
 const ALL_GAME_TITLES_FOR_PROMPT = COGNITIVE_GAMES.map(game => game.title).join(", ");
 
 const summarizeGameplayPrompt = ai.definePrompt({
   name: 'summarizeGameplayPrompt',
-  model: 'googleai/gemini-2.0-flash', // Added model specification
+  model: 'googleai/gemini-2.5-pro', 
   input: {schema: AnalyzeGameplayInputSchema},
   output: {schema: AnalyzeGameplayOutputSchema},
   prompt: `You are an expert AI specializing in cognitive assessment and Multiple Intelligences theory.
@@ -66,7 +57,7 @@ Then, calculate a composite 0-10 score for each of the 8 Multiple Intelligences 
 Finally, scale this composite 0-10 score to 0-100 for the output JSON. Provide clear reasoning for each intelligence's score.
 
 The 8 Multiple Intelligences to assess are:
-${EIGHT_MULTIPLE_INTELLIGENCES.map(intelligence => `- ${intelligence}`).join('\n')}
+${EIGHT_MULTIPLE_INTELLIGENCES_ORDERED.map(intelligence => `- ${intelligence}`).join('\n')}
 
 Gameplay Data Provided:
 {{#each gameplayData}}
@@ -224,7 +215,7 @@ For any other games played from the available list (e.g., ${ALL_GAME_TITLES_FOR_
     e.  Provide a concise \`reasoning\` for this score, mentioning the contributing games and the user's general performance in them based on the rubrics. For example: "Achieved a strong score in Logical-Mathematical, driven by high performance in Math Twins (mapped to 9/10) and good problem-solving in Crossroads (Logical aspect mapped to 8/10)."
 
 **Output Format:**
-Produce a JSON object matching the \`AnalyzeGameplayOutputSchema\`. Ensure each of the 8 intelligences is present in the \`intelligenceMappings\` array with a score from 0-100 and reasoning.
+Produce a JSON object matching the \`AnalyzeGameplayOutputSchema\`. Ensure each of the 8 intelligences is present in the \`intelligenceMappings\` array with a score from 0-100 and reasoning. The order of intelligences in the output array should match this order: ${EIGHT_MULTIPLE_INTELLIGENCES_ORDERED.join(', ')}.
 
 Example for Reasoning: "User shows strong Visual-Spatial skills (80/100) based on quick completion of Jigsaw 9 (rated 8/10) and good trajectory prediction in Butterfly Hunter (Spatial aspect rated 8/10)."
 
@@ -241,7 +232,7 @@ const analyzeGameplayAndMapToIntelligencesFlow = ai.defineFlow(
   async input => {
     // Check if there's any gameplay data. If not, return a default response.
     if (!input.gameplayData || input.gameplayData.length === 0) {
-      const defaultMappings = EIGHT_MULTIPLE_INTELLIGENCES.map(intelligenceName => ({
+      const defaultMappings = EIGHT_MULTIPLE_INTELLIGENCES_ORDERED.map(intelligenceName => ({
         intelligence: intelligenceName,
         score: 0,
         reasoning: "No gameplay data provided for analysis.",
@@ -254,7 +245,7 @@ const analyzeGameplayAndMapToIntelligencesFlow = ai.defineFlow(
     // Ensure output is not null and all intelligences are present
     if (output && output.intelligenceMappings) {
       const presentIntelligences = new Set(output.intelligenceMappings.map(im => im.intelligence));
-      for (const expectedIntelligence of EIGHT_MULTIPLE_INTELLIGENCES) {
+      for (const expectedIntelligence of EIGHT_MULTIPLE_INTELLIGENCES_ORDERED) {
         if (!presentIntelligences.has(expectedIntelligence)) {
           output.intelligenceMappings.push({
             intelligence: expectedIntelligence,
@@ -265,14 +256,14 @@ const analyzeGameplayAndMapToIntelligencesFlow = ai.defineFlow(
       }
       // Sort by the defined order of intelligences for consistency
       output.intelligenceMappings.sort((a, b) => {
-        return EIGHT_MULTIPLE_INTELLIGENCES.indexOf(a.intelligence) - EIGHT_MULTIPLE_INTELLIGENCES.indexOf(b.intelligence);
+        return EIGHT_MULTIPLE_INTELLIGENCES_ORDERED.indexOf(a.intelligence) - EIGHT_MULTIPLE_INTELLIGENCES_ORDERED.indexOf(b.intelligence);
       });
 
       return output;
     }
     
     // Fallback if AI output is malformed or null
-    const fallbackMappings = EIGHT_MULTIPLE_INTELLIGENCES.map(intelligenceName => ({
+    const fallbackMappings = EIGHT_MULTIPLE_INTELLIGENCES_ORDERED.map(intelligenceName => ({
         intelligence: intelligenceName,
         score: 0,
         reasoning: "AI analysis could not be completed or returned an unexpected result.",
@@ -280,3 +271,4 @@ const analyzeGameplayAndMapToIntelligencesFlow = ai.defineFlow(
     return { intelligenceMappings: fallbackMappings };
   }
 );
+
