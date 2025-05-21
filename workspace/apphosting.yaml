@@ -1,5 +1,10 @@
 # apphosting.yaml
-# ... other configurations like runConfig, buildConfig etc. ...
+
+runConfig:
+  minInstances: 0
+  maxInstances: 10
+
+# ... other configurations like buildConfig etc. ...
 
 env:
   - variable: COGNITFIT_CLIENT_ID
