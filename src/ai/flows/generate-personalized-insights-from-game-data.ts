@@ -26,7 +26,7 @@ const PersonalizedInsightsInputSchema = z.object({
 export type PersonalizedInsightsInput = z.infer<typeof PersonalizedInsightsInputSchema>;
 
 const PersonalizedInsightsOutputSchema = z.object({
-  multipleIntelligencesSummary: z.string().describe('Personalized insights based on Multiple Intelligences mapping from gameplay data. This summary should reflect any MI analysis already performed (e.g., by another AI agent that calculated MI scores based on rubrics).'),
+  multipleIntelligencesSummary: z.string().describe('Personalized insights based on Multiple Intelligences mapping from gameplay data. This summary should reflect any MI analysis already performed (e.g., by another AI agent that calculated MI scores based on rubrics). It should be formatted as a Markdown bulleted list.'),
   broaderCognitiveInsights: z.string().optional().describe('Additional observations on general cognitive abilities like attention, memory, processing speed, or executive functions, inferred from game performance. Phrased as observations and areas for potential self-awareness or development.'),
   actionableRecommendations: z.string().describe('Actionable recommendations for improvement or leveraging strengths, based on all insights. May include learning style suggestions.'),
 });
@@ -79,6 +79,7 @@ User's Current Multiple Intelligences Profile (Scores 0-100, with reasoning):
 Based on ALL available information (game summary AND MI profile if provided):
 
 1.  **Multiple Intelligences Summary**: Provide personalized insights about the user's strengths and weaknesses across different Multiple Intelligences.
+    **Format this summary using Markdown bullet points, one for each of the 8 Multiple Intelligences. For each intelligence, briefly state the user's standing (e.g., strong, developing, area for focus) based on their profile and offer a concise observation.**
     {{#if intelligenceProfileString}}
     This summary should directly reflect the provided MI profile, highlighting dominant intelligences, areas that are less developed, and any notable patterns or reasoning from the MI scores.
     {{else}}
