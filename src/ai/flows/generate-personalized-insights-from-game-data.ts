@@ -28,7 +28,7 @@ export type PersonalizedInsightsInput = z.infer<typeof PersonalizedInsightsInput
 const PersonalizedInsightsOutputSchema = z.object({
   multipleIntelligencesSummary: z.string().describe('Personalized insights based on Multiple Intelligences mapping from gameplay data. This summary should reflect any MI analysis already performed (e.g., by another AI agent that calculated MI scores based on rubrics). It should be formatted as a Markdown bulleted list.'),
   broaderCognitiveInsights: z.string().optional().describe('Additional observations on general cognitive abilities like attention, memory, processing speed, or executive functions, inferred from game performance. Phrased as observations and areas for potential self-awareness or development. Should be formatted using Markdown for readability (e.g., bullet points or distinct paragraphs).'),
-  actionableRecommendations: z.string().describe('Actionable recommendations for improvement or leveraging strengths, based on all insights. May include learning style suggestions.'),
+  actionableRecommendations: z.string().describe('Actionable recommendations for improvement or leveraging strengths, based on all insights. May include learning style suggestions. Formatted as a Markdown list.'),
 });
 export type PersonalizedInsightsOutput = z.infer<typeof PersonalizedInsightsOutputSchema>;
 
@@ -109,7 +109,7 @@ Based on ALL available information (game summary AND MI profile if provided):
 
     Your observations should be framed as potential areas for self-awareness or general cognitive skill development. Do not output risk percentages, specific clinical correlations, or direct medical advice.
 
-3.  **Actionable Recommendations**: Offer clear, concise, and actionable recommendations. These should aim to help the user improve their cognitive skills, leverage their strengths, or explore areas for cognitive development based on ALL the insights generated (MI summary, broader cognitive insights, and the MI profile scores if provided). 
+3.  **Actionable Recommendations**: Offer clear, concise, and actionable recommendations. **Format these recommendations as a Markdown bulleted or numbered list for clear, step-by-step guidance.** These should aim to help the user improve their cognitive skills, leverage their strengths, or explore areas for cognitive development based on ALL the insights generated (MI summary, broader cognitive insights, and the MI profile scores if provided). 
     Consider suggesting learning styles or approaches based on the user's apparent stronger intelligences from the MI profile (if available) or inferred from game performance. For example:
     *   If Linguistic-Verbal intelligence seems prominent (e.g., from good performance in 'Words Birds', 'Scrambled', 'Word Quest'), you might suggest learning methods that involve reading, writing, storytelling, or verbal discussions.
     *   If Logical-Mathematical intelligence appears strong (e.g., from 'Math Twins', 'Sudoku', 'Fuel a Car'), suggest activities that involve problem-solving, puzzles, or logical sequencing.
