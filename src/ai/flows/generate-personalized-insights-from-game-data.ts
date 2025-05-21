@@ -27,7 +27,7 @@ export type PersonalizedInsightsInput = z.infer<typeof PersonalizedInsightsInput
 
 const PersonalizedInsightsOutputSchema = z.object({
   multipleIntelligencesSummary: z.string().describe('Personalized insights based on Multiple Intelligences mapping from gameplay data. This summary should reflect any MI analysis already performed (e.g., by another AI agent that calculated MI scores based on rubrics). It should be formatted as a Markdown bulleted list.'),
-  broaderCognitiveInsights: z.string().optional().describe('Additional observations on general cognitive abilities like attention, memory, processing speed, or executive functions, inferred from game performance. Phrased as observations and areas for potential self-awareness or development.'),
+  broaderCognitiveInsights: z.string().optional().describe('Additional observations on general cognitive abilities like attention, memory, processing speed, or executive functions, inferred from game performance. Phrased as observations and areas for potential self-awareness or development. Should be formatted using Markdown for readability (e.g., bullet points or distinct paragraphs).'),
   actionableRecommendations: z.string().describe('Actionable recommendations for improvement or leveraging strengths, based on all insights. May include learning style suggestions.'),
 });
 export type PersonalizedInsightsOutput = z.infer<typeof PersonalizedInsightsOutputSchema>;
@@ -87,7 +87,7 @@ Based on ALL available information (game summary AND MI profile if provided):
     {{/if}}
 
 2.  **Broader Cognitive Insights (Optional)**:
-    Based on the types of games played, general performance (scores), and the MI profile (if available), provide observations on general cognitive abilities. Phrase these as potential observations or areas that might warrant further exploration for self-awareness or general cognitive skill development. **Crucially, DO NOT make any medical diagnoses, suggest clinical conditions, or advise medical consultation. Stick to general cognitive function observations.**
+    Based on the types of games played, general performance (scores), and the MI profile (if available), provide observations on general cognitive abilities. **Format these observations using Markdown, for example, as a bulleted list where each bullet point discusses a specific cognitive domain or pattern observed. If a list is not suitable, use distinct paragraphs for each key observation.** Phrase these as potential observations or areas that might warrant further exploration for self-awareness or general cognitive skill development. **Crucially, DO NOT make any medical diagnoses, suggest clinical conditions, or advise medical consultation. Stick to general cognitive function observations.**
 
     Consider these cognitive domains and how game performance (and MI scores if available) might relate. Synthesize information from multiple relevant games if possible:
     *   **Working Memory**: (e.g., performance in games like 'Math Twins', 'Digits', 'Candy Factory', 'Drive me crazy'). If scores in games requiring holding and manipulating information are consistently notable (high or low), this might offer general insights into working memory capacity as an area for self-awareness.

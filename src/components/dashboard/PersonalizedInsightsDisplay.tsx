@@ -73,7 +73,7 @@ export function PersonalizedInsightsDisplay({ aiResults }: PersonalizedInsightsD
               </AccordionTrigger>
               <AccordionContent className="px-6 pb-4 pt-0">
                  <div className="prose prose-sm dark:prose-invert max-w-none">
-                  <p>{aiResults.broaderCognitiveInsights}</p>
+                  {aiResults.broaderCognitiveInsights}
                 </div>
               </AccordionContent>
             </AccordionItem>
@@ -89,7 +89,7 @@ export function PersonalizedInsightsDisplay({ aiResults }: PersonalizedInsightsD
               </AccordionTrigger>
               <AccordionContent className="px-6 pb-4 pt-0">
                 <div className="prose prose-sm dark:prose-invert max-w-none">
-                  <p>{aiResults.actionableRecommendations}</p>
+                  {aiResults.actionableRecommendations}
                 </div>
               </AccordionContent>
             </AccordionItem>
