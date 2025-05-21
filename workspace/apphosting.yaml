@@ -8,27 +8,27 @@ runConfig:
 
 env:
   - variable: COGNITFIT_CLIENT_ID
-    value: "322ede20ac6b8c88968da72d0efd3c51" # Your actual value
+    value: "322ede20ac6b8c88968da72d0efd3c51"
     availability:
       - BUILD
       - RUNTIME
   - variable: COGNITFIT_CLIENT_SECRET
-    value: "c9b55f958b4bc1bf5258cf7d8ec1ef4b" # Your actual value - treat as secret if platform supports
+    value: "c9b55f958b4bc1bf5258cf7d8ec1ef4b"
     availability:
       - BUILD # Needed if used during build by services/genkit
       - RUNTIME
   - variable: COGNITFIT_CLIENT_HASH
-    value: "S1e1yi7U8FSdKtk1WJ6BzNOfRiVkx4Hjr7YwiQf0VClFUkTvmL1S0qmUHqJHYowP" # Your actual value
+    value: "S1e1yi7U8FSdKtk1WJ6BzNOfRiVkx4Hjr7YwiQf0VClFUkTvmL1S0qmUHqJHYowP"
     availability:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_COGNITFIT_CLIENT_ID
-    value: "322ede20ac6b8c88968da72d0efd3c51" # Your actual value
+    value: "322ede20ac6b8c88968da72d0efd3c51"
     availability:
       - BUILD # Next.js needs this during build for client-side bundling
       - RUNTIME
   - variable: GOOGLE_API_KEY
-    value: "AIzaSyAc-_x5QUIT0q6bk7GfAQlsCwkeaRn6zC0" # Your actual value - treat as secret
+    value: "AIzaSyAc-_x5QUIT0q6bk7GfAQlsCwkeaRn6zC0"
     availability:
       - BUILD # Needed if Genkit initializes plugins during build
       - RUNTIME
@@ -74,12 +74,11 @@ env:
     availability:
       - BUILD
       - RUNTIME
-  - variable: NEXT_PUBLIC_FIREBASE_VAPID_KEY # This was in .env but not apphosting.yaml, added for consistency
+  - variable: NEXT_PUBLIC_FIREBASE_VAPID_KEY
     value: "e370ec545b63fc7bf32b148a8b7c90bebff2ec99"
     availability:
       - BUILD
       - RUNTIME
-
 
 # Note: Firebase also automatically injects FIREBASE_CONFIG (runtime) and FIREBASE_WEBAPP_CONFIG (build time).
 # The NEXT_PUBLIC_FIREBASE_ variables above are for explicit access in your code
