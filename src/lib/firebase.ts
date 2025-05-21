@@ -11,6 +11,7 @@ if (typeof window !== 'undefined') {
 
 let firebaseConfig: FirebaseOptions | null = null;
 const missingVarsArray: string[] = [];
+let initializationError: string | null = null;
 
 // Directly check each required environment variable
 const clientApiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
@@ -29,17 +30,15 @@ if (!clientMessagingSenderId) missingVarsArray.push('NEXT_PUBLIC_FIREBASE_MESSAG
 if (!clientAppId) missingVarsArray.push('NEXT_PUBLIC_FIREBASE_APP_ID');
 
 if (missingVarsArray.length > 0) {
-  const errorMessage =
-    `Firebase initialization failed: Client-side code is missing required environment variables: ${missingVarsArray.join(', ')}. ` +
-    `Please ensure these are correctly defined in your apphosting.yaml with 'availability: [BUILD, RUNTIME]' (for deployed environments) ` +
-    `or in your .env file (for local development) and that your Next.js server has been restarted.`;
+  initializationError =
+    `Firebase initialization failed: Missing required environment variables: ${missingVarsArray.join(', ')}. ` +
+    `Please ensure these are correctly defined in your apphosting.yaml with 'BUILD' and 'RUNTIME' availability, ` +
+    `and that your local .env file is correctly populated if running locally.`;
   
-  // Log the error clearly in the client console as well before throwing
+  // Log the error clearly in the client console as well before potentially throwing
   if (typeof window !== 'undefined') {
-    console.error("Firebase Initialization Error:", errorMessage);
-    console.error("Current NEXT_PUBLIC_FIREBASE_API_KEY on client:", process.env.NEXT_PUBLIC_FIREBASE_API_KEY);
+    console.error("[FirebaseInit Client Error]", initializationError);
   }
-  throw new Error(errorMessage);
 } else {
   firebaseConfig = {
     apiKey: clientApiKey!,
@@ -53,14 +52,30 @@ if (missingVarsArray.length > 0) {
     firebaseConfig.measurementId = clientMeasurementId;
   }
   if (typeof window !== 'undefined') {
-    console.log("[FirebaseInit Client] Firebase config object created successfully.");
+    console.log("[FirebaseInit Client] Firebase config object created successfully from process.env.NEXT_PUBLIC_ variables.");
   }
+}
+
+if (initializationError && !firebaseConfig) {
+  // If we have an error and firebaseConfig is still not set, throw the error.
+  // This will happen if individual NEXT_PUBLIC_FIREBASE_... vars are missing.
+  throw new Error(initializationError);
+}
+
+if (!firebaseConfig) {
+  // This case should ideally not be reached if the above logic is sound,
+  // but it's a final safeguard.
+  const finalErrorMsg = "Firebase configuration object could not be created. Ensure environment variables are correctly set and accessible.";
+  if (typeof window !== 'undefined') {
+    console.error("[FirebaseInit Client Error]", finalErrorMsg);
+  }
+  throw new Error(finalErrorMsg);
 }
 
 // Initialize Firebase
 let app;
 if (!getApps().length) {
-  app = initializeApp(firebaseConfig); // firebaseConfig is guaranteed to be non-null here if no error was thrown
+  app = initializeApp(firebaseConfig); 
   if (typeof window !== 'undefined') {
     console.log("[FirebaseInit Client] Firebase app initialized successfully.");
   }
