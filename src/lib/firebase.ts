@@ -3,77 +3,72 @@ import { initializeApp, getApps, getApp, type FirebaseOptions } from 'firebase/a
 import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 
-// Log all process.env available on the client side FOR DIAGNOSTICS
+// This console.log can be helpful for debugging what process.env looks like on the client.
+// It should only show NEXT_PUBLIC_ prefixed variables.
 if (typeof window !== 'undefined') {
-  // Only log specific NEXT_PUBLIC_ variables to avoid exposing sensitive server-side vars
-  // if any somehow make it to this client-side process.env object (they shouldn't with Next.js).
-  const clientSideEnv: Record<string, string | undefined> = {};
-  for (const key in process.env) {
-    if (key.startsWith('NEXT_PUBLIC_')) {
-      clientSideEnv[key] = process.env[key];
-    }
-  }
-  console.log("CLIENT_SIDE_ACCESSIBLE_PROCESS_ENV (NEXT_PUBLIC_ only):", JSON.stringify(clientSideEnv, null, 2));
+  console.log("CLIENT_SIDE_PROCESS_ENV:", JSON.stringify(process.env, null, 2));
 }
 
 let firebaseConfig: FirebaseOptions | null = null;
-let initializationError: string | null = null;
+const missingVarsArray: string[] = [];
 
-const requiredEnvVars: string[] = [ // Explicitly type as string[]
-  'NEXT_PUBLIC_FIREBASE_API_KEY',
-  'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN',
-  'NEXT_PUBLIC_FIREBASE_PROJECT_ID',
-  'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET',
-  'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID',
-  'NEXT_PUBLIC_FIREBASE_APP_ID',
-];
+// Directly check each required environment variable
+const clientApiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
+const clientAuthDomain = process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN;
+const clientProjectId = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+const clientStorageBucket = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
+const clientMessagingSenderId = process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID;
+const clientAppId = process.env.NEXT_PUBLIC_FIREBASE_APP_ID;
+const clientMeasurementId = process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID; // Optional
 
-const missingVars = requiredEnvVars.filter(varName => {
-  const value = process.env[varName as keyof NodeJS.ProcessEnv]; // Cast for process.env access
+if (!clientApiKey) missingVarsArray.push('NEXT_PUBLIC_FIREBASE_API_KEY');
+if (!clientAuthDomain) missingVarsArray.push('NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN');
+if (!clientProjectId) missingVarsArray.push('NEXT_PUBLIC_FIREBASE_PROJECT_ID');
+if (!clientStorageBucket) missingVarsArray.push('NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET');
+if (!clientMessagingSenderId) missingVarsArray.push('NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID');
+if (!clientAppId) missingVarsArray.push('NEXT_PUBLIC_FIREBASE_APP_ID');
+
+if (missingVarsArray.length > 0) {
+  const errorMessage =
+    `Firebase initialization failed: Client-side code is missing required environment variables: ${missingVarsArray.join(', ')}. ` +
+    `Please ensure these are correctly defined in your apphosting.yaml with 'availability: [BUILD, RUNTIME]' (for deployed environments) ` +
+    `or in your .env file (for local development) and that your Next.js server has been restarted.`;
+  
+  // Log the error clearly in the client console as well before throwing
   if (typeof window !== 'undefined') {
-    console.log(`[FirebaseInit] Checking var ${varName}: Value is '${String(value)}' (Type: ${typeof value})`);
+    console.error("Firebase Initialization Error:", errorMessage);
+    console.error("Current NEXT_PUBLIC_FIREBASE_API_KEY on client:", process.env.NEXT_PUBLIC_FIREBASE_API_KEY);
   }
-  return !value;
-});
-
-if (missingVars.length > 0) {
-  initializationError =
-    `Firebase initialization failed: Missing required environment variables: ${missingVars.join(', ')}. ` +
-    `Please ensure these are correctly defined in your apphosting.yaml with 'BUILD' and 'RUNTIME' availability, ` +
-    `and that your local .env file is correctly populated if running locally.`;
+  throw new Error(errorMessage);
 } else {
   firebaseConfig = {
-    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
-    authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
-    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
-    storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
-    messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
-    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
-    measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID, // Optional, can be undefined
+    apiKey: clientApiKey!,
+    authDomain: clientAuthDomain!,
+    projectId: clientProjectId!,
+    storageBucket: clientStorageBucket!,
+    messagingSenderId: clientMessagingSenderId!,
+    appId: clientAppId!,
   };
-  console.log("[FirebaseInit] Firebase config object created successfully from individual NEXT_PUBLIC_ variables.");
-}
-
-if (initializationError && !firebaseConfig) {
-  // This error will be thrown if essential Firebase config is missing during build/runtime
-  // It should provide a clearer message in the build logs if this is the cause of failure.
-  throw new Error(initializationError);
-}
-
-if (!firebaseConfig) {
-  // This case should ideally not be reached if the above logic is sound,
-  // but acts as a final guard.
-  throw new Error("Firebase configuration could not be determined. Critical error in environment variable setup.");
+  if (clientMeasurementId) {
+    firebaseConfig.measurementId = clientMeasurementId;
+  }
+  if (typeof window !== 'undefined') {
+    console.log("[FirebaseInit Client] Firebase config object created successfully.");
+  }
 }
 
 // Initialize Firebase
 let app;
 if (!getApps().length) {
-  app = initializeApp(firebaseConfig);
-  console.log("[FirebaseInit] Firebase app initialized successfully.");
+  app = initializeApp(firebaseConfig); // firebaseConfig is guaranteed to be non-null here if no error was thrown
+  if (typeof window !== 'undefined') {
+    console.log("[FirebaseInit Client] Firebase app initialized successfully.");
+  }
 } else {
   app = getApp();
-  console.log("[FirebaseInit] Existing Firebase app retrieved.");
+  if (typeof window !== 'undefined') {
+    console.log("[FirebaseInit Client] Existing Firebase app retrieved.");
+  }
 }
 
 const db = getFirestore(app);
