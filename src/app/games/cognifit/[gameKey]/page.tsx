@@ -9,7 +9,7 @@ import { ArrowLeft, Loader2, AlertTriangle, Brain, CheckCircle2 } from 'lucide-r
 import { useToast, type ToastFunction } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CognifitSdk } from '@cognifit/launcher-js-sdk';
-import { CognifitSdkConfig } from '@cognifit/launcher-js-sdk/lib/lib/cognifit.sdk.config';
+import { CognifitSdkConfig } from '@cognifit/launcher-js-sdk/lib/lib/cognifit.sdk.config'; // Deep import for config class
 import type { User } from '@/context/AuthContext';
 import { useAuth } from '@/context/AuthContext';
 import { useRequireAuth } from '@/hooks/useRequireAuth';
@@ -24,12 +24,14 @@ export default function CognifitGamePage() {
   const params = useParams();
   const gameKeyParam = params.gameKey as string;
 
+  // For diagnostics
   if (typeof window !== 'undefined') {
     console.log(
-      "[CognifitGamePage Module Scope] Value of NEXT_PUBLIC_COGNITFIT_CLIENT_ID during build/initialization:",
-      process.env.NEXT_PUBLIC_COGNITFIT_CLIENT_ID
-    );
+        "[CognifitGamePage Module Scope] Value of NEXT_PUBLIC_COGNITFIT_CLIENT_ID during build/initialization:",
+        process.env.NEXT_PUBLIC_COGNITFIT_CLIENT_ID
+      );
   }
+
 
   const [game, setGame] = useState<CognitiveGame | null>(null);
   const [currentStatus, setCurrentStatus] = useState< 'idle' | 'registering' | 'fetching_access_token' | 'initializing_sdk' | 'launching_game' | 'game_loaded' | 'game_ended' | 'sdk_error' | 'registration_error' | 'access_token_error' | 'game_launch_error' >('idle');
@@ -37,7 +39,7 @@ export default function CognifitGamePage() {
   
   const sdkRef = useRef<CognifitSdk | null>(null);
   const sdkInitializedRef = useRef(false);
-  const gameLaunchedRef = useRef(false);
+  const gameLaunchedRef = useRef(false); // To prevent multiple game launches
 
   const cognifitClientId = process.env.NEXT_PUBLIC_COGNITFIT_CLIENT_ID;
 
@@ -87,7 +89,7 @@ export default function CognifitGamePage() {
       return;
     }
     if (!cognifitClientId) {
-      const message = `Cognitive Gym Client ID is missing. For local development, ensure NEXT_PUBLIC_COGNITFIT_CLIENT_ID is in .env and restart the server. For deployed environments, verify it in your hosting provider's settings (e.g., apphosting.yaml or Firebase Console).`;
+      const message = `Cognitive Gym Client ID is missing. Please ensure NEXT_PUBLIC_COGNITFIT_CLIENT_ID is set in your environment variables and restart your development server if you recently changed them. For deployed environments, verify it in your hosting provider's settings (e.g., apphosting.yaml or Firebase Console).`;
       setStatusMessage(message);
       setCurrentStatus('sdk_error');
       toast({ title: "Configuration Error", description: message, variant: "destructive", duration: 10000 });
@@ -96,11 +98,12 @@ export default function CognifitGamePage() {
 
     const activityKey = game.id.toUpperCase();
     console.log(`[CognifitGamePage] Preparing to initialize Cognitive Gym SDK for gameKey: ${activityKey} (Title: ${game.title}) using client ID: ${cognifitClientId}`);
-
+    
     if (!sdkRef.current) {
       sdkRef.current = new CognifitSdk();
     }
     const currentSdkInstance = sdkRef.current;
+
 
     if (!sdkInitializedRef.current && currentSdkInstance) {
       console.log(`[CognifitGamePage] Initializing Cognitive Gym SDK for gameKey: ${activityKey} with access token.`);
@@ -133,7 +136,7 @@ export default function CognifitGamePage() {
         sdkInitializedRef.current = true;
       } catch (sdkError: any) {
         console.error('[CognifitGamePage] Cognitive Gym SDK initialization failed:', sdkError);
-        const errorMessage = currentSdkInstance.cognifitSdkError?.getMessage() || sdkError?.message || 'Unknown SDK initialization error.';
+        const errorMessage = sdkRef.current?.cognifitSdkError?.getMessage() || sdkError?.message || 'Unknown SDK initialization error.';
         setStatusMessage(`Failed to initialize Cognitive Gym: ${errorMessage}`);
         setCurrentStatus('sdk_error');
         sdkInitializedRef.current = false; 
@@ -157,7 +160,7 @@ export default function CognifitGamePage() {
       console.log(`[CognifitGamePage] Container ${COGNITFIT_CONTENT_ID} found, proceeding to start game.`);
 
       try {
-        gameLaunchedRef.current = true;
+        gameLaunchedRef.current = true; // Set before calling start to avoid race conditions if start is synchronous
         currentSdkInstance.start("GAME", activityKey).subscribe({
           next: (cognifitSdkResponse) => {
             console.log("[CognifitGamePage] Cognitive Gym SDK event:", cognifitSdkResponse);
@@ -213,20 +216,29 @@ export default function CognifitGamePage() {
           
             let finalErrorMessage: string;
             const detailedMessageFromSDK = sdkRef.current?.cognifitSdkError?.getMessage();
-            const errorDetailsFromSDK = sdkRef.current?.cognifitSdkError && typeof sdkRef.current.cognifitSdkError.getError === 'function'
+            const errorDetailsFromSDK =
+              sdkRef.current?.cognifitSdkError &&
+              typeof sdkRef.current.cognifitSdkError.getError === 'function'
                 ? sdkRef.current.cognifitSdkError.getError()
                 : null;
 
-            if (detailedMessageFromSDK && detailedMessageFromSDK !== "Check cognifitSdkError" && typeof detailedMessageFromSDK === 'string') {
-              finalErrorMessage = detailedMessageFromSDK;
-            } else if (errorDetailsFromSDK && typeof errorDetailsFromSDK === 'object' && errorDetailsFromSDK !== null && 'message' in errorDetailsFromSDK && typeof (errorDetailsFromSDK as { message?: unknown }).message === 'string') {
-              finalErrorMessage = (errorDetailsFromSDK as { message: string }).message;
+            if (reason === 'Check cognifitSdkError') {
+              if (detailedMessageFromSDK && typeof detailedMessageFromSDK === 'string') {
+                // If detailedMessageFromSDK is one of the specific known error strings, use it.
+                // The type error means it CANNOT be "Check cognifitSdkError" itself.
+                finalErrorMessage = detailedMessageFromSDK;
+              } else if (errorDetailsFromSDK && typeof errorDetailsFromSDK === 'object' && errorDetailsFromSDK !== null && 'message' in errorDetailsFromSDK && typeof (errorDetailsFromSDK as { message?: string }).message === 'string') {
+                finalErrorMessage = (errorDetailsFromSDK as { message: string }).message;
+              } else {
+                finalErrorMessage = "An error occurred with the Cognitive Gym session. Please consult support with details from the browser console.";
+              }
             } else if (typeof reason === 'string') {
               finalErrorMessage = reason;
             } else {
               finalErrorMessage = 'An unknown error occurred with the game session.';
             }
           
+            // A final cleanup to ensure the user never sees "Check cognifitSdkError" directly
             if (finalErrorMessage === "Check cognifitSdkError") {
                 finalErrorMessage = "An error occurred with the Cognitive Gym session. Please try again later or contact support if the issue persists.";
             }
@@ -248,7 +260,7 @@ export default function CognifitGamePage() {
           toast({ title: "Game Launch Failed", description: errorMessage, variant: "destructive" });
       }
     }
-  }, [game, cognifitClientId, toast, updateCognifitUserToken, currentStatus]); // Removed initializeAndLoadGame from here as it's defined inside
+  }, [game, cognifitClientId, toast, currentStatus]); 
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -477,7 +489,7 @@ export default function CognifitGamePage() {
              document.getElementById(COGNITFIT_CONTENT_ID) &&
              !document.getElementById(COGNITFIT_CONTENT_ID)!.hasChildNodes() && ( 
                  <div className="text-center py-4 text-muted-foreground">
-                    <p>Cognitive Gym SDK initialized for {game.title}. If the game does not appear, it might indicate an issue with this specific game key (`{game.id.toUpperCase()}`), the Cognitive Gym platform, or environmental network issues. The SDK may also require an explicit command to load/start the specific game after initialization if it's not already handled.</p>
+                    <p>Cognitive Gym SDK initialized for {game.title}. If the game does not appear, it might indicate an issue with this specific game key (`{game.id.toUpperCase()}`), the Cognitive Gym platform, environmental network issues, or a missing SDK step to explicitly load the game content after initialization.</p>
                     <p className="text-xs mt-2">Please also check your browser's console for any errors from the Cognitive Gym SDK.</p>
                 </div>
             )}
@@ -498,3 +510,4 @@ export default function CognifitGamePage() {
     </AppLayout>
   );
 }
+
