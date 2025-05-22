@@ -1,3 +1,4 @@
+
 "use client"
 
 // Inspired by react-hot-toast library
@@ -149,7 +150,7 @@ function dispatch(action: Action) {
 }
 
 // This is the exposed Toast function type
-type ToastFunction = (props: Omit<ToasterToast, "id" | "open" | "onOpenChange">) => {
+export type ToastFunction = (props: Omit<ToasterToast, "id" | "open" | "onOpenChange">) => {
   id: string;
   dismiss: () => void;
   update: (props: Partial<ToasterToast>) => void;

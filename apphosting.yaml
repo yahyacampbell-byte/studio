@@ -1,5 +1,16 @@
 # apphosting.yaml
 # ... other configurations like runConfig, buildConfig etc. ...
+# Settings for Cloud Run
+runConfig:
+  minInstances: 2
+  maxInstances: 100
+  concurrency: 100
+  cpu: 2
+  memoryMiB: 1024
+
+scripts:
+  buildCommand: next build --no-lint
+  runCommand: node dist/index.js
 
 env:
   - variable: COGNITFIT_CLIENT_ID
@@ -68,3 +79,6 @@ env:
 # Note: Firebase also automatically injects FIREBASE_CONFIG (runtime) and FIREBASE_WEBAPP_CONFIG (build time).
 # The NEXT_PUBLIC_FIREBASE_ variables above are for explicit access in your code
 # and ensure Next.js bundles them correctly for client-side use.
+outputFiles:
+  serverApp:
+    include: [dist, server.js]
