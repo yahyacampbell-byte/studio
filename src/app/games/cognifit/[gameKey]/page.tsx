@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader2, AlertTriangle, Brain, CheckCircle2 } from 'lucide-react';
-import { useToast, type ToastFunction } from '@/hooks/use-toast'; // Ensured ToastFunction is available if needed by type
+import { useToast, type ToastFunction } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CognifitSdk } from '@cognifit/launcher-js-sdk';
 import { CognifitSdkConfig } from '@cognifit/launcher-js-sdk/lib/lib/cognifit.sdk.config';
@@ -18,7 +18,7 @@ import { COGNITIVE_GAMES, CognitiveGame, APP_NAME } from '@/lib/constants';
 const COGNITFIT_CONTENT_ID = 'cognitiveGymContent';
 
 export default function CognifitGamePage() {
-  useRequireAuth(); // Handles initial auth loading and redirection
+  useRequireAuth();
   const { user, isAuthenticated, isLoadingAuth: isLoadingAuthContext, updateCognifitUserToken } = useAuth();
   const router = useRouter();
   const params = useParams();
@@ -26,9 +26,9 @@ export default function CognifitGamePage() {
 
   if (typeof window !== 'undefined') {
     console.log(
-        "[CognifitGamePage Module Scope] Value of NEXT_PUBLIC_COGNITFIT_CLIENT_ID during build/initialization:",
-        process.env.NEXT_PUBLIC_COGNITFIT_CLIENT_ID
-      );
+      "[CognifitGamePage Module Scope] Value of NEXT_PUBLIC_COGNITFIT_CLIENT_ID during build/initialization:",
+      process.env.NEXT_PUBLIC_COGNITFIT_CLIENT_ID
+    );
   }
 
   const [game, setGame] = useState<CognitiveGame | null>(null);
@@ -59,18 +59,16 @@ export default function CognifitGamePage() {
   }
   const toast = toastRef;
 
-
   useEffect(() => {
     if (gameKeyParam && !game) {
       const foundGame = COGNITIVE_GAMES.find(g => g.id.toUpperCase() === gameKeyParam.toUpperCase());
       setGame(foundGame || null);
       if (!foundGame && currentStatus === 'idle') {
         setStatusMessage(`Game with key "${gameKeyParam}" not found in our library.`);
-        setCurrentStatus('sdk_error'); // Using sdk_error for game not found
+        setCurrentStatus('sdk_error');
       }
     }
   }, [gameKeyParam, game, currentStatus]);
-
 
   const initializeAndLoadGame = useCallback(async (accessToken: string | null) => {
     if (!game) {
@@ -103,8 +101,7 @@ export default function CognifitGamePage() {
     }
     const currentSdkInstance = sdkRef.current;
 
-
-    if (!sdkInitializedRef.current) {
+    if (!sdkInitializedRef.current && currentSdkInstance) {
       console.log(`[CognifitGamePage] Initializing Cognitive Gym SDK for gameKey: ${activityKey} with access token.`);
       setCurrentStatus('initializing_sdk');
       setStatusMessage(`Initializing Cognitive Gym for ${game.title}...`);
@@ -151,7 +148,7 @@ export default function CognifitGamePage() {
       console.log(`[CognifitGamePage] Attempting to start Cognitive Gym session for game: ${activityKey}`);
 
       try {
-        gameLaunchedRef.current = true;
+        gameLaunchedRef.current = true; // Set before starting to prevent re-entry on fast HMR
         currentSdkInstance.start("GAME", activityKey).subscribe({
           next: (cognifitSdkResponse) => {
             console.log("[CognifitGamePage] Cognitive Gym SDK event:", cognifitSdkResponse);
@@ -193,22 +190,29 @@ export default function CognifitGamePage() {
             }
           },
           error: (reason) => {
-            console.error(`[CognifitGamePage] Error during Cognitive Gym session for ${game?.title || 'session'}:`, reason);
-            let errorMessage = sdkRef.current?.cognifitSdkError?.getMessage();
-            if (!errorMessage || reason === "Check cognifitSdkError") {
-                // If getMessage() is null/undefined, or reason explicitly says to check, try getError() if it exists, or use the reason itself.
-                // Note: cognifitSdkError.getError() might not exist or might be different from getMessage().
-                // For now, we'll prioritize getMessage() and fall back to the reason string.
-                 errorMessage = typeof reason === 'string' ? reason : 'Unknown session error.';
-                 if (sdkRef.current?.cognifitSdkError?.getMessage()) {
-                    errorMessage = sdkRef.current.cognifitSdkError.getMessage();
-                 }
+            console.error(`[CognifitGamePage] Error during Cognitive Gym session for ${game?.title || 'session'}:`, reason); // Log original reason
+            
+            let finalErrorMessage: string;
+            const detailedMessageFromSDK = sdkRef.current?.cognifitSdkError?.getMessage();
+
+            if (detailedMessageFromSDK && detailedMessageFromSDK !== "Check cognifitSdkError") {
+              finalErrorMessage = detailedMessageFromSDK;
+            } else if (typeof reason === 'string' && reason !== "Check cognifitSdkError") {
+              finalErrorMessage = reason;
+            } else if (detailedMessageFromSDK) { 
+              finalErrorMessage = detailedMessageFromSDK; // Use whatever cognifitSdkError.getMessage() gave
+            } else if (typeof reason === 'string') {
+              finalErrorMessage = reason; // Fallback to reason if detailedMessage is not insightful
             }
-            setStatusMessage(`An error occurred during the ${game?.title || 'session'} session: ${errorMessage}`);
+             else {
+              finalErrorMessage = 'An unknown error occurred with the game session.';
+            }
+          
+            setStatusMessage(`An error occurred during the ${game?.title || 'session'} session: ${finalErrorMessage}`);
             setCurrentStatus('game_launch_error');
             sdkInitializedRef.current = false;
             gameLaunchedRef.current = false;
-            toast({ title: "Game Session Error", description: errorMessage, variant: "destructive" });
+            toast({ title: "Game Session Error", description: finalErrorMessage, variant: "destructive" });
           }
         });
       } catch (startError: any) {
@@ -221,7 +225,7 @@ export default function CognifitGamePage() {
           toast({ title: "Game Launch Failed", description: errorMessage, variant: "destructive" });
       }
     }
-  }, [cognifitClientId, game, toast, currentStatus]); 
+  }, [cognifitClientId, game, toast, updateCognifitUserToken]); 
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -257,16 +261,19 @@ export default function CognifitGamePage() {
         return;
     }
 
-
     const attemptCognifitRegistrationAndLoad = async () => {
-      if (!user) return; 
+      if (!user) {
+        setStatusMessage("User data is unexpectedly missing after authentication check.");
+        setCurrentStatus('sdk_error');
+        return;
+      }
       if (!game) {
         setStatusMessage("Game details not found. Cannot proceed.");
         setCurrentStatus("sdk_error");
         return;
       }
 
-      let currentCognifitUserToken = user?.cognifitUserToken;
+      let currentCognifitUserToken = user.cognifitUserToken;
 
       if (!currentCognifitUserToken) {
         if (!user.id || !user.firstName || !user.lastName || !user.birthDate || (user.sex !== '0' && user.sex !== '1')) {
@@ -313,7 +320,7 @@ export default function CognifitGamePage() {
             return;
           }
           await updateCognifitUserToken(newCognifitToken); 
-          currentCognifitUserToken = newCognifitToken;
+          currentCognifitUserToken = newCognifitToken; 
           toast({ title: "Cognitive Gym Account Ready!", description: "Fetching session token..."});
         } catch (regError: any) {
           console.error("Error during on-demand Cognitive Gym registration process:", regError);
@@ -380,7 +387,7 @@ export default function CognifitGamePage() {
   }, [
       gameKeyParam, user, isAuthenticated, isLoadingAuthContext, game,
       updateCognifitUserToken, toast, cognifitClientId,
-      initializeAndLoadGame, currentStatus, router 
+      initializeAndLoadGame, currentStatus, router // currentStatus added for re-evaluation
     ]);
 
 
