@@ -105,4 +105,3 @@ export function ProgressTrendChart({ aiAnalysisHistory }: ProgressTrendChartProp
     </Card>
   );
 }
-
