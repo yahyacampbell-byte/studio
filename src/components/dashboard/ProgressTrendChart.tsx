@@ -59,7 +59,7 @@ export function ProgressTrendChart({ aiAnalysisHistory }: ProgressTrendChartProp
             data={chartData}
             margin={{
               top: 5,
-              right: 10, 
+              right: 10,
               left: -25, // Adjust to pull Y-axis labels (if any) closer or if axis is hidden
               bottom: 5,
             }}
