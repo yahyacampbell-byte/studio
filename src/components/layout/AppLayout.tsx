@@ -8,11 +8,11 @@ import Image from 'next/image';
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"; // Added SheetHeader, SheetTitle
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Menu, LogIn, LogOut, User } from 'lucide-react';
+import { Menu, LogIn, LogOut, User as UserIconLucide } from 'lucide-react'; // Renamed User to UserIconLucide to avoid conflict
 import { APP_NAME, NAV_LINKS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { Toaster } from "@/components/ui/toaster";
-import { useAuth } from '@/context/AuthContext';
+import { useAuth, type User } from '@/context/AuthContext'; // User type from AuthContext
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,14 +29,14 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const sidebarContent = (
     <ScrollArea className="h-full py-4">
       <div className="px-3 py-2">
-        <div className="mb-4 flex items-center pl-2">
+        <div className="mb-4 flex items-center"> {/* Removed pl-2 */}
           <Image 
             src="https://www.xillo.io/wp-content/uploads/2023/07/Xillo.svg" 
             alt={`${APP_NAME} Logo`}
             data-ai-hint="logo"
-            width={125} 
-            height={30}
-            className="h-[30px] mr-2"
+            width={130} // Adjusted width slightly for proportion with new height
+            height={32} // Adjusted height slightly
+            className="h-8 mr-1" // Used h-8 (2rem = 32px), reduced mr-1
           />
           <h2 className="text-2xl font-semibold tracking-tight text-primary sr-only">
             {APP_NAME}
@@ -117,16 +117,17 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             </SheetContent>
           </Sheet>
           
-          <div className="flex items-center gap-2"> {/* Changed: Removed hidden lg:flex to make it always flex for consistency */}
+          <div className="flex items-center gap-2">
             {isLoadingAuth ? (
               <Button variant="ghost" size="sm" disabled>
+                <UserIconLucide className="mr-2 h-5 w-5 animate-pulse" /> 
                 Loading...
               </Button>
             ) : isAuthenticated && user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                    <User className="h-5 w-5" />
+                    <UserIconLucide className="h-5 w-5" />
                     <span>{user.firstName}</span>
                   </Button>
                 </DropdownMenuTrigger>
@@ -135,7 +136,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link href="/profile" className="flex items-center w-full">
-                      <User className="mr-2 h-4 w-4" />
+                      <UserIconLucide className="mr-2 h-4 w-4" />
                       Profile
                     </Link>
                   </DropdownMenuItem>
