@@ -14,7 +14,7 @@ export function ProgressTrendChart({ aiAnalysisHistory }: ProgressTrendChartProp
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Cognitive Score Trend</CardTitle>
+          <CardTitle>Overall Cognitive Score Trend</CardTitle>
           <CardDescription>Your overall cognitive score trend will appear here.</CardDescription>
         </CardHeader>
         <CardContent className="h-[200px] flex flex-col items-center justify-center"> {/* Reduced height */}
