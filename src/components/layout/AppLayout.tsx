@@ -6,13 +6,13 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"; // Added SheetHeader, SheetTitle
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Menu, LogIn, LogOut, User as UserIconLucide } from 'lucide-react'; // Renamed User to UserIconLucide to avoid conflict
+import { Menu, LogIn, LogOut, User as UserIconLucide } from 'lucide-react';
 import { APP_NAME, NAV_LINKS } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { Toaster } from "@/components/ui/toaster";
-import { useAuth, type User } from '@/context/AuthContext'; // User type from AuthContext
+import { useAuth, type User } from '@/context/AuthContext';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,14 +29,14 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const sidebarContent = (
     <ScrollArea className="h-full py-4">
       <div className="px-3 py-2">
-        <div className="mb-4 flex items-center"> {/* Removed pl-2 */}
-          <Image 
-            src="https://www.xillo.io/wp-content/uploads/2023/07/Xillo.svg" 
+        <div className="mb-4 flex items-center px-1"> {/* Adjusted padding */}
+          <Image
+            src="https://www.xillo.io/wp-content/uploads/2023/07/Xillo.svg"
             alt={`${APP_NAME} Logo`}
             data-ai-hint="logo"
-            width={130} // Adjusted width slightly for proportion with new height
-            height={32} // Adjusted height slightly
-            className="h-8 mr-1" // Used h-8 (2rem = 32px), reduced mr-1
+            width={260} 
+            height={64} 
+            className="h-16 mr-1" // Changed h-8 to h-16 for 64px height
           />
           <h2 className="text-2xl font-semibold tracking-tight text-primary sr-only">
             {APP_NAME}
@@ -67,19 +67,19 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 Loading...
               </Button>
           ) : isAuthenticated ? (
-            <Button 
-              variant="outline" 
-              className="w-full justify-start" 
-              onClick={logout} 
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              onClick={logout}
             >
               <LogOut className="mr-2 h-4 w-4" />
               Logout
             </Button>
           ) : (
-            <Button 
-              variant="default" 
-              className="w-full justify-start" 
-              asChild 
+            <Button
+              variant="default"
+              className="w-full justify-start"
+              asChild
             >
               <Link href="/auth/login">
                 <LogIn className="mr-2 h-4 w-4" />
@@ -111,16 +111,17 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               </Button>
             </SheetTrigger>
             <SheetContent side="left" className="flex flex-col p-0 w-64">
-              {/* Add SheetTitle here for accessibility */}
-              <SheetTitle className="sr-only">Main Navigation Menu</SheetTitle>
+              <SheetHeader> {/* Added SheetHeader */}
+                <SheetTitle className="sr-only">Main Navigation Menu</SheetTitle>
+              </SheetHeader>
               {sidebarContent}
             </SheetContent>
           </Sheet>
-          
+
           <div className="flex items-center gap-2">
             {isLoadingAuth ? (
               <Button variant="ghost" size="sm" disabled>
-                <UserIconLucide className="mr-2 h-5 w-5 animate-pulse" /> 
+                <UserIconLucide className="mr-2 h-5 w-5 animate-pulse" />
                 Loading...
               </Button>
             ) : isAuthenticated && user ? (
