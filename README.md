@@ -1,4 +1,4 @@
-un ild r# Firebase Studio
+nstun ild r# Firebase Studio
 
 This is a NextJS starter in Firebase Studio.
 

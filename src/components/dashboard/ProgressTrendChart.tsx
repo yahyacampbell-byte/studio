@@ -54,13 +54,13 @@ export function ProgressTrendChart({ aiAnalysisHistory }: ProgressTrendChartProp
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-2"> {/* Reduced top padding */}
-        <ResponsiveContainer width="100%" height={150}> {/* Reduced height */}
+        <ResponsiveContainer width="100%" height={150}> {/* Corrected width */}
           <LineChart
             data={chartData}
             margin={{
               top: 5,
               right: 10,
-              left: -25, 
+              left: -25,
               bottom: 5,
             }}
           >
@@ -70,14 +70,14 @@ export function ProgressTrendChart({ aiAnalysisHistory }: ProgressTrendChartProp
                 tickLine={false}
                 axisLine={false}
                 interval="preserveStartEnd"
-                dy={5} 
+                dy={5}
             />
             <YAxis
                 domain={[0, 100]}
                 tick={false}
                 axisLine={false}
                 tickLine={false}
-                width={0} 
+                width={0}
             />
             <Tooltip
               contentStyle={{
