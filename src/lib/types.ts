@@ -2,7 +2,17 @@
 import type { COGNITIVE_GAMES, MULTIPLE_INTELLIGENCES } from './constants';
 
 export type GameId = typeof COGNITIVE_GAMES[number]['id'];
-export type IntelligenceId = typeof MULTIPLE_INTELLIGENCES[number]['id'];
+
+// Define IntelligenceId as a union of string literals to avoid circular dependency
+export type IntelligenceId =
+  | 'Logical-Mathematical'
+  | 'Visual-Spatial'
+  | 'Bodily-Kinesthetic'
+  | 'Linguistic-Verbal'
+  | 'Musical'
+  | 'Interpersonal'
+  | 'Intrapersonal'
+  | 'Naturalistic';
 
 export interface GameActivity {
   id: string; // Unique ID for this activity entry
