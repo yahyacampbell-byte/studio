@@ -2,12 +2,14 @@
 runConfig:
   cpu: 2
   memoryMiB: 1024
-  concurrency: 100 # Adjusted from 80 to 100 as per latest user file
-  maxInstances: 100 # Adjusted from 10 to 100 as per latest user file
-  minInstances: 2   # Added minInstances as per latest user file
+  concurrency: 100
+  maxInstances: 100
+  minInstances: 2
 
 scripts:
-  buildCommand: next build --no-lint # This is called by "npm run apphosting:build"
+  # buildCommand is used by "npm run apphosting:build" which is what the buildpack calls
+  buildCommand: next build --no-lint
+  # runCommand is removed to let the buildpack decide, or we can use `next start` if needed.
 
 env:
   - variable: COGNITFIT_CLIENT_ID
@@ -35,7 +37,7 @@ env:
     availability:
       - BUILD
       - RUNTIME
-  - variable: COGNITFIT_CLIENT_HASH # Added as per user request
+  - variable: COGNITFIT_CLIENT_HASH
     value: "S1e1yi7U8FSdKtk1WJ6BzNOfRiVkx4Hjr7YwiQf0VClFUkTvmL1S0qmUHqJHYowP"
     availability:
       - BUILD
@@ -77,42 +79,19 @@ env:
     availability:
       - BUILD
       - RUNTIME
-  - variable: NEXT_PUBLIC_FIREBASE_VAPID_KEY # Added based on user's .env
+  - variable: NEXT_PUBLIC_FIREBASE_VAPID_KEY
     value: "e370ec545b63fc7bf32b148a8b7c90bebff2ec99"
     availability:
       - BUILD
       - RUNTIME
 
 # Note: Firebase also automatically injects FIREBASE_CONFIG (runtime) and FIREBASE_WEBAPP_CONFIG (build time).
-# The NEXT_PUBLIC_FIREBASE_ variables above are for explicit access in your code
-# and ensure Next.js bundles them correctly for client-side use.
 
-# The buildpack should handle the run command for a standard Next.js app
-# If necessary, one might specify: runCommand: next start -p $PORT
-# but often it's detected.
-
-# Updated to include standard Next.js output and necessary config files
 outputFiles:
   serverApp:
     include:
-      - .next
-      - next.config.js # or next.config.mjs / next.config.ts
+      - .next # Standard Next.js build output
+      - next.config.js # or .ts / .mjs
       - package.json
-      # public directory is often handled separately or included by default if serving static assets
-      # - public
-      # include node_modules if not using a buildpack that handles dependencies,
-      # but typically the buildpack manages this.
-      # - node_modules 
-      # If you have a custom server.js, include it. Otherwise, Next.js handles its own server.
-      # - server.js 
-      # Include .env files if your deployed environment explicitly needs them,
-      # but prefer platform-level environment variable configuration.
-      # - .env 
-      # - .env.production
-    exclude:
-      - node_modules/.cache # Exclude build caches
-      - .firebase # Exclude firebase CLI specific files
-      - .git # Exclude git repository files
-      - README.md
-      # Add any other files/folders you want to exclude from the final server bundle
-      - src # Source code is usually not needed in the final server bundle
+      # public directory is often handled automatically by the buildpack
+      # node_modules is also typically handled by the buildpack
