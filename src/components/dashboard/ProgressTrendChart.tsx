@@ -17,7 +17,7 @@ export function ProgressTrendChart({ aiAnalysisHistory }: ProgressTrendChartProp
           <CardTitle>Overall Cognitive Score Trend</CardTitle>
           <CardDescription>Your overall cognitive score trend will appear here.</CardDescription>
         </CardHeader>
-        <CardContent className="h-[200px] flex flex-col items-center justify-center"> {/* Reduced height */}
+        <CardContent className="h-[200px] flex flex-col items-center justify-center">
           <p className="text-muted-foreground text-center">
             {(!aiAnalysisHistory || aiAnalysisHistory.length === 0)
               ? "No analysis data available yet. Analyze your activity on the Insights page."
@@ -54,13 +54,14 @@ export function ProgressTrendChart({ aiAnalysisHistory }: ProgressTrendChartProp
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-2"> {/* Reduced top padding */}
-        <ResponsiveContainer width={360} height={150}> {/* Changed width to JS expression */}
+        {/* Comment moved outside the tag */}
+        <ResponsiveContainer width="100%" height={150}>
           <LineChart
             data={chartData}
             margin={{
               top: 5,
               right: 10,
-              left: -25,
+              left: -25, // Adjusted to bring Y-axis labels closer if they were to be shown
               bottom: 5,
             }}
           >
@@ -69,15 +70,16 @@ export function ProgressTrendChart({ aiAnalysisHistory }: ProgressTrendChartProp
                 tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
                 tickLine={false}
                 axisLine={false}
-                interval="preserveStartEnd"
-                dy={5}
+                interval="preserveStartEnd" // Tries to show first and last tick
+                dy={5} // Offset for ticks
             />
+            {/* Y-axis is hidden for a sparkline feel, but its domain is set for correct scaling */}
             <YAxis
                 domain={[0, 100]}
-                tick={false}
-                axisLine={false}
-                tickLine={false}
-                width={0}
+                tick={false} // Hides ticks
+                axisLine={false} // Hides the axis line
+                tickLine={false} // Hides tick lines
+                width={0} // Effectively hides the axis space
             />
             <Tooltip
               contentStyle={{
