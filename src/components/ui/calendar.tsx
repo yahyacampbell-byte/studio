@@ -9,10 +9,11 @@ import { DayPicker, type DropdownProps as DayPickerDropdownProps } from "react-d
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 
-export interface CustomCalendarProps extends Omit<React.ComponentProps<typeof DayPicker>, 'month' | 'onMonthChange'> {
+export interface CustomCalendarProps extends Omit<React.ComponentProps<typeof DayPicker>, 'month' | 'onMonthChange' | 'mode'> {
   showMonthDropdown?: boolean;
   month?: Date;
   onMonthChange?: (date: Date) => void;
+  mode?: "single"; // Ensure mode is always single for this specific usage context if needed by parent
 }
 
 const InternalDropdownOverride: React.FC<
@@ -20,7 +21,7 @@ const InternalDropdownOverride: React.FC<
     showMonthDropdown?: boolean;
     topLevelOnMonthChange?: (date: Date) => void;
     currentDisplayMonth?: Date;
-    // children is implicitly part of DayPickerDropdownProps or React.FC if needed
+    children?: ReactNode; 
   }
 > = (props) => {
   const {
@@ -31,7 +32,7 @@ const InternalDropdownOverride: React.FC<
     showMonthDropdown,
     topLevelOnMonthChange,
     currentDisplayMonth,
-    children, // These are the <option> elements from react-day-picker
+    children, 
   } = props;
 
   const selectClassName = cn(
@@ -50,8 +51,8 @@ const InternalDropdownOverride: React.FC<
   );
 
   if (name === 'months') {
-    if (showMonthDropdown === false) { // Explicitly check for false
-      return null; // Hide month dropdown
+    if (showMonthDropdown === false) {
+      return null; 
     }
     return (
       <select
@@ -72,7 +73,6 @@ const InternalDropdownOverride: React.FC<
             console.warn('Calendar: Missing topLevelOnMonthChange or currentDisplayMonth in month dropdown.');
           }
         }}
-        // react-day-picker handles disabling options based on from/toMonth etc.
       >
         {children}
       </select>
@@ -99,7 +99,6 @@ const InternalDropdownOverride: React.FC<
             console.warn('Calendar: Missing topLevelOnMonthChange or currentDisplayMonth in year dropdown.');
           }
         }}
-        // react-day-picker handles disabling options based on from/toYear etc.
       >
         {children}
       </select>
@@ -133,10 +132,10 @@ function Calendar({
   className,
   classNames,
   showOutsideDays = true,
-  showMonthDropdown = true, // Prop to control month dropdown visibility
+  showMonthDropdown = true, 
   month: controlledMonth,
   onMonthChange: controlledOnMonthChange,
-  ...props
+  ...props // This will include `mode` if passed from DatePicker, and other DayPicker props
 }: CustomCalendarProps) {
 
   const componentsConfig: React.ComponentProps<typeof DayPicker>['components'] = {
@@ -146,7 +145,7 @@ function Calendar({
   };
 
   if ((props.captionLayout === 'dropdown' || props.captionLayout === 'dropdown-buttons')) {
-    componentsConfig.Dropdown = (dropdownProps: DayPickerDropdownProps) => ( // children is part of dropdownProps
+    componentsConfig.Dropdown = (dropdownProps: DayPickerDropdownProps) => (
       <InternalDropdownOverride
         {...dropdownProps}
         showMonthDropdown={showMonthDropdown}
@@ -157,13 +156,14 @@ function Calendar({
   }
 
   const dayPickerProps = {
-    ...props,
+    ...props, // Spreads props from CustomCalendarProps, which might include mode="single"
     month: controlledMonth,
     onMonthChange: controlledOnMonthChange,
   };
 
   return (
     <DayPicker
+      mode="single" // Explicitly set mode to "single"
       showOutsideDays={showOutsideDays}
       className={cn("p-3", className)}
       classNames={{
@@ -202,7 +202,7 @@ function Calendar({
         ...classNames,
       }}
       components={componentsConfig}
-      {...dayPickerProps}
+      {...dayPickerProps} // Spread remaining props
     />
   )
 }
