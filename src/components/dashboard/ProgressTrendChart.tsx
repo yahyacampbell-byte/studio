@@ -17,7 +17,7 @@ export function ProgressTrendChart({ aiAnalysisHistory }: ProgressTrendChartProp
           <CardTitle>Overall Cognitive Score Trend</CardTitle>
           <CardDescription>Your overall cognitive score trend will appear here.</CardDescription>
         </CardHeader>
-        <CardContent className="h-[200px] flex flex-col items-center justify-center"> {/* Reduced height */}
+        <CardContent className="h-[200px] flex flex-col items-center justify-center">
           <p className="text-muted-foreground text-center">
             {(!aiAnalysisHistory || aiAnalysisHistory.length === 0)
               ? "No analysis data available yet. Analyze your activity on the Insights page."
@@ -60,7 +60,7 @@ export function ProgressTrendChart({ aiAnalysisHistory }: ProgressTrendChartProp
             margin={{
               top: 5,
               right: 10,
-              left: -25, // Adjusted to bring Y-axis labels closer if they were shown
+              left: -25, 
               bottom: 5,
             }}
           >
@@ -69,15 +69,15 @@ export function ProgressTrendChart({ aiAnalysisHistory }: ProgressTrendChartProp
                 tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
                 tickLine={false}
                 axisLine={false}
-                interval="preserveStartEnd" // Ensures first and last ticks are shown
-                dy={5} // Adjust vertical position of ticks if needed
+                interval="preserveStartEnd" 
+                dy={5} 
             />
             <YAxis
-                domain={[0, 100]} // Explicitly set domain for clarity
-                tick={false} // Hide Y-axis ticks
-                axisLine={false} // Hide Y-axis line
-                tickLine={false} // Hide Y-axis tick lines
-                width={0} // Effectively hide the Y-axis space
+                domain={[0, 100]} 
+                tick={false} 
+                axisLine={false} 
+                tickLine={false} 
+                width={0} 
             />
             <Tooltip
               contentStyle={{
