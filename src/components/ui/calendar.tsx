@@ -2,67 +2,82 @@
 "use client"
 
 import * as React from "react"
+import type { ChangeEventHandler, CSSProperties, ReactNode } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { DayPicker, DropdownProps as DayPickerDropdownProps } from "react-day-picker"
-import type { Locale } from "date-fns"
-
+import { DayPicker, type DropdownProps as DayPickerDropdownProps } from "react-day-picker"
 
 import { cn } from "@/lib/utils"
 import { buttonVariants } from "@/components/ui/button"
 
 export interface CustomCalendarProps extends Omit<React.ComponentProps<typeof DayPicker>, 'month' | 'onMonthChange'> {
   showMonthDropdown?: boolean;
-  month?: Date; 
-  onMonthChange?: (date: Date) => void; 
+  month?: Date;
+  onMonthChange?: (date: Date) => void;
 }
 
-
-const InternalDropdownOverride: React.FC<DayPickerDropdownProps & { 
-  showMonthDropdown?: boolean;
-  topLevelOnMonthChange?: (date: Date) => void;
-  currentDisplayMonth?: Date;
-}> = ({ name, showMonthDropdown, children, topLevelOnMonthChange, currentDisplayMonth, ...props }) => {
-  
+const InternalDropdownOverride: React.FC<
+  DayPickerDropdownProps & {
+    showMonthDropdown?: boolean;
+    topLevelOnMonthChange?: (date: Date) => void;
+    currentDisplayMonth?: Date;
+    children?: React.ReactNode; // Ensure children is part of the type for clarity
+  }
+> = ({
+  name,
+  value,
+  onChange: _rdpOnChange, // Renamed as we handle change logic via topLevelOnMonthChange
+  options: _options,     // Renamed as options are typically passed as children by RDP
+  disabled,
+  caption: _caption,
+  className: _rdpClassName,
+  style: _rdpStyle,
+  "aria-label": ariaLabel,
+  // Custom props
+  showMonthDropdown,
+  topLevelOnMonthChange,
+  currentDisplayMonth,
+  // Rendered <option> elements
+  children,
+}) => {
   const selectClassName = cn(
-    "rdp-dropdown", 
+    "rdp-dropdown",
     "mx-1",
-    "h-7", 
-    "px-1", 
-    "py-0", 
-    "text-xs", 
+    "h-7",
+    "px-1",
+    "py-0",
+    "text-xs",
     "rounded-md",
     "border",
-    "border-input", 
-    "bg-background", 
-    "focus:outline-none focus:ring-1 focus:ring-ring", 
+    "border-input",
+    "bg-background",
+    "focus:outline-none focus:ring-1 focus:ring-ring",
     name === 'months' ? "rdp-dropdown_month" : "rdp-dropdown_year"
   );
 
   if (name === 'months') {
     if (showMonthDropdown === false) {
-      return null; 
+      return null;
     }
     return (
       <select
         name={name}
-        aria-label={props['aria-label']}
+        aria-label={ariaLabel}
         className={selectClassName}
-        value={props.value}
+        value={value}
         onChange={(e) => {
           const newMonth = Number(e.target.value);
-          // props.onChange?.(newMonth); // Removed to rely on topLevelOnMonthChange for controlled component
           if (topLevelOnMonthChange && currentDisplayMonth) {
             if (!isNaN(newMonth)) {
               const currentYear = currentDisplayMonth.getFullYear();
               topLevelOnMonthChange(new Date(currentYear, newMonth, 1));
             } else {
-              console.warn('Invalid month selected:', e.target.value);
+              console.warn('Calendar: Invalid month selected:', e.target.value);
             }
           } else {
             console.warn('Calendar: Missing topLevelOnMonthChange or currentDisplayMonth in month dropdown.');
           }
         }}
-        disabled={props.disabled}
+        disabled={Boolean(disabled)} // Explicitly cast to boolean
       >
         {children}
       </select>
@@ -70,97 +85,90 @@ const InternalDropdownOverride: React.FC<DayPickerDropdownProps & {
   }
 
   if (name === 'years') {
-     return (
+    return (
       <select
         name={name}
-        aria-label={props['aria-label']}
+        aria-label={ariaLabel}
         className={selectClassName}
-        value={props.value}
+        value={value}
         onChange={(e) => {
           const newYear = Number(e.target.value);
-          // props.onChange?.(newYear); // Removed to rely on topLevelOnMonthChange for controlled component
           if (topLevelOnMonthChange && currentDisplayMonth) {
             if (!isNaN(newYear)) {
               const currentMonth = currentDisplayMonth.getMonth();
               topLevelOnMonthChange(new Date(newYear, currentMonth, 1));
             } else {
-              console.warn('Invalid year selected:', e.target.value);
+              console.warn('Calendar: Invalid year selected:', e.target.value);
             }
           } else {
             console.warn('Calendar: Missing topLevelOnMonthChange or currentDisplayMonth in year dropdown.');
           }
         }}
-        disabled={props.disabled}
+        disabled={Boolean(disabled)} // Explicitly cast to boolean
       >
         {children}
       </select>
     );
   }
 
-  // Fallback for other dropdown types if any, or if logic is bypassed
-  // This part likely won't be hit with 'dropdown-buttons' captionLayout
-  // but kept for robustness if other captionLayouts are used with custom Dropdown.
+  // Fallback for other dropdown types (should not be hit with "dropdown-buttons" layout)
+  console.warn(`[Calendar] InternalDropdownOverride rendered for unexpected name: ${name}`);
   return (
-     <select
+    <select
       name={name}
-      aria-label={props['aria-label']}
+      aria-label={ariaLabel}
       className={selectClassName}
-      value={props.value}
+      value={value}
       onChange={(e) => {
         const newValue = Number(e.target.value);
-        // props.onChange?.(newValue); // Potentially remove this too if issues persist with other dropdown types
         if (topLevelOnMonthChange && currentDisplayMonth && !isNaN(newValue)) {
-            // Generic fallback, might need specific logic depending on 'name'
-            console.warn(`Calendar: Fallback dropdown "${name}" changed to ${newValue}. Consider specific handling.`);
-            // Attempt a reasonable default: update based on current month/year
-            if (name === 'years') topLevelOnMonthChange(new Date(newValue, currentDisplayMonth.getMonth(), 1));
-            else if (name === 'months') topLevelOnMonthChange(new Date(currentDisplayMonth.getFullYear(), newValue, 1));
-        } else if (isNaN(newValue)){
-            console.warn(`Calendar: Invalid value in fallback dropdown "${name}":`, e.target.value);
+          console.warn(`Calendar: Fallback dropdown "${name}" changed to ${newValue}. Consider specific handling.`);
+          if (name === 'years') topLevelOnMonthChange(new Date(newValue, currentDisplayMonth.getMonth(), 1));
+          else if (name === 'months') topLevelOnMonthChange(new Date(currentDisplayMonth.getFullYear(), newValue, 1));
+        } else if (isNaN(newValue)) {
+          console.warn(`Calendar: Invalid value in fallback dropdown "${name}":`, e.target.value);
         }
-
       }}
-      disabled={props.disabled}
+      disabled={Boolean(disabled)} // Explicitly cast to boolean
     >
       {children}
     </select>
   );
 };
 
-
 function Calendar({
   className,
   classNames,
   showOutsideDays = true,
-  showMonthDropdown = true, 
-  month: controlledMonth, 
-  onMonthChange: controlledOnMonthChange, 
+  showMonthDropdown = true,
+  month: controlledMonth,
+  onMonthChange: controlledOnMonthChange,
   ...props
-}: CustomCalendarProps) { 
+}: CustomCalendarProps) {
 
   const componentsConfig: React.ComponentProps<typeof DayPicker>['components'] = {
-    IconLeft: ({ ...rest } : React.HTMLAttributes<SVGElement>) => <ChevronLeft className="h-4 w-4" {...rest} />,
+    IconLeft: ({ ...rest }: React.HTMLAttributes<SVGElement>) => <ChevronLeft className="h-4 w-4" {...rest} />,
     IconRight: ({ ...rest }: React.HTMLAttributes<SVGElement>) => <ChevronRight className="h-4 w-4" {...rest} />,
-    Dropdown: undefined // Explicitly undefined to be set below
+    Dropdown: undefined
   };
 
   if ((props.captionLayout === 'dropdown' || props.captionLayout === 'dropdown-buttons')) {
-    componentsConfig.Dropdown = (dropdownProps: DayPickerDropdownProps) => (
-      <InternalDropdownOverride 
-        {...dropdownProps} 
-        showMonthDropdown={showMonthDropdown}
-        topLevelOnMonthChange={controlledOnMonthChange} // This is DatePicker's handleMonthNavigation
-        currentDisplayMonth={controlledMonth} // This is DatePicker's displayedMonth
+    componentsConfig.Dropdown = (dropdownProps: DayPickerDropdownProps & { children?: React.ReactNode }) => (
+      <InternalDropdownOverride
+        {...dropdownProps} // Pass all props from react-day-picker
+        showMonthDropdown={showMonthDropdown} // Our custom prop
+        topLevelOnMonthChange={controlledOnMonthChange}
+        currentDisplayMonth={controlledMonth}
+        // children is passed implicitly if part of dropdownProps, or as actual children by RDP
       />
     );
   }
-  
+
   const dayPickerProps = {
     ...props,
     month: controlledMonth,
     onMonthChange: controlledOnMonthChange,
   };
-
 
   return (
     <DayPicker
@@ -170,8 +178,8 @@ function Calendar({
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
         caption: "flex justify-center pt-1 relative items-center",
-        caption_label: "text-sm font-medium", 
-        caption_dropdowns: "flex gap-1", 
+        caption_label: "text-sm font-medium",
+        caption_dropdowns: "flex gap-1",
         nav: "space-x-1 flex items-center",
         nav_button: cn(
           buttonVariants({ variant: "outline" }),
@@ -202,11 +210,10 @@ function Calendar({
         ...classNames,
       }}
       components={componentsConfig}
-      {...dayPickerProps} 
+      {...dayPickerProps}
     />
   )
 }
 Calendar.displayName = "Calendar"
 
 export { Calendar }
-
