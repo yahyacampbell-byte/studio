@@ -54,13 +54,13 @@ export function ProgressTrendChart({ aiAnalysisHistory }: ProgressTrendChartProp
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-2"> {/* Reduced top padding */}
-        <ResponsiveContainer width="100%" height={150}> {/* Corrected width and checking to see sync */}
+        <ResponsiveContainer width="100%" height={150}> {/* Corrected width */}
           <LineChart
             data={chartData}
             margin={{
               top: 5,
               right: 10,
-              left: -25,
+              left: -25, // Adjusted to bring Y-axis labels closer if they were shown
               bottom: 5,
             }}
           >
@@ -69,15 +69,15 @@ export function ProgressTrendChart({ aiAnalysisHistory }: ProgressTrendChartProp
                 tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
                 tickLine={false}
                 axisLine={false}
-                interval="preserveStartEnd"
-                dy={5}
+                interval="preserveStartEnd" // Ensures first and last ticks are shown
+                dy={5} // Adjust vertical position of ticks if needed
             />
             <YAxis
-                domain={[0, 100]}
-                tick={false}
-                axisLine={false}
-                tickLine={false}
-                width={0}
+                domain={[0, 100]} // Explicitly set domain for clarity
+                tick={false} // Hide Y-axis ticks
+                axisLine={false} // Hide Y-axis line
+                tickLine={false} // Hide Y-axis tick lines
+                width={0} // Effectively hide the Y-axis space
             />
             <Tooltip
               contentStyle={{
