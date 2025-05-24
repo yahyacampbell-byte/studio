@@ -17,7 +17,7 @@ export function ProgressTrendChart({ aiAnalysisHistory }: ProgressTrendChartProp
           <CardTitle>Overall Cognitive Score Trend</CardTitle>
           <CardDescription>Your overall cognitive score trend will appear here.</CardDescription>
         </CardHeader>
-        <CardContent className="h-[200px] flex flex-col items-center justify-center">
+        <CardContent className="h-[200px] flex flex-col items-center justify-center"> {/* Reduced height */}
           <p className="text-muted-foreground text-center">
             {(!aiAnalysisHistory || aiAnalysisHistory.length === 0)
               ? "No analysis data available yet. Analyze your activity on the Insights page."
@@ -54,13 +54,13 @@ export function ProgressTrendChart({ aiAnalysisHistory }: ProgressTrendChartProp
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-2"> {/* Reduced top padding */}
-        <ResponsiveContainer width="100%" height={150}> {/* Corrected width */}
+        <ResponsiveContainer width={'100%'} height={150}> {/* Changed width to JS expression */}
           <LineChart
             data={chartData}
             margin={{
               top: 5,
               right: 10,
-              left: -25, 
+              left: -25,
               bottom: 5,
             }}
           >
@@ -69,15 +69,15 @@ export function ProgressTrendChart({ aiAnalysisHistory }: ProgressTrendChartProp
                 tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
                 tickLine={false}
                 axisLine={false}
-                interval="preserveStartEnd" 
-                dy={5} 
+                interval="preserveStartEnd"
+                dy={5}
             />
             <YAxis
-                domain={[0, 100]} 
-                tick={false} 
-                axisLine={false} 
-                tickLine={false} 
-                width={0} 
+                domain={[0, 100]}
+                tick={false}
+                axisLine={false}
+                tickLine={false}
+                width={0}
             />
             <Tooltip
               contentStyle={{
