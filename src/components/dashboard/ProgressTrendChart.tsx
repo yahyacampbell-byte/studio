@@ -54,7 +54,7 @@ export function ProgressTrendChart({ aiAnalysisHistory }: ProgressTrendChartProp
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-2"> {/* Reduced top padding */}
-        <ResponsiveContainer width={'100%'} height={150}> {/* Changed width to JS expression */}
+        <ResponsiveContainer width={360} height={150}> {/* Changed width to JS expression */}
           <LineChart
             data={chartData}
             margin={{
