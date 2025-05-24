@@ -20,25 +20,18 @@ const InternalDropdownOverride: React.FC<
     showMonthDropdown?: boolean;
     topLevelOnMonthChange?: (date: Date) => void;
     currentDisplayMonth?: Date;
-    children?: React.ReactNode; // Ensure children is part of the type for clarity
+    // children is implicitly part of DayPickerDropdownProps or React.FC if needed
   }
 > = (props) => {
   const {
     name,
     value,
-    onChange: _rdpOnChange, // Renamed as we handle change logic via topLevelOnMonthChange
-    // options prop is not directly on DayPickerDropdownProps, options are passed as children
-    // disabled, // Accessed directly via props.disabled
-    caption: _caption,
-    className: _rdpClassName,
-    style: _rdpStyle,
     "aria-label": ariaLabel,
     // Custom props
     showMonthDropdown,
     topLevelOnMonthChange,
     currentDisplayMonth,
-    // Rendered <option> elements
-    children,
+    children, // These are the <option> elements from react-day-picker
   } = props;
 
   const selectClassName = cn(
@@ -57,8 +50,8 @@ const InternalDropdownOverride: React.FC<
   );
 
   if (name === 'months') {
-    if (showMonthDropdown === false) {
-      return null;
+    if (showMonthDropdown === false) { // Explicitly check for false
+      return null; // Hide month dropdown
     }
     return (
       <select
@@ -79,7 +72,7 @@ const InternalDropdownOverride: React.FC<
             console.warn('Calendar: Missing topLevelOnMonthChange or currentDisplayMonth in month dropdown.');
           }
         }}
-        disabled={Boolean(props.disabled)}
+        // react-day-picker handles disabling options based on from/toMonth etc.
       >
         {children}
       </select>
@@ -106,14 +99,13 @@ const InternalDropdownOverride: React.FC<
             console.warn('Calendar: Missing topLevelOnMonthChange or currentDisplayMonth in year dropdown.');
           }
         }}
-        disabled={Boolean(props.disabled)}
+        // react-day-picker handles disabling options based on from/toYear etc.
       >
         {children}
       </select>
     );
   }
 
-  // Fallback for other dropdown types (should not be hit with "dropdown-buttons" layout)
   console.warn(`[Calendar] InternalDropdownOverride rendered for unexpected name: ${name}`);
   return (
     <select
@@ -131,7 +123,6 @@ const InternalDropdownOverride: React.FC<
           console.warn(`Calendar: Invalid value in fallback dropdown "${name}":`, e.target.value);
         }
       }}
-      disabled={Boolean(props.disabled)}
     >
       {children}
     </select>
@@ -142,7 +133,7 @@ function Calendar({
   className,
   classNames,
   showOutsideDays = true,
-  showMonthDropdown = true,
+  showMonthDropdown = true, // Prop to control month dropdown visibility
   month: controlledMonth,
   onMonthChange: controlledOnMonthChange,
   ...props
@@ -155,13 +146,12 @@ function Calendar({
   };
 
   if ((props.captionLayout === 'dropdown' || props.captionLayout === 'dropdown-buttons')) {
-    componentsConfig.Dropdown = (dropdownProps: DayPickerDropdownProps & { children?: React.ReactNode }) => (
+    componentsConfig.Dropdown = (dropdownProps: DayPickerDropdownProps) => ( // children is part of dropdownProps
       <InternalDropdownOverride
-        {...dropdownProps} // Pass all props from react-day-picker
-        showMonthDropdown={showMonthDropdown} // Our custom prop
+        {...dropdownProps}
+        showMonthDropdown={showMonthDropdown}
         topLevelOnMonthChange={controlledOnMonthChange}
         currentDisplayMonth={controlledMonth}
-        // children is passed implicitly if part of dropdownProps, or as actual children by RDP
       />
     );
   }
@@ -181,7 +171,7 @@ function Calendar({
         month: "space-y-4",
         caption: "flex justify-center pt-1 relative items-center",
         caption_label: "text-sm font-medium",
-        caption_dropdowns: "flex gap-1", // Ensures dropdowns are flex items
+        caption_dropdowns: "flex gap-1",
         nav: "space-x-1 flex items-center",
         nav_button: cn(
           buttonVariants({ variant: "outline" }),
@@ -219,4 +209,3 @@ function Calendar({
 Calendar.displayName = "Calendar"
 
 export { Calendar }
-
