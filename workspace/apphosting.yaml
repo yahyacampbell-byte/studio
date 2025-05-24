@@ -1,10 +1,13 @@
 # apphosting.yaml
-
 runConfig:
-  minInstances: 0
-  maxInstances: 10
+  cpu: 2
+  memoryMiB: 1024
+  concurrency: 100 # Adjusted from 80 to 100 as per latest user file
+  maxInstances: 100 # Adjusted from 10 to 100 as per latest user file
+  minInstances: 2   # Added minInstances as per latest user file
 
-# ... other configurations like buildConfig etc. ...
+scripts:
+  buildCommand: next build --no-lint # This is called by "npm run apphosting:build"
 
 env:
   - variable: COGNITFIT_CLIENT_ID
@@ -15,30 +18,30 @@ env:
   - variable: COGNITFIT_CLIENT_SECRET
     value: "c9b55f958b4bc1bf5258cf7d8ec1ef4b"
     availability:
-      - BUILD # Needed if used during build by services/genkit
-      - RUNTIME
-  - variable: COGNITFIT_CLIENT_HASH
-    value: "S1e1yi7U8FSdKtk1WJ6BzNOfRiVkx4Hjr7YwiQf0VClFUkTvmL1S0qmUHqJHYowP"
-    availability:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_COGNITFIT_CLIENT_ID
     value: "322ede20ac6b8c88968da72d0efd3c51"
     availability:
-      - BUILD # Next.js needs this during build for client-side bundling
+      - BUILD
       - RUNTIME
   - variable: GOOGLE_API_KEY
     value: "AIzaSyAc-_x5QUIT0q6bk7GfAQlsCwkeaRn6zC0"
     availability:
-      - BUILD # Needed if Genkit initializes plugins during build
+      - BUILD
       - RUNTIME
   - variable: COGNITFIT_API_BASE_URL
     value: "https://api.cognifit.com"
     availability:
       - BUILD
       - RUNTIME
+  - variable: COGNITFIT_CLIENT_HASH # Added as per user request
+    value: "S1e1yi7U8FSdKtk1WJ6BzNOfRiVkx4Hjr7YwiQf0VClFUkTvmL1S0qmUHqJHYowP"
+    availability:
+      - BUILD
+      - RUNTIME
 
-  # Firebase Public Config - these are also made available by Next.js via the NEXT_PUBLIC_ prefix
+  # Firebase Public Config
   - variable: NEXT_PUBLIC_FIREBASE_API_KEY
     value: "AIzaSyD4zAVc_JokKcstkZGzTUtxxNv62L6pgkE"
     availability:
@@ -74,7 +77,7 @@ env:
     availability:
       - BUILD
       - RUNTIME
-  - variable: NEXT_PUBLIC_FIREBASE_VAPID_KEY
+  - variable: NEXT_PUBLIC_FIREBASE_VAPID_KEY # Added based on user's .env
     value: "e370ec545b63fc7bf32b148a8b7c90bebff2ec99"
     availability:
       - BUILD
@@ -83,3 +86,33 @@ env:
 # Note: Firebase also automatically injects FIREBASE_CONFIG (runtime) and FIREBASE_WEBAPP_CONFIG (build time).
 # The NEXT_PUBLIC_FIREBASE_ variables above are for explicit access in your code
 # and ensure Next.js bundles them correctly for client-side use.
+
+# The buildpack should handle the run command for a standard Next.js app
+# If necessary, one might specify: runCommand: next start -p $PORT
+# but often it's detected.
+
+# Updated to include standard Next.js output and necessary config files
+outputFiles:
+  serverApp:
+    include:
+      - .next
+      - next.config.js # or next.config.mjs / next.config.ts
+      - package.json
+      # public directory is often handled separately or included by default if serving static assets
+      # - public
+      # include node_modules if not using a buildpack that handles dependencies,
+      # but typically the buildpack manages this.
+      # - node_modules 
+      # If you have a custom server.js, include it. Otherwise, Next.js handles its own server.
+      # - server.js 
+      # Include .env files if your deployed environment explicitly needs them,
+      # but prefer platform-level environment variable configuration.
+      # - .env 
+      # - .env.production
+    exclude:
+      - node_modules/.cache # Exclude build caches
+      - .firebase # Exclude firebase CLI specific files
+      - .git # Exclude git repository files
+      - README.md
+      # Add any other files/folders you want to exclude from the final server bundle
+      - src # Source code is usually not needed in the final server bundle
