@@ -3,10 +3,9 @@
 
 import type { GameActivity, AIAnalysisResults, GameId } from '@/lib/types';
 import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
-import { v4 as uuidv4 } from 'uuid';
 import { useAuth } from './AuthContext';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, query, where, getDocs, orderBy, serverTimestamp, Timestamp, doc, DocumentData, QueryDocumentSnapshot } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs, orderBy, serverTimestamp, Timestamp, doc, DocumentData, QueryDocumentSnapshot, writeBatch, deleteDoc } from 'firebase/firestore';
 
 interface ActivityContextType {
   activities: GameActivity[];
@@ -16,19 +15,35 @@ interface ActivityContextType {
   latestAIAnalysis: AIAnalysisResults | null;
   isLoadingAI: boolean;
   setIsLoadingAI: (loading: boolean) => void;
-  isLoadingActivities: boolean; // New state for loading activities
+  isLoadingActivities: boolean; 
 }
 
 const ActivityContext = createContext<ActivityContextType | undefined>(undefined);
 
 // Helper to convert Firestore Timestamps in AIAnalysisResults to ISO strings
 const mapFirestoreTimestampToISO = (docData: DocumentData): AIAnalysisResults => {
-  const data = { ...docData } as AIAnalysisResults;
-  if (data.lastAnalyzed && data.lastAnalyzed instanceof Timestamp) {
-    data.lastAnalyzed = data.lastAnalyzed.toDate().toISOString();
+  const rawLastAnalyzed = docData.lastAnalyzed;
+  let lastAnalyzedISO: string;
+
+  if (rawLastAnalyzed instanceof Timestamp) {
+    lastAnalyzedISO = rawLastAnalyzed.toDate().toISOString();
+  } else if (typeof rawLastAnalyzed === 'string') {
+    // If it's already a string (e.g., from local storage mock or previous conversion), use it
+    lastAnalyzedISO = rawLastAnalyzed;
+  } else {
+    // Fallback for missing or unexpected type. Firestore should provide Timestamp.
+    // This might indicate an issue if data is being written incorrectly elsewhere.
+    console.warn('mapFirestoreTimestampToISO: lastAnalyzed field was not a Timestamp or string:', rawLastAnalyzed, 'for docData:', docData);
+    lastAnalyzedISO = new Date().toISOString(); // Default to now, or consider more robust error handling
   }
-  // If intelligenceScores have timestamps, map them here too if necessary
-  return data;
+
+  return {
+    intelligenceScores: docData.intelligenceScores || [],
+    multipleIntelligencesSummary: docData.multipleIntelligencesSummary || '',
+    broaderCognitiveInsights: docData.broaderCognitiveInsights, // This can be undefined
+    actionableRecommendations: docData.actionableRecommendations || '',
+    lastAnalyzed: lastAnalyzedISO,
+  };
 };
 
 
@@ -53,7 +68,7 @@ export const ActivityProvider = ({ children }: { children: ReactNode }) => {
             return {
               ...data,
               id: docSnap.id,
-              timestamp: (data.timestamp as Timestamp)?.toDate().toISOString() || new Date().toISOString(),
+              timestamp: (data.timestamp instanceof Timestamp) ? data.timestamp.toDate().toISOString() : new Date(data.timestamp || Date.now()).toISOString(),
             } as GameActivity;
           });
           setActivities(fetchedActivities);
@@ -74,7 +89,7 @@ export const ActivityProvider = ({ children }: { children: ReactNode }) => {
         } finally {
           setIsLoadingActivities(false);
         }
-      } else if (!isLoadingAuth) { // If not loading auth and no user, means logged out
+      } else if (!isLoadingAuth) { 
         setActivities([]);
         setAIAnalysisHistory([]);
         setIsLoadingActivities(false);
@@ -89,29 +104,26 @@ export const ActivityProvider = ({ children }: { children: ReactNode }) => {
   const addActivity = useCallback(async (activityData: { gameId: GameId; gameTitle: string; score: number; activityDuration: number }) => {
     if (!user || !user.id) {
       console.error("Cannot add activity: User not logged in.");
-      // Optionally, throw an error or show a toast
       return;
     }
-    setIsLoadingAI(true); // Assuming this might trigger AI later or is part of a flow
-    const newActivityFirestore: Omit<GameActivity, 'id'> = {
+    
+    const newActivityFirestore = {
       ...activityData,
-      timestamp: serverTimestamp() as any, // Firestore will convert this
+      userId: user.id, // Ensure userId is part of the activity document for potential broader queries
+      timestamp: serverTimestamp(), 
     };
     try {
       const activitiesColRef = collection(db, `users/${user.id}/activities`);
       const docRef = await addDoc(activitiesColRef, newActivityFirestore);
       
-      // Create the client-side version with the ID and converted timestamp
       const newActivityClient: GameActivity = {
         ...activityData,
         id: docRef.id,
-        timestamp: new Date().toISOString(), // Immediate representation
+        timestamp: new Date().toISOString(), 
       };
-      setActivities(prevActivities => [...prevActivities, newActivityClient]);
+      setActivities(prevActivities => [...prevActivities, newActivityClient].sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()));
     } catch (error) {
       console.error("Error adding activity to Firestore:", error);
-    } finally {
-      setIsLoadingAI(false);
     }
   }, [user]);
 
@@ -122,24 +134,23 @@ export const ActivityProvider = ({ children }: { children: ReactNode }) => {
     }
     const newAnalysisFirestore = {
       ...analysisData,
-      lastAnalyzed: serverTimestamp() as any, // Firestore will convert this
+      lastAnalyzed: serverTimestamp(), 
     };
     try {
       const analysesColRef = collection(db, `users/${user.id}/aiAnalyses`);
-      const docRef = await addDoc(analysesColRef, newAnalysisFirestore);
+      await addDoc(analysesColRef, newAnalysisFirestore); // No need to get docRef if not immediately using the ID client-side for this
       
-      // Create client-side version with ID and converted timestamp
       const newAnalysisClient: AIAnalysisResults = {
           ...analysisData,
-          lastAnalyzed: new Date().toISOString(), // Immediate representation
+          lastAnalyzed: new Date().toISOString(), 
       };
-      setAIAnalysisHistory(prevHistory => [...prevHistory, newAnalysisClient]);
+      setAIAnalysisHistory(prevHistory => [...(prevHistory || []), newAnalysisClient].sort((a,b) => new Date(a.lastAnalyzed).getTime() - new Date(b.lastAnalyzed).getTime()));
     } catch (error) {
       console.error("Error adding AI analysis to Firestore:", error);
     }
   }, [user]);
 
-  const latestAIAnalysis = aiAnalysisHistory.length > 0 ? aiAnalysisHistory[aiAnalysisHistory.length - 1] : null;
+  const latestAIAnalysis = aiAnalysisHistory && aiAnalysisHistory.length > 0 ? aiAnalysisHistory[aiAnalysisHistory.length - 1] : null;
 
   return (
     <ActivityContext.Provider value={{
@@ -164,3 +175,5 @@ export const useActivity = (): ActivityContextType => {
   }
   return context;
 };
+
+    
