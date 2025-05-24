@@ -2,14 +2,14 @@
 runConfig:
   cpu: 2
   memoryMiB: 1024
-  concurrency: 100
-  maxInstances: 100
-  minInstances: 2
+  concurrency: 80 # From your existing file
+  maxInstances: 10 # As per your request
+  minInstances: 2 # From your existing file
+  # vpcAccess: null # This can be added if needed
 
 scripts:
-  # buildCommand is used by "npm run apphosting:build" which is what the buildpack calls
+  # runCommand is removed to let the buildpack handle it for Next.js
   buildCommand: next build --no-lint
-  # runCommand is removed to let the buildpack decide, or we can use `next start` if needed.
 
 env:
   - variable: COGNITFIT_CLIENT_ID
@@ -86,12 +86,14 @@ env:
       - RUNTIME
 
 # Note: Firebase also automatically injects FIREBASE_CONFIG (runtime) and FIREBASE_WEBAPP_CONFIG (build time).
+# The NEXT_PUBLIC_FIREBASE_ variables above are for explicit access in your code
+# and ensure Next.js bundles them correctly for client-side use.
 
 outputFiles:
   serverApp:
     include:
-      - .next # Standard Next.js build output
-      - next.config.js # or .ts / .mjs
+      - .next # Standard Next.js build output directory
+      - next.config.js # or .ts / .mjs, ensure your actual config file name is used
       - package.json
-      # public directory is often handled automatically by the buildpack
-      # node_modules is also typically handled by the buildpack
+      # public directory is typically handled by the buildpack
+      # node_modules are also typically handled
