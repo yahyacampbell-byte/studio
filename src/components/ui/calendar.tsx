@@ -22,23 +22,25 @@ const InternalDropdownOverride: React.FC<
     currentDisplayMonth?: Date;
     children?: React.ReactNode; // Ensure children is part of the type for clarity
   }
-> = ({
-  name,
-  value,
-  onChange: _rdpOnChange, // Renamed as we handle change logic via topLevelOnMonthChange
-  // options: _options,     // Removed: react-day-picker passes options as children
-  disabled,
-  caption: _caption,
-  className: _rdpClassName,
-  style: _rdpStyle,
-  "aria-label": ariaLabel,
-  // Custom props
-  showMonthDropdown,
-  topLevelOnMonthChange,
-  currentDisplayMonth,
-  // Rendered <option> elements
-  children,
-}) => {
+> = (props) => {
+  const {
+    name,
+    value,
+    onChange: _rdpOnChange, // Renamed as we handle change logic via topLevelOnMonthChange
+    // options prop is not directly on DayPickerDropdownProps, options are passed as children
+    // disabled, // Accessed directly via props.disabled
+    caption: _caption,
+    className: _rdpClassName,
+    style: _rdpStyle,
+    "aria-label": ariaLabel,
+    // Custom props
+    showMonthDropdown,
+    topLevelOnMonthChange,
+    currentDisplayMonth,
+    // Rendered <option> elements
+    children,
+  } = props;
+
   const selectClassName = cn(
     "rdp-dropdown",
     "mx-1",
@@ -77,7 +79,7 @@ const InternalDropdownOverride: React.FC<
             console.warn('Calendar: Missing topLevelOnMonthChange or currentDisplayMonth in month dropdown.');
           }
         }}
-        disabled={Boolean(disabled)}
+        disabled={Boolean(props.disabled)}
       >
         {children}
       </select>
@@ -104,7 +106,7 @@ const InternalDropdownOverride: React.FC<
             console.warn('Calendar: Missing topLevelOnMonthChange or currentDisplayMonth in year dropdown.');
           }
         }}
-        disabled={Boolean(disabled)}
+        disabled={Boolean(props.disabled)}
       >
         {children}
       </select>
@@ -129,7 +131,7 @@ const InternalDropdownOverride: React.FC<
           console.warn(`Calendar: Invalid value in fallback dropdown "${name}":`, e.target.value);
         }
       }}
-      disabled={Boolean(disabled)}
+      disabled={Boolean(props.disabled)}
     >
       {children}
     </select>
