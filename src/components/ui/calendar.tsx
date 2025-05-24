@@ -26,7 +26,7 @@ const InternalDropdownOverride: React.FC<
   name,
   value,
   onChange: _rdpOnChange, // Renamed as we handle change logic via topLevelOnMonthChange
-  options: _options,     // Renamed as options are typically passed as children by RDP
+  // options: _options,     // Removed: react-day-picker passes options as children
   disabled,
   caption: _caption,
   className: _rdpClassName,
@@ -77,7 +77,7 @@ const InternalDropdownOverride: React.FC<
             console.warn('Calendar: Missing topLevelOnMonthChange or currentDisplayMonth in month dropdown.');
           }
         }}
-        disabled={Boolean(disabled)} // Explicitly cast to boolean
+        disabled={Boolean(disabled)}
       >
         {children}
       </select>
@@ -104,7 +104,7 @@ const InternalDropdownOverride: React.FC<
             console.warn('Calendar: Missing topLevelOnMonthChange or currentDisplayMonth in year dropdown.');
           }
         }}
-        disabled={Boolean(disabled)} // Explicitly cast to boolean
+        disabled={Boolean(disabled)}
       >
         {children}
       </select>
@@ -129,7 +129,7 @@ const InternalDropdownOverride: React.FC<
           console.warn(`Calendar: Invalid value in fallback dropdown "${name}":`, e.target.value);
         }
       }}
-      disabled={Boolean(disabled)} // Explicitly cast to boolean
+      disabled={Boolean(disabled)}
     >
       {children}
     </select>
@@ -179,7 +179,7 @@ function Calendar({
         month: "space-y-4",
         caption: "flex justify-center pt-1 relative items-center",
         caption_label: "text-sm font-medium",
-        caption_dropdowns: "flex gap-1",
+        caption_dropdowns: "flex gap-1", // Ensures dropdowns are flex items
         nav: "space-x-1 flex items-center",
         nav_button: cn(
           buttonVariants({ variant: "outline" }),
@@ -217,3 +217,4 @@ function Calendar({
 Calendar.displayName = "Calendar"
 
 export { Calendar }
+
