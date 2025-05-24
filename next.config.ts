@@ -16,13 +16,13 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'placehold.co',
+        hostname: 'app.xillo.io',
         port: '',
         pathname: '/**',
       },
       {
         protocol: 'https',
-        hostname: 'www.xillo.io',
+        hostname: 'app.xillo.io',
         port: '',
         pathname: '/**',
       }
