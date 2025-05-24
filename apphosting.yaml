@@ -1,11 +1,12 @@
+
 # apphosting.yaml
 runConfig:
   cpu: 2
   memoryMiB: 1024
-  concurrency: 80
-  maxInstances: 10
+  concurrency: 100
+  maxInstances: 100
   minInstances: 2
-  # vpcAccess: null
+  # vpcAccess: null # This can be added if needed
 
 scripts:
   # runCommand is removed to let the buildpack handle it for Next.js
@@ -92,4 +93,7 @@ outputFiles:
   serverApp:
     include:
       - .next # Standard Next.js build output directory
-      # package.json and next.config.ts are usually handled by the buildpack
+      - next.config.ts # Corrected to .ts
+      - package.json
+      # public directory is typically handled by the buildpack
+      # node_modules are also typically handled
